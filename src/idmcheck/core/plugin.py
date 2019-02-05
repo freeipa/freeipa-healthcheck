@@ -18,3 +18,60 @@ class Registry:
 class Plugin:
     def __init__(self, registry):
         self.registry = registry
+
+
+class Result:
+    def __init__(self, severity, **kw):
+        self.source = None  # set by caller later
+        self.check = None   # set by caller later
+        self.severity = severity
+        self.kw = kw
+
+    def __repr__(self):
+        return "%s.%s(%s): %s" % (self.source, self.check, self.kw, self.severity)
+
+
+class Results:
+    def __init__(self):
+        self.results = []
+
+    def add(self, result):
+        self.results.append(result)
+
+    def output(self):
+        for result in self.results:
+            yield dict(source=result.source,
+                       check=result.check,
+                       severity=result.severity,
+                       kw=result.kw)
+
+
+class Output:
+    def __init__(self):
+        pass
+
+    def render(self, data):
+        pass
+
+
+import json
+import sys
+
+class JSON(Output):
+
+    def __init__(self, filename = None):
+        self.filename = filename
+
+    def render(self, data):
+        if self.filename:
+           f = open(self.filename, 'w')
+        else:
+           f = sys.stdout
+
+        output =  [x for x in data.output()]
+        f.write(json.dumps(output))
+
+        # Ok, hacky, but using with and stdout will close stdout
+        # which could be bad.
+        if self.filename:
+            f.close()
