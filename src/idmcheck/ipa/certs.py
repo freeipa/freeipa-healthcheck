@@ -1,17 +1,12 @@
-from idmcheck.core.plugin import Plugin
+from idmcheck.ipa.plugin import IPAPlugin, registry
 
-def register(api):
-    return [
-        IPACertCheck(api),
-        IPANSSCheck(api),
-    ]
-
-
-class IPACertCheck(Plugin):
+@registry
+class IPACertCheck(IPAPlugin):
     def check(self):
-        print(self)
+        print('Called check on', self)
 
 
-class IPANSSCheck(Plugin):
+@registry
+class IPANSSCheck(IPAPlugin):
     def check(self):
-        print(self)
+        print('Called check on', self)

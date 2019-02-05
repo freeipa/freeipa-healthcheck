@@ -1,11 +1,6 @@
-from idmcheck.core.plugin import Plugin
+from idmcheck.ipa.plugin import IPAPlugin, registry
 
-def register(api):
-    return [
-        IPAKerberosCheck(api)
-    ]
-
-
-class IPAKerberosCheck(Plugin):
+@registry
+class IPAKerberosCheck(IPAPlugin):
     def check(self):
-        print(self)
+        print('Called check on', self)

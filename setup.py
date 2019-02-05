@@ -11,14 +11,21 @@ setup(
         'idmcheck.ipa'
     ],
     entry_points={
+        # creates bin/idmcheck
         'console_scripts': [
             'idmcheck = idmcheck.core.main:main',
         ],
+        # subsystem registries
+        'idmcheck.registry': [
+            'idmcheck.ipa = idmcheck.ipa.plugin:registry'
+        ],
+        # plugin modules for idmcheck.ipa registry
         'idmcheck.ipa': [
-            'ipacerts = idmcheck.ipa.certs:register',
-            'ipakerberos = idmcheck.ipa.kerberos:register',
+            'ipacerts = idmcheck.ipa.certs',
+            'ipakerberos = idmcheck.ipa.kerberos',
         ],
     },
+    install_requires=['ipaclient'],
     classifiers=[
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
