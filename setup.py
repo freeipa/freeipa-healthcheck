@@ -17,12 +17,17 @@ setup(
         ],
         # subsystem registries
         'idmcheck.registry': [
-            'idmcheck.ipa = idmcheck.ipa.plugin:registry'
+            'idmcheck.ipa = idmcheck.ipa.plugin:registry',
+            'idmcheck.dogtag = idmcheck.dogtag.plugin:registry',
         ],
         # plugin modules for idmcheck.ipa registry
         'idmcheck.ipa': [
             'ipacerts = idmcheck.ipa.certs',
             'ipakerberos = idmcheck.ipa.kerberos',
+        ],
+        # plugin modules for idmcheck.ipa registry
+        'idmcheck.dogtag': [
+            'example = idmcheck.dogtag.example',
         ],
     },
     install_requires=['ipaclient'],

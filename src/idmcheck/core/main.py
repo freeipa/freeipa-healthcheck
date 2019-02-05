@@ -19,6 +19,7 @@ def main():
 
     for name, registry in find_registries().items():
         registry.initialize(framework)
+        print(name, registry)
         for plugin in find_plugins(name, registry):
             plugins.append(plugin)
 
