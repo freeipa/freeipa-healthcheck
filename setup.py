@@ -23,6 +23,7 @@ setup(
         # plugin modules for idmcheck.ipa registry
         'idmcheck.ipa': [
             'ipacerts = idmcheck.ipa.certs',
+            'ipafiles = idmcheck.ipa.files',
             'ipakerberos = idmcheck.ipa.kerberos',
         ],
         # plugin modules for idmcheck.ipa registry
