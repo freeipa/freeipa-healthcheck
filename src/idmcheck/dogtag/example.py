@@ -5,4 +5,4 @@ from idmcheck.dogtag.plugin import registry
 class DogtagExample(Plugin):
     def check(self):
         print('Called check on', self)
-        return Result(0)
+        return Result(self, 0)

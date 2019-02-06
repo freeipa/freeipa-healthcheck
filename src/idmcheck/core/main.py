@@ -1,5 +1,6 @@
 import pkg_resources
 from idmcheck.core.plugin import Result, Results, JSON
+from idmcheck.core import constants
 from pprint import pprint
 
 def find_registries():
@@ -29,14 +30,17 @@ def main():
     for plugin in plugins:
         try:
             result = plugin.check()
-            if not isinstance(result, Result):
+            if type(result) not in (Result, Results):
                 # Treat no result as success
-                result = Result(0)
-            result.check = plugin.__class__.__name__
-            result.source = plugin.__class__.__module__
-            results.add(result)
+                result = Result(plugin, constants.SUCCESS)
         except Exception as e:
             print('Exception raised: %s', e)
+            result = Result(plugin, constants.CRITICAL, exception=str(e))
+
+        if isinstance(result, Result):
+            results.add(result)
+        elif isinstance(result, Results):
+            results.extend(result)
 
     output = JSON()
     output.render(results)

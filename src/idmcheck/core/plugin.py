@@ -21,11 +21,12 @@ class Plugin:
 
 
 class Result:
-    def __init__(self, severity, **kw):
-        self.source = None  # set by caller later
-        self.check = None   # set by caller later
+    def __init__(self, plugin, severity, **kw):
         self.severity = severity
         self.kw = kw
+        self.check = plugin.__class__.__name__
+        self.source = plugin.__class__.__module__
+
 
     def __repr__(self):
         return "%s.%s(%s): %s" % (self.source, self.check, self.kw, self.severity)
@@ -36,7 +37,12 @@ class Results:
         self.results = []
 
     def add(self, result):
+        assert isinstance(result, Result)
         self.results.append(result)
+
+    def extend(self, results):
+        assert isinstance(results, Results)
+        self.results.extend(results.results)
 
     def output(self):
         for result in self.results:
