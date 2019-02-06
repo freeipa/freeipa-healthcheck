@@ -75,7 +75,7 @@ class JSON(Output):
            f = sys.stdout
 
         output =  [x for x in data.output()]
-        f.write(json.dumps(output))
+        f.write(json.dumps(output, indent=2))
 
         # Ok, hacky, but using with and stdout will close stdout
         # which could be bad.

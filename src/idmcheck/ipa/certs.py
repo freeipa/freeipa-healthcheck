@@ -6,6 +6,7 @@ from ipalib import api
 from ipalib import x509
 from ipalib.install import certmonger
 from ipaplatform.paths import paths
+from ipapython.certdb import unparse_trust_flags
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
 
@@ -180,6 +181,7 @@ class IPACertTracking(IPAPlugin):
                     ids.remove(request_id)
             except ValueError as e:
                 result = Result(self, constants.FAILURE,
+                                key=request_id,
                                 msg='Failure trying to remove % from '
                                 'list: %s' % (request_id, e))
                 results.add(result)
@@ -190,8 +192,48 @@ class IPACertTracking(IPAPlugin):
                 results.add(result)
 
         if ids:
-            result = Result(self, constants.WARNING,
-                            msg='Unknown certmonger ids: %s' % ','.join(ids))
-            results.add(result)
+            for id in ids:
+                result = Result(self, constants.WARNING, key=id,
+                                msg='Unknown certmonger id %s' % id)
+                results.add(result)
+
+        return results
+
+
+@registry
+class IPACertNSSTrust(IPAPlugin):
+    def check(self):
+        print('Called check on', self)
+
+        results = Results()
+
+        expected_trust = {
+            'ocspSigningCert cert-pki-ca': 'u,u,u',
+            'subsystemCert cert-pki-ca': 'u,u,u',
+            'auditSigningCert cert-pki-ca': 'u,u,Pu',
+            'Server-Cert cert-pki-ca': 'u,u,u'
+        }
+
+        if not self.ca.is_configured():
+            return
+
+        db = certs.CertDB(api.env.realm, paths.PKI_TOMCAT_ALIAS_DIR)
+        for nickname, _trust_flags in db.list_certs():
+            flags = unparse_trust_flags(_trust_flags)
+            if nickname.startswith('caSigningCert cert-pki-ca'):
+                expected = 'CTu,Cu,Cu'
+            else:
+                try:
+                    expected = expected_trust[nickname]
+                except KeyError:
+                    # FIXME: is this a warning, skip?
+                    print("%s not found, assuming 3rd party" % nickname)
+                    continue
+            if flags != expected:
+                result = Result(
+                    self, constants.FAILURE, key=nickname,
+                    msg='Incorrect NSS trust for %s. Got %s expected %s'
+                    % (nickname, flags, expected))
+                results.add(result)
 
         return results
