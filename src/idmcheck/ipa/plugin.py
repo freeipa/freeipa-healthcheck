@@ -1,4 +1,4 @@
-from ipalib import api
+from ipalib import api, errors
 from ipapython.ipaldap import realm_to_serverid
 from ipaserver.install import cainstance
 from ipaserver.install import dsinstance
@@ -28,7 +28,10 @@ class IPARegistry(Registry):
             api.finalize()
 
         if not api.Backend.ldap2.isconnected():
-            api.Backend.ldap2.connect()
+            try:
+                api.Backend.ldap2.connect()
+            except errors.CCacheError:
+                pass
 
 
 registry = IPARegistry()
