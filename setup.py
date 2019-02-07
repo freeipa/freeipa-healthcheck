@@ -19,6 +19,11 @@ setup(
         'idmcheck.registry': [
             'idmcheck.ipa = idmcheck.ipa.plugin:registry',
             'idmcheck.dogtag = idmcheck.dogtag.plugin:registry',
+            'idmcheck.meta = idmcheck.meta.plugin:registry',
+        ],
+        # plugin modules for idmcheck.meta registry
+        'idmcheck.meta': [
+            'idmcheck.meta = idmcheck.meta.core',
         ],
         # plugin modules for idmcheck.ipa registry
         'idmcheck.ipa': [
