@@ -7,6 +7,8 @@ class Registry:
         self.framework = framework
 
     def __call__(self, cls):
+        if not callable(cls):
+            raise TypeError('plugin must be callable; got %r' % cls)
         self.plugins.append(cls)
         return cls
 
