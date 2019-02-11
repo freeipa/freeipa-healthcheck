@@ -23,7 +23,8 @@ setup(
         ],
         # plugin modules for idmcheck.meta registry
         'idmcheck.meta': [
-            'idmcheck.meta = idmcheck.meta.core',
+            'meta = idmcheck.meta.core',
+            'services = idmcheck.meta.services',
         ],
         # plugin modules for idmcheck.ipa registry
         'idmcheck.ipa': [
