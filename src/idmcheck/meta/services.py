@@ -3,13 +3,12 @@ from idmcheck.core.plugin import Result
 from idmcheck.meta.plugin import Plugin, registry
 from idmcheck.meta.systemd import SystemdService
 
-@registry
-class ApacheCheck(Plugin, SystemdService):
+
+class ServiceCheck(Plugin, SystemdService):
     def check(self):
         print('Called check on', self)
-        self.service_name = 'httpd'
 
-        status, msg = super(ApacheCheck, self).check()
+        status, msg = super(ServiceCheck, self).check()
 
         if msg:
             result = Result(self, constants.ERROR,
@@ -20,3 +19,18 @@ class ApacheCheck(Plugin, SystemdService):
 
         return result
 
+
+@registry
+class ApacheCheck(ServiceCheck):
+    def check(self):
+        self.service_name = 'httpd'
+
+        return super(ApacheCheck, self).check()
+
+
+@registry
+class DogtagCheck(ServiceCheck):
+    def check(self):
+        self.service_name = 'pki-tomcatd@pki-tomcat.service'
+
+        return super(DogtagCheck, self).check()

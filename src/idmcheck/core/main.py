@@ -1,6 +1,7 @@
 import pkg_resources
 from idmcheck.core.plugin import Result, Results, JSON
 from idmcheck.core import constants
+from idmcheck.meta.services import ServiceCheck
 from pprint import pprint
 
 def find_registries():
@@ -16,18 +17,17 @@ def find_plugins(name, registry):
         ep.load()
     return registry.get_plugins()
 
-def main():
-    framework = object()
-    plugins = []
+def run_plugins(plugins, services=False):
+    """Run the service check plugins first so a dependency tree is
+       possible.
+    """
     results = Results()
 
-    for name, registry in find_registries().items():
-        registry.initialize(framework)
-        print(name, registry)
-        for plugin in find_plugins(name, registry):
-            plugins.append(plugin)
-
     for plugin in plugins:
+        if services and not isinstance(plugin, ServiceCheck):
+            continue
+        elif not services and isinstance(plugin, ServiceCheck):
+            continue
         try:
             result = plugin.check()
             if type(result) not in (Result, Results):
@@ -41,6 +41,21 @@ def main():
             results.add(result)
         elif isinstance(result, Results):
             results.extend(result)
+
+    return results
+
+def main():
+    framework = object()
+    plugins = []
+
+    for name, registry in find_registries().items():
+        registry.initialize(framework)
+        print(name, registry)
+        for plugin in find_plugins(name, registry):
+            plugins.append(plugin)
+
+    results = run_plugins(plugins, services=True)
+    results.extend(run_plugins(plugins))
 
     output = JSON()
     output.render(results)
