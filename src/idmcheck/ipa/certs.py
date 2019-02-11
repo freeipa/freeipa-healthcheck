@@ -180,14 +180,14 @@ class IPACertTracking(IPAPlugin):
                 if request_id is not None:
                     ids.remove(request_id)
             except ValueError as e:
-                result = Result(self, constants.FAILURE,
+                result = Result(self, constants.ERROR,
                                 key=request_id,
                                 msg='Failure trying to remove % from '
                                 'list: %s' % (request_id, e))
                 results.add(result)
 
             if request_id is None:
-                result = Result(self, constants.FAILURE,
+                result = Result(self, constants.ERROR,
                                 msg='Missing tracking for %s' % request)
                 results.add(result)
 
@@ -231,7 +231,7 @@ class IPACertNSSTrust(IPAPlugin):
                     continue
             if flags != expected:
                 result = Result(
-                    self, constants.FAILURE, key=nickname,
+                    self, constants.ERROR, key=nickname,
                     msg='Incorrect NSS trust for %s. Got %s expected %s'
                     % (nickname, flags, expected))
                 results.add(result)
