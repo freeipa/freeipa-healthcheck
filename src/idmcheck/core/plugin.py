@@ -20,8 +20,7 @@ class Registry:
 class Plugin:
     def __init__(self, registry):
         self.registry = registry
-        self.provides = ()
-        self.requires = ()
+        self.requires = set()
 
 
 class Result:

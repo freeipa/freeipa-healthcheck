@@ -17,25 +17,55 @@ def find_plugins(name, registry):
         ep.load()
     return registry.get_plugins()
 
-def run_plugins(plugins, services=False):
-    """Run the service check plugins first so a dependency tree is
-       possible.
-    """
+
+def run_plugin(plugin, available=()):
+    try:
+        result = plugin.check()
+        if type(result) not in (Result, Results):
+            # Treat no result as success
+            result = Result(plugin, constants.SUCCESS)
+    except Exception as e:
+        print('Exception raised: %s', e)
+        result = Result(plugin, constants.CRITICAL, exception=str(e))
+
+    return result
+
+
+def run_service_plugins(plugins):
+    results = Results()
+    available = []
+
+    for plugin in plugins:
+        if not isinstance(plugin, ServiceCheck):
+            continue
+
+        result = run_plugin(plugin)
+
+        if result.severity == constants.SUCCESS:
+            available.append(plugin.service_name)
+
+        if isinstance(result, Result):
+            results.add(result)
+        elif isinstance(result, Results):
+            results.extend(result)
+
+    return results, set(available)
+
+
+def run_plugins(plugins, available):
     results = Results()
 
     for plugin in plugins:
-        if services and not isinstance(plugin, ServiceCheck):
+        if isinstance(plugin, ServiceCheck):
             continue
-        elif not services and isinstance(plugin, ServiceCheck):
-            continue
-        try:
-            result = plugin.check()
-            if type(result) not in (Result, Results):
-                # Treat no result as success
-                result = Result(plugin, constants.SUCCESS)
-        except Exception as e:
-            print('Exception raised: %s', e)
-            result = Result(plugin, constants.CRITICAL, exception=str(e))
+
+        # TODO: make this not the default
+        if not set(plugin.requires).issubset(available):
+            result = Result(plugin, constants.ERROR,
+                            msg='%s service(s) not running' %
+                            (', '.join(set(plugin.requires) - available)))
+        else:
+            result = run_plugin(plugin, available)
 
         if isinstance(result, Result):
             results.add(result)
@@ -54,8 +84,8 @@ def main():
         for plugin in find_plugins(name, registry):
             plugins.append(plugin)
 
-    results = run_plugins(plugins, services=True)
-    results.extend(run_plugins(plugins))
+    results, available = run_service_plugins(plugins)
+    results.extend(run_plugins(plugins, available))
 
     output = JSON()
     output.render(results)
