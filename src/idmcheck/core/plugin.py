@@ -29,12 +29,24 @@ class Plugin:
 
 
 class Result:
+    """
+    The result of a check.
+
+    kw is meant to provide some level of flexibility to check authors
+    but the following is a set of pre-defined keys that may be present:
+
+        key: some checks can have multiple tests. This
+             provides for uniqueuess.
+        msg: A message that can take other keywords as input
+        exception: used when a check raises an exception
+    """ 
     def __init__(self, plugin, severity, **kw):
         self.severity = severity
         self.kw = kw
         self.check = plugin.__class__.__name__
         self.source = plugin.__class__.__module__
 
+        assert getLevelName(severity) is not None
 
     def __repr__(self):
         return "%s.%s(%s): %s" % (self.source, self.check, self.kw, self.severity)
