@@ -1,6 +1,7 @@
 import argparse
 import pkg_resources
-from idmcheck.core.plugin import Result, Results, JSON, Human
+from idmcheck.core.plugin import Result, Results
+from idmcheck.core.output import output_registry, JSON, Human
 from idmcheck.core import constants
 from idmcheck.meta.services import ServiceCheck
 
@@ -76,10 +77,12 @@ def run_plugins(plugins, available):
     return results
 
 
-def parse_options():
+def parse_options(output_names):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output', dest='output', choices=['json', 'human'],
-                        help='Output method')
+    parser.add_argument('--output', dest='output', choices=output_names,
+                        default='json', help='Output method')
+    parser.add_argument('--output-file', dest='filename',
+                        help='File to store output')
     parser.add_argument('--no-success', dest='success', action='store_true',
                         default=False,
                         help='Include SUCCESS level on output')
@@ -93,7 +96,9 @@ def main():
     framework = object()
     plugins = []
 
-    options = parse_options()
+    output_names = [plugin.__name__.lower() for
+                    plugin in output_registry.plugins]
+    options = parse_options(output_names)
 
     for name, registry in find_registries().items():
         registry.initialize(framework)
@@ -104,5 +109,7 @@ def main():
     results, available = run_service_plugins(plugins)
     results.extend(run_plugins(plugins, available))
 
-    output = JSON()
-    output.render(results)
+    for out in output_registry.plugins:
+        if out.__name__.lower() == options.output:
+            output = out(options)
+            output.render(results)
