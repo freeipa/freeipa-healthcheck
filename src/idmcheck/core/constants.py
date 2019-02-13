@@ -11,6 +11,7 @@ _levelToName = {
     WARNING: 'WARNING',
 }
 
+
 def getLevelName(level):
     """
     Translate a level constant to a textual level name.

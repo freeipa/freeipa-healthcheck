@@ -4,6 +4,7 @@ from idmcheck.core import constants
 from idmcheck.core.plugin import Result
 from idmcheck.meta.plugin import Plugin, registry
 
+
 @registry
 class MetaCheck(Plugin):
     def check(self):

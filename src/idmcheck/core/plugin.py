@@ -39,7 +39,7 @@ class Result:
              provides for uniqueuess.
         msg: A message that can take other keywords as input
         exception: used when a check raises an exception
-    """ 
+    """
     def __init__(self, plugin, severity, **kw):
         self.severity = severity
         self.kw = kw
@@ -49,7 +49,8 @@ class Result:
         assert getLevelName(severity) is not None
 
     def __repr__(self):
-        return "%s.%s(%s): %s" % (self.source, self.check, self.kw, self.severity)
+        return "%s.%s(%s): %s" % (self.source, self.check, self.kw,
+                                  self.severity)
 
 
 class Results:
@@ -82,14 +83,14 @@ class Output:
 
 class JSON(Output):
 
-    def __init__(self, filename = None):
+    def __init__(self, filename=None):
         self.filename = filename
 
     def render(self, data):
         if self.filename:
-           f = open(self.filename, 'w')
+            f = open(self.filename, 'w')
         else:
-           f = sys.stdout
+            f = sys.stdout
 
         output = [x for x in data.output()]
         f.write(json.dumps(output, indent=2))

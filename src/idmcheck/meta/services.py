@@ -12,7 +12,8 @@ class ServiceCheck(Plugin, SystemdService):
 
         if msg:
             result = Result(self, constants.ERROR,
-                            status=status, msg='%s: %s' % (self.service_name, msg))
+                            status=status, msg='%s: %s' %
+                            (self.service_name, msg))
         else:
             result = Result(self, constants.SUCCESS,
                             status=status)

@@ -1,6 +1,7 @@
 from idmcheck.core.plugin import Plugin, Result
 from idmcheck.dogtag.plugin import registry
 
+
 @registry
 class DogtagExample(Plugin):
     def __init__(self, registry):

@@ -1,19 +1,17 @@
-from datetime import datetime
 import dbus
-import socket
 
- 
+
 # Not registered on purpose
 class SystemdService:
     service_name = None
- 
+
     def __init__(self):
         pass
- 
+
     def get_service(self):
         service_name = self.service_name
         if not service_name.endswith('.service'):
-             service_name += '.service'
+            service_name += '.service'
         bus = dbus.SystemBus()
         systemd1_obj = bus.get_object(
             'org.freedesktop.systemd1', '/org/freedesktop/systemd1'
@@ -41,7 +39,7 @@ class SystemdService:
         for k, v in prop_if.GetAll(service_if.dbus_interface).items():
             properties[str(k)] = v
         return properties
- 
+
     def check(self):
         properties = self.get_service()
         error = properties.get('_dbus_error_name')

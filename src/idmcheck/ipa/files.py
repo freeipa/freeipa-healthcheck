@@ -11,6 +11,7 @@ from ipaplatform.paths import paths
 
 from ipaserver.install import dsinstance
 
+
 @registry
 class IPAFileNSSDBCheck(IPAPlugin):
     def check(self):

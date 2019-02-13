@@ -1,6 +1,7 @@
 from util import raises
 from idmcheck.core.plugin import Plugin, Registry
 
+
 def test_Registry():
     """
     Test the `idmcheck.core.Registry` class
