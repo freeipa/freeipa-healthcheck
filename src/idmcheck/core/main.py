@@ -1,8 +1,9 @@
+import argparse
 import pkg_resources
 from idmcheck.core.plugin import Result, Results, JSON, Human
 from idmcheck.core import constants
 from idmcheck.meta.services import ServiceCheck
-from pprint import pprint
+
 
 def find_registries():
     return {
@@ -74,9 +75,25 @@ def run_plugins(plugins, available):
 
     return results
 
+
+def parse_options():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', dest='output', choices=['json', 'human'],
+                        help='Output method')
+    parser.add_argument('--no-success', dest='success', action='store_true',
+                        default=False,
+                        help='Include SUCCESS level on output')
+
+    options = parser.parse_args()
+
+    return options
+
+
 def main():
     framework = object()
     plugins = []
+
+    options = parse_options()
 
     for name, registry in find_registries().items():
         registry.initialize(framework)
