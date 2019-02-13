@@ -77,15 +77,21 @@ def run_plugins(plugins, available):
     return results
 
 
-def parse_options(output_names):
+def parse_options(output_registry):
+    output_names = [plugin.__name__.lower() for
+                    plugin in output_registry.plugins]
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output', dest='output', choices=output_names,
+    parser.add_argument('--output-type', dest='output', choices=output_names,
                         default='json', help='Output method')
-    parser.add_argument('--output-file', dest='filename',
-                        help='File to store output')
     parser.add_argument('--no-success', dest='success', action='store_true',
                         default=False,
                         help='Include SUCCESS level on output')
+    for plugin in output_registry.plugins:
+        onelinedoc = plugin.__doc__.split('\n\n', 1)[0].strip()
+        group = parser.add_argument_group(plugin.__name__.lower(),
+                                          onelinedoc)
+        for option in plugin.options:
+            group.add_argument(option[0], **option[1])
 
     options = parser.parse_args()
 
@@ -98,7 +104,7 @@ def main():
 
     output_names = [plugin.__name__.lower() for
                     plugin in output_registry.plugins]
-    options = parse_options(output_names)
+    options = parse_options(output_registry)
 
     for name, registry in find_registries().items():
         registry.initialize(framework)

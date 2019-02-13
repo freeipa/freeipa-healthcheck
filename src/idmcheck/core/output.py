@@ -21,9 +21,17 @@ class Output:
 
 @output_registry
 class JSON(Output):
+    """Output information in JSON format"""
+
+    options = (
+        ('--output-file', dict(dest='filename', help='File to store output')),
+        ('--indent', dict(dest='indent', type=int, default=None,
+             help='Indention level of JSON output')),
+    )
 
     def __init__(self, options):
         self.filename = options.filename
+        self.indent = options.indent
 
     def render(self, data):
         if self.filename:
@@ -32,7 +40,7 @@ class JSON(Output):
             f = sys.stdout
 
         output = [x for x in data.output()]
-        f.write(json.dumps(output, indent=2))
+        f.write(json.dumps(output, indent=self.indent))
 
         # Ok, hacky, but using with and stdout will close stdout
         # which could be bad.
@@ -47,6 +55,7 @@ class Human(Output):
     TODO: Use the logging module
 
     """
+    options = ()
 
     def render(self, data):
 
