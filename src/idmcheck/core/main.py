@@ -1,5 +1,5 @@
 import pkg_resources
-from idmcheck.core.plugin import Result, Results, JSON
+from idmcheck.core.plugin import Result, Results, JSON, Human
 from idmcheck.core import constants
 from idmcheck.meta.services import ServiceCheck
 from pprint import pprint

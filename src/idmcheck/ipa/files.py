@@ -56,7 +56,7 @@ class IPAFileNSSDBCheck(IPAPlugin):
                 path = os.path.join(db['dirname'], file)
                 stat = os.stat(path)
                 fmode = str(oct(stat.st_mode)[-4:])
-                key = '%s_mode' % path
+                key = '%s_mode' % path.replace('/', '_')
                 if mode != fmode:
                     result = Result(self, constants.WARNING, key=key,
                                     path=path, expected=mode,
@@ -67,7 +67,7 @@ class IPAFileNSSDBCheck(IPAPlugin):
                     result = Result(self, constants.SUCCESS, key=key,
                                     path=path)
                 fowner = pwd.getpwnam(owner)
-                key = '%s_owner' % path
+                key = '%s_owner' % path.replace('/', '_')
                 if fowner.pw_uid != stat.st_uid:
                     actual = pwd.getpwuid(stat.st_uid)
                     result = Result(self, constants.WARNING, key=key,
@@ -80,7 +80,7 @@ class IPAFileNSSDBCheck(IPAPlugin):
                     result = Result(self, constants.SUCCESS, key=key,
                                     path=path)
                 fgroup = grp.getgrnam(group)
-                key = '%s_group' % path
+                key = '%s_group' % path.replace('/', '_')
                 if fgroup.gr_gid != stat.st_gid:
                     actual = grp.getgrgid(stat.st_gid)
                     result = Result(self, constants.WARNING, key=key,
