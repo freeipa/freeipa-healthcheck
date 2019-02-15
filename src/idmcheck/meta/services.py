@@ -7,7 +7,7 @@ from idmcheck.meta.systemd import SystemdService
 class ServiceCheck(Plugin, SystemdService):
     def check(self):
         status, msg = SystemdService.check_service(self)
-        
+
         if msg:
             result = Result(self, constants.ERROR,
                             status=status, msg='%s: %s' %
