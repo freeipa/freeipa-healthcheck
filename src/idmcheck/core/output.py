@@ -1,7 +1,7 @@
 import json
 import sys
 from idmcheck.core.constants import getLevelName
-from idmcheck.core.plugin import Registry
+from idmcheck.core.plugin import Registry, json_to_results
 
 
 class OutputRegistry(Registry):
@@ -13,7 +13,7 @@ output_registry = OutputRegistry()
 
 class Output:
     def __init__(self, options):
-        pass
+        self.output_only = False
 
     def render(self, data):
         pass
@@ -26,10 +26,11 @@ class JSON(Output):
     options = (
         ('--output-file', dict(dest='filename', help='File to store output')),
         ('--indent', dict(dest='indent', type=int, default=None,
-             help='Indention level of JSON output')),
+         help='Indention level of JSON output')),
     )
 
     def __init__(self, options):
+        super(JSON, self).__init__(options)
         self.filename = options.filename
         self.indent = options.indent
 
@@ -55,9 +56,25 @@ class Human(Output):
     TODO: Use the logging module
 
     """
-    options = ()
+    options = (
+        ('--input-file', dict(dest='infile', help='File to translate')),
+    )
+
+    def __init__(self, options):
+        super(Human, self).__init__(options)
+        self.filename = options.infile
+        if self.filename:
+            self.output_only = True
 
     def render(self, data):
+
+        if self.filename:
+            with open(self.filename, 'r') as f:
+                raw_data = f.read()
+
+            # caller catches exception
+            json_data = json.loads(raw_data)
+            data = json_to_results(json_data)
 
         for line in data.output():
             kw = line.get('kw')

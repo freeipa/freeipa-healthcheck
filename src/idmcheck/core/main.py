@@ -3,7 +3,7 @@ import logging
 import pkg_resources
 
 from idmcheck.core.plugin import Result, Results
-from idmcheck.core.output import output_registry, JSON, Human
+from idmcheck.core.output import output_registry
 from idmcheck.core import constants
 from idmcheck.meta.services import ServiceCheck
 
@@ -114,8 +114,6 @@ def main():
 
     logger.setLevel(logging.INFO)
 
-    output_names = [plugin.__name__.lower() for
-                    plugin in output_registry.plugins]
     options = parse_options(output_registry)
 
     if options.debug:
@@ -126,10 +124,17 @@ def main():
         for plugin in find_plugins(name, registry):
             plugins.append(plugin)
 
-    results, available = run_service_plugins(plugins)
-    results.extend(run_plugins(plugins, available))
-
     for out in output_registry.plugins:
         if out.__name__.lower() == options.output:
             output = out(options)
-            output.render(results)
+
+    if not output.output_only:
+        results, available = run_service_plugins(plugins)
+        results.extend(run_plugins(plugins, available))
+    else:
+        results = None
+
+    try:
+        output.render(results)
+    except Exception as e:
+        logger.error('Output raised %s: %s', e.__class__.__name__, e)
