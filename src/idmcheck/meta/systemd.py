@@ -40,7 +40,7 @@ class SystemdService:
             properties[str(k)] = v
         return properties
 
-    def check(self):
+    def check_service(self):
         properties = self.get_service()
         error = properties.get('_dbus_error_name')
         if error:
