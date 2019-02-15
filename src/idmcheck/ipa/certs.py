@@ -145,20 +145,18 @@ def get_requests(ca, ds, serverid):
 @registry
 class IPACertCheck(IPAPlugin):
     def check(self):
-        print('Called check on', self)
+        pass
 
 
 @registry
 class IPANSSCheck(IPAPlugin):
     def check(self):
-        print('Called check on', self)
+        pass
 
 
 @registry
 class IPACertTracking(IPAPlugin):
     def check(self):
-        print('Called check on', self)
-
         results = Results()
 
         requests = get_requests(self.ca, self.ds, self.serverid)
@@ -203,8 +201,6 @@ class IPACertTracking(IPAPlugin):
 @registry
 class IPACertNSSTrust(IPAPlugin):
     def check(self):
-        print('Called check on', self)
-
         results = Results()
 
         expected_trust = {

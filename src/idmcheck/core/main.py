@@ -1,9 +1,15 @@
 import argparse
+import logging
 import pkg_resources
+
 from idmcheck.core.plugin import Result, Results
 from idmcheck.core.output import output_registry, JSON, Human
 from idmcheck.core import constants
 from idmcheck.meta.services import ServiceCheck
+
+
+logging.basicConfig(format='%(message)s')
+logger = logging.getLogger()
 
 
 def find_registries():
@@ -27,7 +33,7 @@ def run_plugin(plugin, available=()):
             # Treat no result as success
             result = Result(plugin, constants.SUCCESS)
     except Exception as e:
-        print('Exception raised: %s', e)
+        logger.debug('Exception raised: %s', e)
         result = Result(plugin, constants.CRITICAL, exception=str(e))
 
     return result
@@ -41,6 +47,7 @@ def run_service_plugins(plugins):
         if not isinstance(plugin, ServiceCheck):
             continue
 
+        logger.debug('Calling check %s' % plugin)
         result = run_plugin(plugin)
 
         if result.severity == constants.SUCCESS:
@@ -61,6 +68,7 @@ def run_plugins(plugins, available):
         if isinstance(plugin, ServiceCheck):
             continue
 
+        logger.debug('Calling check %s' % plugin)
         # TODO: make this not the default
         if not set(plugin.requires).issubset(available):
             result = Result(plugin, constants.ERROR,
@@ -81,6 +89,8 @@ def parse_options(output_registry):
     output_names = [plugin.__name__.lower() for
                     plugin in output_registry.plugins]
     parser = argparse.ArgumentParser()
+    parser.add_argument('--debug', dest='debug', action='store_true',
+                        default=False, help='Include debug output')
     parser.add_argument('--output-type', dest='output', choices=output_names,
                         default='json', help='Output method')
     parser.add_argument('--no-success', dest='success', action='store_true',
@@ -102,13 +112,17 @@ def main():
     framework = object()
     plugins = []
 
+    logger.setLevel(logging.INFO)
+
     output_names = [plugin.__name__.lower() for
                     plugin in output_registry.plugins]
     options = parse_options(output_registry)
 
+    if options.debug:
+        logger.setLevel(logging.DEBUG)
+
     for name, registry in find_registries().items():
         registry.initialize(framework)
-        print(name, registry)
         for plugin in find_plugins(name, registry):
             plugins.append(plugin)
 

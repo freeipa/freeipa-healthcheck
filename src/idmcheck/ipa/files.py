@@ -15,8 +15,6 @@ from ipaserver.install import dsinstance
 @registry
 class IPAFileNSSDBCheck(IPAPlugin):
     def check(self):
-        print('Called check on', self)
-
         results = Results()
 
         databases = [

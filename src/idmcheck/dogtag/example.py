@@ -9,5 +9,4 @@ class DogtagExample(Plugin):
         self.requires = ('foo', 'bar')
 
     def check(self):
-        print('Called check on', self)
         return Result(self, 0)

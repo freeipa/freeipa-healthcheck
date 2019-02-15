@@ -8,8 +8,6 @@ from idmcheck.meta.plugin import Plugin, registry
 @registry
 class MetaCheck(Plugin):
     def check(self):
-        print('Called check on', self)
-
         dt = datetime.utcnow()
 
         result = Result(self, constants.SUCCESS,
