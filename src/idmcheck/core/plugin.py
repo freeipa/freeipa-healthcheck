@@ -52,10 +52,12 @@ class Result:
     def __init__(self, plugin, severity, source=None, check=None, **kw):
         self.severity = severity
         self.kw = kw
-        if check and source:
+        if None not in (check, source):
             self.check = check
             self.source = source
         else:
+            if plugin is None:
+                raise TypeError('source and check or plugin must be provided')
             self.check = plugin.__class__.__name__
             self.source = plugin.__class__.__module__
 
@@ -69,6 +71,9 @@ class Result:
 class Results:
     def __init__(self):
         self.results = []
+
+    def __len__(self):
+        return len(self.results)
 
     def add(self, result):
         assert isinstance(result, Result)
