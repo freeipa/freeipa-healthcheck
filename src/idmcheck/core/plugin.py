@@ -2,6 +2,17 @@ from idmcheck.core.constants import getLevelName
 
 
 class Registry:
+    """
+    A decorator that makes plugins available to the API
+
+    Usage::
+
+        register = Registry()
+
+        @register()
+        class obj_mod(...):
+            ...
+    """
     def __init__(self):
         self.plugins = []
         self.framework = None
@@ -21,6 +32,9 @@ class Registry:
 
 
 class Plugin:
+    """
+    Base class for all plugins.
+    """
     def __init__(self, registry):
         self.registry = registry
         self.requires = set()
@@ -69,6 +83,18 @@ class Result:
 
 
 class Results:
+    """
+    A list-like collection of Result values.
+
+    Provides a very limited subset of list operations.
+
+    Usage::
+
+        results = Results()
+
+        result = Result(plugin, SUCCESS, **kw)
+        results.add(result)
+    """
     def __init__(self):
         self.results = []
 
