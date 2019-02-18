@@ -10,7 +10,7 @@ class Registry:
         register = Registry()
 
         @register()
-        class obj_mod(...):
+        class some_plugin(...):
             ...
     """
     def __init__(self):
@@ -34,6 +34,40 @@ class Registry:
 class Plugin:
     """
     Base class for all plugins.
+
+    registry defines where the plugin was registered, normally via
+    a pkg_resource.
+
+    requires is a set of strings that define pre-requisites for
+    execution. Some output formats allow plugins that do not have
+    these requirements met to skip them (JSON does NOT, all plugins
+    are always executed and reported).
+
+    Each Plugin should define a check() method that contains as
+    simple a test as possible on the status a unique potential issue.
+
+    A Plugin may return either Result for a single result or
+    Results if multiple issues are discovered.
+
+    It is strongly recommended to keep each Plugin as discrete as
+    possible. This is not always possible or practical, for example
+    to avoid hundreds of plugins that test nearly the same thing.
+
+    Usage::
+
+        register = Registry()
+
+        @register()
+        tmp_exists_check(Plugin)
+            def check(self):
+                if os.path.exists('/tmp'):
+                    result = Result(self, SUCCESS)
+                else:
+                    result = Result(self, CRITICAL, path='/tmp',
+                                    msg='Temporary directory is missing')
+
+                return result
+
     """
     def __init__(self, registry):
         self.registry = registry
