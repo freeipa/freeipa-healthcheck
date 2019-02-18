@@ -111,6 +111,7 @@ def parse_options(output_registry):
 def main():
     framework = object()
     plugins = []
+    output = constants.DEFAULT_OUTPUT
 
     logger.setLevel(logging.INFO)
 

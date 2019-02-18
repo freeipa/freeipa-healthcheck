@@ -1,3 +1,5 @@
+DEFAULT_OUTPUT = 'json'
+
 # Error reporting severity
 SUCCESS = 0
 CRITICAL = 1
