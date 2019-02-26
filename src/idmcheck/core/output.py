@@ -1,6 +1,6 @@
 import json
 import sys
-from idmcheck.core.constants import getLevelName
+from idmcheck.core.constants import getLevelName, SUCCESS
 from idmcheck.core.plugin import Registry, json_to_results
 
 
@@ -12,6 +12,15 @@ output_registry = OutputRegistry()
 
 
 class Output:
+    """Base class for writing/displayhing the output of results
+
+       output_only defines whether the tests should be executed.
+       This allows for an existing set of results to be read and
+       displaying using a different output method.
+
+       options is a tuple of argparse options that can add
+       class-specific options for output.
+    """
     def __init__(self, options):
         self.output_only = False
 
@@ -53,7 +62,7 @@ class JSON(Output):
 class Human(Output):
     """Display output in a more human-friendly way
 
-    TODO: Use the logging module
+    TODO: Use the logging module?
 
     """
     options = (
@@ -65,6 +74,7 @@ class Human(Output):
         self.filename = options.infile
         if self.filename:
             self.output_only = True
+        self.failures_only = options.failures_only
 
     def render(self, data):
 
@@ -81,6 +91,8 @@ class Human(Output):
             severity = line.get('severity')
             source = line.get('source')
             check = line.get('check')
+            if self.failures_only and int(severity) == SUCCESS:
+                continue
             print('%s: %s.%s' % (getLevelName(severity), source, check),
                   end='')
             if 'key' in kw:

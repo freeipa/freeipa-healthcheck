@@ -1,6 +1,7 @@
 import argparse
 import logging
 import pkg_resources
+import sys
 
 from idmcheck.core.plugin import Result, Results
 from idmcheck.core.output import output_registry
@@ -93,9 +94,9 @@ def parse_options(output_registry):
                         default=False, help='Include debug output')
     parser.add_argument('--output-type', dest='output', choices=output_names,
                         default='json', help='Output method')
-    parser.add_argument('--no-success', dest='success', action='store_true',
-                        default=False,
-                        help='Include SUCCESS level on output')
+    parser.add_argument('--failures-only', dest='failures_only',
+                        action='store_true', default=False,
+                        help='Exclude SUCCESS severity on output')
     for plugin in output_registry.plugins:
         onelinedoc = plugin.__doc__.split('\n\n', 1)[0].strip()
         group = parser.add_argument_group(plugin.__name__.lower(),
@@ -121,7 +122,11 @@ def main():
         logger.setLevel(logging.DEBUG)
 
     for name, registry in find_registries().items():
-        registry.initialize(framework)
+        try:
+            registry.initialize(framework)
+        except Exception as e:
+            print("Unable to initialize %s: %s" % (name, e))
+            sys.exit(1)
         for plugin in find_plugins(name, registry):
             plugins.append(plugin)
 
