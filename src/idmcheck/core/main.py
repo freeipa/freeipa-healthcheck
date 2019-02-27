@@ -40,12 +40,33 @@ def run_plugin(plugin, available=()):
     return result
 
 
-def run_service_plugins(plugins):
+def source_or_check_matches(plugin, source, check):
+    """Determine whether a given a plugin matches if a source
+       and optional check are provided.
+    """
+    if source is not None and plugin.__module__ != source:
+        return False
+
+    if check and plugin.__class__.__name__ != check:
+        return False
+
+    return True
+
+
+def run_service_plugins(plugins, source, check):
+    """Execute plugins with the base class of ServiceCheck
+
+       This is a specialized check to use systemd to determine
+       if a service is running or not.
+    """
     results = Results()
     available = []
 
     for plugin in plugins:
         if not isinstance(plugin, ServiceCheck):
+            continue
+
+        if not source_or_check_matches(plugin, source, check):
             continue
 
         logger.debug('Calling check %s' % plugin)
@@ -62,11 +83,19 @@ def run_service_plugins(plugins):
     return results, set(available)
 
 
-def run_plugins(plugins, available):
+def run_plugins(plugins, available, source, check):
+    """Execute plugins without the base class of ServiceCheck
+
+       These are the remaining, non-service checking checks
+       that do validation for various parts of a system.
+    """
     results = Results()
 
     for plugin in plugins:
         if isinstance(plugin, ServiceCheck):
+            continue
+
+        if not source_or_check_matches(plugin, source, check):
             continue
 
         logger.debug('Calling check %s' % plugin)
@@ -92,6 +121,12 @@ def parse_options(output_registry):
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', dest='debug', action='store_true',
                         default=False, help='Include debug output')
+    parser.add_argument('--source', dest='source',
+                        default=None,
+                        help='Source of checks, e.g. idmcheck.foo.bar')
+    parser.add_argument('--check', dest='check',
+                        default=None,
+                        help='Check to execute, e.g. BazCheck')
     parser.add_argument('--output-type', dest='output', choices=output_names,
                         default='json', help='Output method')
     parser.add_argument('--failures-only', dest='failures_only',
@@ -105,6 +140,11 @@ def parse_options(output_registry):
             group.add_argument(option[0], **option[1])
 
     options = parser.parse_args()
+
+    # Validation
+    if options.check and not options.source:
+        print("--source is required when --check is used")
+        sys.exit(1)
 
     return options
 
@@ -135,8 +175,10 @@ def main():
             output = out(options)
 
     if not output.output_only:
-        results, available = run_service_plugins(plugins)
-        results.extend(run_plugins(plugins, available))
+        results, available = run_service_plugins(plugins, options.source,
+                                                 options.check)
+        results.extend(run_plugins(plugins, available, options.source,
+                                   options.check))
     else:
         results = None
 
