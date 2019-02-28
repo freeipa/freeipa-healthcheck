@@ -42,6 +42,7 @@ class JSON(Output):
         super(JSON, self).__init__(options)
         self.filename = options.filename
         self.indent = options.indent
+        self.failures_only = options.failures_only
 
     def render(self, data):
         if self.filename:
@@ -49,7 +50,12 @@ class JSON(Output):
         else:
             f = sys.stdout
 
-        output = [x for x in data.output()]
+        output = []
+        for line in data.output():
+            severity = line.get('severity')
+            if self.failures_only and int(severity) == SUCCESS:
+                continue
+            output.append(line)
         f.write(json.dumps(output, indent=self.indent))
 
         # Ok, hacky, but using with and stdout will close stdout
