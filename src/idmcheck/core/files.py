@@ -25,13 +25,13 @@ class FileCheck:
             key = '%s_mode' % path.replace('/', '_')
             if mode != fmode:
                 result = Result(self, constants.WARNING, key=key,
-                                path=path, expected=mode,
+                                path=path, type='mode', expected=mode,
                                 got=fmode,
                                 msg='Permissions of %s are %s and '
                                 'should be %s' % (path, fmode, mode))
             else:
                 result = Result(self, constants.SUCCESS, key=key,
-                                path=path)
+                                type='mode', path=path)
             results.add(result)
 
             fowner = pwd.getpwnam(owner)
@@ -39,14 +39,14 @@ class FileCheck:
             if fowner.pw_uid != stat.st_uid:
                 actual = pwd.getpwuid(stat.st_uid)
                 result = Result(self, constants.WARNING, key=key,
-                                path=path, expected=owner,
+                                path=path, type='owner', expected=owner,
                                 got=actual.pw_name,
                                 msg='Ownership of %s is %s and should '
                                     'be %s' %
                                     (path, actual.pw_name, owner))
             else:
                 result = Result(self, constants.SUCCESS, key=key,
-                                path=path)
+                                type='owner', path=path)
             results.add(result)
 
             fgroup = grp.getgrnam(group)
@@ -54,14 +54,14 @@ class FileCheck:
             if fgroup.gr_gid != stat.st_gid:
                 actual = grp.getgrgid(stat.st_gid)
                 result = Result(self, constants.WARNING, key=key,
-                                path=path, expected=group,
+                                path=path, type='group', expected=group,
                                 got=actual.gr_name,
                                 msg='Group of %s is %s and should '
                                     'be %s' %
                                     (path, actual.gr_name, group))
             else:
                 result = Result(self, constants.SUCCESS, key=key,
-                                path=path)
+                                type='group', path=path)
             results.add(result)
 
         return results
