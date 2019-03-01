@@ -1,4 +1,3 @@
-import os
 import pwd
 import posix
 from idmcheck.core.files import FileCheck

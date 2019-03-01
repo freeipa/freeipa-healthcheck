@@ -14,7 +14,7 @@ def test_Result():
     # Standard case of passing plugin to Result
     r = Result(p, constants.SUCCESS)
 
-    kw = dict(key = 'value')
+    kw = dict(key='value')
     r = Result(p, constants.SUCCESS, **kw)
 
     e = raises(TypeError, Result)
