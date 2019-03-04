@@ -1,3 +1,7 @@
+#
+# Copyright (C) 2019 FreeIPA Contributors see COPYING for license
+#
+
 import os
 
 from ipahealthcheck.core.files import FileCheck

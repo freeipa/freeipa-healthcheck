@@ -1,3 +1,7 @@
+#
+# Copyright (C) 2019 FreeIPA Contributors see COPYING for license
+#
+
 import pwd
 import posix
 from ipahealthcheck.core.files import FileCheck

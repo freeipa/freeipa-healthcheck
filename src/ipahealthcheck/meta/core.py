@@ -1,3 +1,7 @@
+#
+# Copyright (C) 2019 FreeIPA Contributors see COPYING for license
+#
+
 from datetime import datetime
 import socket
 from ipahealthcheck.core import constants

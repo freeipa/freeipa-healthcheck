@@ -1,3 +1,7 @@
+#
+# Copyright (C) 2019 FreeIPA Contributors see COPYING for license
+#
+
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
 from ipahealthcheck.core.plugin import Result, Results
 from ipahealthcheck.core import constants

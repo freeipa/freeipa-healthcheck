@@ -1,3 +1,7 @@
+#
+# Copyright (C) 2019 FreeIPA Contributors see COPYING for license
+#
+
 from ipalib import api, errors
 from ipapython.ipaldap import realm_to_serverid
 from ipaserver.install import cainstance

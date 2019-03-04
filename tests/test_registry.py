@@ -1,3 +1,7 @@
+#
+# Copyright (C) 2019 FreeIPA Contributors see COPYING for license
+#
+
 from util import raises
 from ipahealthcheck.core.plugin import Plugin, Registry
 
