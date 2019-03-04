@@ -18,7 +18,6 @@ setup(
         # subsystem registries
         'ipahealthcheck.registry': [
             'ipahealthcheck.ipa = ipahealthcheck.ipa.plugin:registry',
-            'ipahealthcheck.dogtag = ipahealthcheck.dogtag.plugin:registry',
             'ipahealthcheck.meta = ipahealthcheck.meta.plugin:registry',
         ],
         # plugin modules for ipahealthcheck.meta registry
@@ -30,11 +29,6 @@ setup(
         'ipahealthcheck.ipa': [
             'ipacerts = ipahealthcheck.ipa.certs',
             'ipafiles = ipahealthcheck.ipa.files',
-            'ipakerberos = ipahealthcheck.ipa.kerberos',
-        ],
-        # plugin modules for ipahealthcheck.ipa registry
-        'ipahealthcheck.dogtag': [
-            'example = ipahealthcheck.dogtag.example',
         ],
     },
     classifiers=[
