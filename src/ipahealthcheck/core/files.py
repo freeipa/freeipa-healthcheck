@@ -2,8 +2,8 @@ import grp
 import os
 import pwd
 
-from idmcheck.core import constants
-from idmcheck.core.plugin import Result, Results
+from ipahealthcheck.core import constants
+from ipahealthcheck.core.plugin import Result, Results
 
 
 class FileCheck:

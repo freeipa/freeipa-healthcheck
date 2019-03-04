@@ -3,10 +3,10 @@ import logging
 import pkg_resources
 import sys
 
-from idmcheck.core.plugin import Result, Results
-from idmcheck.core.output import output_registry
-from idmcheck.core import constants
-from idmcheck.meta.services import ServiceCheck
+from ipahealthcheck.core.plugin import Result, Results
+from ipahealthcheck.core.output import output_registry
+from ipahealthcheck.core import constants
+from ipahealthcheck.meta.services import ServiceCheck
 
 
 logging.basicConfig(format='%(message)s')
@@ -16,7 +16,7 @@ logger = logging.getLogger()
 def find_registries():
     return {
         ep.name: ep.resolve()
-        for ep in pkg_resources.iter_entry_points('idmcheck.registry')
+        for ep in pkg_resources.iter_entry_points('ipahealthcheck.registry')
     }
 
 
@@ -123,7 +123,7 @@ def parse_options(output_registry):
                         default=False, help='Include debug output')
     parser.add_argument('--source', dest='source',
                         default=None,
-                        help='Source of checks, e.g. idmcheck.foo.bar')
+                        help='Source of checks, e.g. ipahealthcheck.foo.bar')
     parser.add_argument('--check', dest='check',
                         default=None,
                         help='Check to execute, e.g. BazCheck')

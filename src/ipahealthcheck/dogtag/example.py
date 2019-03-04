@@ -1,5 +1,5 @@
-from idmcheck.core.plugin import Plugin, Result
-from idmcheck.dogtag.plugin import registry
+from ipahealthcheck.core.plugin import Plugin, Result
+from ipahealthcheck.dogtag.plugin import registry
 
 
 @registry

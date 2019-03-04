@@ -1,7 +1,7 @@
 import os
 
-from idmcheck.core.files import FileCheck
-from idmcheck.ipa.plugin import IPAPlugin, registry
+from ipahealthcheck.core.files import FileCheck
+from ipahealthcheck.ipa.plugin import IPAPlugin, registry
 
 from ipaplatform.paths import paths
 from ipapython.certdb import NSS_SQL_FILES

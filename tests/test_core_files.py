@@ -1,8 +1,8 @@
 import pwd
 import posix
-from idmcheck.core.files import FileCheck
-from idmcheck.core import constants
-from idmcheck.core.plugin import Results
+from ipahealthcheck.core.files import FileCheck
+from ipahealthcheck.core import constants
+from ipahealthcheck.core.plugin import Results
 from unittest.mock import patch
 
 nobody = pwd.getpwnam('nobody')

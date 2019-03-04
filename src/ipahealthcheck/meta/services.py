@@ -1,7 +1,7 @@
-from idmcheck.core import constants
-from idmcheck.core.plugin import Result
-from idmcheck.meta.plugin import Plugin, registry
-from idmcheck.meta.systemd import SystemdService
+from ipahealthcheck.core import constants
+from ipahealthcheck.core.plugin import Result
+from ipahealthcheck.meta.plugin import Plugin, registry
+from ipahealthcheck.meta.systemd import SystemdService
 
 
 class ServiceCheck(Plugin, SystemdService):

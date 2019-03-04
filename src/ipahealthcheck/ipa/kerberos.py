@@ -1,4 +1,4 @@
-from idmcheck.ipa.plugin import IPAPlugin, registry
+from ipahealthcheck.ipa.plugin import IPAPlugin, registry
 
 
 @registry

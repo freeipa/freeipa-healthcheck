@@ -1,4 +1,4 @@
-from idmcheck.core.constants import getLevelName
+from ipahealthcheck.core.constants import getLevelName
 
 
 class Registry:

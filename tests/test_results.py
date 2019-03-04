@@ -1,11 +1,11 @@
 from util import raises
-from idmcheck.core.plugin import Registry, Plugin, Result, Results
-from idmcheck.core import constants
+from ipahealthcheck.core.plugin import Registry, Plugin, Result, Results
+from ipahealthcheck.core import constants
 
 
 def test_Result():
     """
-    Test the `idmcheck.plugin.Result` class
+    Test the `ipahealthcheck.plugin.Result` class
     """
 
     registry = Registry()
@@ -60,7 +60,7 @@ def test_Result():
     output = [x for x in results.output()]
     assert len(output) == 2
     for x in output:
-        assert x['source'] == 'idmcheck.core.plugin'
+        assert x['source'] == 'ipahealthcheck.core.plugin'
         assert x['check'] == 'Plugin'
         assert x['severity'] in (constants.SUCCESS, constants.CRITICAL)
         assert len(x['kw']) == 0

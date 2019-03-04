@@ -1,10 +1,10 @@
 from util import raises
-from idmcheck.core.plugin import Plugin, Registry
+from ipahealthcheck.core.plugin import Plugin, Registry
 
 
 def test_Registry():
     """
-    Test the `idmcheck.core.Registry` class
+    Test the `ipahealthcheck.core.Registry` class
     """
     class plugin1(Plugin):
         pass

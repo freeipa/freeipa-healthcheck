@@ -5,7 +5,7 @@ from ipaserver.install import dsinstance
 from ipaserver.install import httpinstance
 
 
-from idmcheck.core.plugin import Plugin, Registry
+from ipahealthcheck.core.plugin import Plugin, Registry
 
 
 class IPAPlugin(Plugin):
@@ -22,7 +22,7 @@ class IPARegistry(Registry):
     def initialize(self, framework):
         if not api.isdone('bootstrap'):
             api.bootstrap(in_server=True,
-                          context='idmcheck',
+                          context='ipahealthcheck',
                           log=None)
         if not api.isdone('finalize'):
             api.finalize()

@@ -1,7 +1,7 @@
 import json
 import sys
-from idmcheck.core.constants import getLevelName, SUCCESS
-from idmcheck.core.plugin import Registry, json_to_results
+from ipahealthcheck.core.constants import getLevelName, SUCCESS
+from ipahealthcheck.core.plugin import Registry, json_to_results
 
 
 class OutputRegistry(Registry):

@@ -2,39 +2,39 @@ from setuptools import find_packages, setup
 
 
 setup(
-    name='idmcheck',
-    namespace_packages=['idmcheck'],
+    name='ipahealthcheck',
+    namespace_packages=['ipahealthcheck'],
     package_dir={'': 'src'},
     # packages=find_packages(where='src'),
     packages=[
-        'idmcheck.core',
-        'idmcheck.ipa'
+        'ipahealthcheck.core',
+        'ipahealthcheck.ipa'
     ],
     entry_points={
-        # creates bin/idmcheck
+        # creates bin/ipahealthcheck
         'console_scripts': [
-            'idmcheck = idmcheck.core.main:main',
+            'ipa-healthcheck = ipahealthcheck.core.main:main',
         ],
         # subsystem registries
-        'idmcheck.registry': [
-            'idmcheck.ipa = idmcheck.ipa.plugin:registry',
-            'idmcheck.dogtag = idmcheck.dogtag.plugin:registry',
-            'idmcheck.meta = idmcheck.meta.plugin:registry',
+        'ipahealthcheck.registry': [
+            'ipahealthcheck.ipa = ipahealthcheck.ipa.plugin:registry',
+            'ipahealthcheck.dogtag = ipahealthcheck.dogtag.plugin:registry',
+            'ipahealthcheck.meta = ipahealthcheck.meta.plugin:registry',
         ],
-        # plugin modules for idmcheck.meta registry
-        'idmcheck.meta': [
-            'meta = idmcheck.meta.core',
-            'services = idmcheck.meta.services',
+        # plugin modules for ipahealthcheck.meta registry
+        'ipahealthcheck.meta': [
+            'meta = ipahealthcheck.meta.core',
+            'services = ipahealthcheck.meta.services',
         ],
-        # plugin modules for idmcheck.ipa registry
-        'idmcheck.ipa': [
-            'ipacerts = idmcheck.ipa.certs',
-            'ipafiles = idmcheck.ipa.files',
-            'ipakerberos = idmcheck.ipa.kerberos',
+        # plugin modules for ipahealthcheck.ipa registry
+        'ipahealthcheck.ipa': [
+            'ipacerts = ipahealthcheck.ipa.certs',
+            'ipafiles = ipahealthcheck.ipa.files',
+            'ipakerberos = ipahealthcheck.ipa.kerberos',
         ],
-        # plugin modules for idmcheck.ipa registry
-        'idmcheck.dogtag': [
-            'example = idmcheck.dogtag.example',
+        # plugin modules for ipahealthcheck.ipa registry
+        'ipahealthcheck.dogtag': [
+            'example = ipahealthcheck.dogtag.example',
         ],
     },
     classifiers=[

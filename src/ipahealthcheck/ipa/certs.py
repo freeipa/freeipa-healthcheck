@@ -1,6 +1,6 @@
-from idmcheck.ipa.plugin import IPAPlugin, registry
-from idmcheck.core.plugin import Result, Results
-from idmcheck.core import constants
+from ipahealthcheck.ipa.plugin import IPAPlugin, registry
+from ipahealthcheck.core.plugin import Result, Results
+from ipahealthcheck.core import constants
 
 from ipalib import api
 from ipalib import x509

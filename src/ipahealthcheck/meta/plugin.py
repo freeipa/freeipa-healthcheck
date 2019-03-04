@@ -1,4 +1,4 @@
-from idmcheck.core.plugin import Plugin, Registry
+from ipahealthcheck.core.plugin import Plugin, Registry
 
 
 class MetaPlugin(Plugin):

@@ -8,7 +8,7 @@ A check should be as atomic as possible to limit the scope and complexity, ideal
 
 At a higher level than source is product. The hierarchy looks like:
 
-    idmcheck
+    ipahealthcheck
       product
         source
           check
@@ -22,7 +22,7 @@ A source provides a registry so its checks are discoverable.
 
 # Writing a check module
 
-The base class for a check is idmcheck.core.plugin::Plugin
+The base class for a check is ipahealthcheck.core.plugin::Plugin
 
 The only method that needs to be implemented is check(). This implements the test against the system and should return either a Result or a Results object.
 
@@ -30,15 +30,15 @@ Typically each source defines its own plugin.py which contains the registry. Thi
 
 
 
-        from idmcheck.core.plugin import Registry
+        from ipahealthcheck.core.plugin import Registry
 
         registry = Registry()
 
 A basic check module consists of:
 
-        from idmcheck.core.plugin import Plugin, Result
-        from idmcheck.core import constants
-        from idmcheck.mymodule.plugin import registry
+        from ipahealthcheck.core.plugin import Plugin, Result
+        from ipahealthcheck.core import constants
+        from ipahealthcheck.mymodule.plugin import registry
 
 
         @registry
@@ -50,7 +50,7 @@ A basic check module consists of:
 
 A check returns either a Result or Results object. This contains the outcome of the check including:
 
-* severity as defined in idmcheck/core/constants.py
+* severity as defined in ipahealthcheck/core/constants.py
 * msg containing a message to be displayed to the user.
 * kw, a python dictionary of name value pairs that provide details on the error
 
@@ -62,35 +62,35 @@ The list of sources is stored in setup.py in the top-level of the tree.
 
 Assuming it is contained in-tree it takes the form of:
 
-'idmcheck.<dir>': [
-    'name = idmcheck.<dir>.<file>'
+'ipahealthcheck.<dir>': [
+    'name = ipahealthcheck.<dir>.<file>'
 ]
 
-For example, to add replication to the src/idmcheck/ipa directory
+For example, to add replication to the src/ipahealthcheck/ipa directory
 
-    'idmcheck.ipa': [
-        'ipacerts = idmcheck.ipa.certs',
-        'ipafiles = idmcheck.ipa.files',
-        'ipakerberos = idmcheck.ipa.kerberos',
-        'replication = idmcheck.ipa.replication',
+    'ipahealthcheck.ipa': [
+        'ipacerts = ipahealthcheck.ipa.certs',
+        'ipafiles = ipahealthcheck.ipa.files',
+        'ipakerberos = ipahealthcheck.ipa.kerberos',
+        'replication = ipahealthcheck.ipa.replication',
     ],
 
 If a new branch of sources is added a new registry is needed. This is
-added into the idmcheck.registry section in setup.py. If we decided
-that replication didn't belong under idmcheck.ipa but instead in
-idmcheck.ds it would look like:
+added into the ipahealthcheck.registry section in setup.py. If we decided
+that replication didn't belong under ipahealthcheck.ipa but instead in
+ipahealthcheck.ds it would look like:
 
-    'idmcheck.registry': [
-        'idmcheck.ipa = idmcheck.ipa.plugin:registry',
-        'idmcheck.dogtag = idmcheck.dogtag.plugin:registry',
-        'idmcheck.meta = idmcheck.meta.plugin:registry',
-        'idmcheck.ds = idmcheck.ds.plugin:registry',
+    'ipahealthcheck.registry': [
+        'ipahealthcheck.ipa = ipahealthcheck.ipa.plugin:registry',
+        'ipahealthcheck.dogtag = ipahealthcheck.dogtag.plugin:registry',
+        'ipahealthcheck.meta = ipahealthcheck.meta.plugin:registry',
+        'ipahealthcheck.ds = ipahealthcheck.ds.plugin:registry',
     ],
 
 and
 
-    'idmcheck.ds': [
-        'replication = idmcheck.ds.replication',
+    'ipahealthcheck.ds': [
+        'replication = ipahealthcheck.ds.replication',
     ],
 
 # Execution

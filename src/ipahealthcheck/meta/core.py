@@ -1,8 +1,8 @@
 from datetime import datetime
 import socket
-from idmcheck.core import constants
-from idmcheck.core.plugin import Result
-from idmcheck.meta.plugin import Plugin, registry
+from ipahealthcheck.core import constants
+from ipahealthcheck.core.plugin import Result
+from ipahealthcheck.meta.plugin import Plugin, registry
 
 
 @registry
