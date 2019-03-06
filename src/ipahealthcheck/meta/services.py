@@ -24,16 +24,16 @@ class ServiceCheck(Plugin, SystemdService):
 
 
 @registry
-class ApacheCheck(ServiceCheck):
+class httpd(ServiceCheck):
     def check(self):
         self.service_name = 'httpd'
 
-        return super(ApacheCheck, self).check()
+        return super(httpd, self).check()
 
 
 @registry
-class DogtagCheck(ServiceCheck):
+class pki_tomcatd(ServiceCheck):
     def check(self):
         self.service_name = 'pki-tomcatd@pki-tomcat.service'
 
-        return super(DogtagCheck, self).check()
+        return super(pki_tomcatd, self).check()

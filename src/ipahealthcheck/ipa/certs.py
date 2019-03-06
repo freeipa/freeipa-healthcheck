@@ -2,6 +2,8 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+import logging
+
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
 from ipahealthcheck.core.plugin import Result, Results
 from ipahealthcheck.core import constants
@@ -13,6 +15,9 @@ from ipaplatform.paths import paths
 from ipapython.certdb import unparse_trust_flags
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
+
+
+logger = logging.getLogger()
 
 
 def get_requests(ca, ds, serverid):
@@ -100,9 +105,9 @@ def get_requests(ca, ds, serverid):
                         'template-profile': 'caCACert',
                     }
                 )
-
-    if ca.is_configured():
         requests += ca_requests
+    else:
+        logger.debug('CA is not configured, skipping CA tracking')
 
     cert = x509.load_certificate_from_file(paths.HTTPD_CERT_FILE)
     if certs.is_ipa_issued_cert(api, cert):
@@ -114,6 +119,8 @@ def get_requests(ca, ds, serverid):
                 'cert-postsave-command': template % 'restart_httpd',
             }
         )
+    else:
+        logger.debug('HTTP cert not issued by IPA, %s', cert.issuer)
 
     # Check the ldap server cert if issued by IPA
     ds_nickname = ds.get_server_cert_nickname(serverid)
@@ -129,6 +136,8 @@ def get_requests(ca, ds, serverid):
                     '%s %s' % (template % 'restart_dirsrv', serverid),
             }
         )
+    else:
+        logger.debug('DS cert not issued by IPA')
 
     # Check the KDC cert if issued by IPA
     cert = x509.load_certificate_from_file(paths.KDC_CERT)
@@ -142,6 +151,8 @@ def get_requests(ca, ds, serverid):
                     template % 'renew_kdc_cert',
             }
         )
+    else:
+        logger.debug('KDC cert not issued by IPA, %s', cert.issuer)
 
     return requests
 
@@ -160,6 +171,21 @@ class IPANSSCheck(IPAPlugin):
 
 @registry
 class IPACertTracking(IPAPlugin):
+    """Compare the certificates tracked by certmonger to those that
+       are configured by default.
+
+       Steps:
+       1. Collect all expected certificates into `requests`
+       2. Get the ids of all the certificates that certmonger is tracking
+       3. Iterate over `requests` to retrieve the request id of the
+          expected tracking.
+       4. If the id is found we remove it from the ids list and move on
+       5. In the unlikely event that the request_id is not in the
+          ids list of all tracked certs report it.
+       6. Report on all tracked certs that IPA didn't setup itself as
+          potential issues.
+    """
+
     def check(self):
         results = Results()
 
@@ -184,8 +210,8 @@ class IPACertTracking(IPAPlugin):
             except ValueError as e:
                 result = Result(self, constants.ERROR,
                                 key=request_id,
-                                msg='Failure trying to remove % from '
-                                'list: %s' % (request_id, e))
+                                msg='Request id %s is not tracked: %s'
+                                % (request_id, e))
                 results.add(result)
 
             if request_id is None:
