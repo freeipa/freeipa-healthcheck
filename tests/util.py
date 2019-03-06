@@ -2,6 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+
 class ExceptionNotRaised(Exception):
     """
     Exception raised when an *expected* exception is *not* raised during a
