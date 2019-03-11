@@ -3,6 +3,7 @@
 #
 
 import logging
+import datetime
 
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
 from ipahealthcheck.core.plugin import Result, Results
@@ -18,6 +19,7 @@ from ipaserver.install import dsinstance
 
 
 logger = logging.getLogger()
+DAY = 60 * 60 * 24
 
 
 def get_requests(ca, ds, serverid):
@@ -158,9 +160,52 @@ def get_requests(ca, ds, serverid):
 
 
 @registry
-class IPACertCheck(IPAPlugin):
+class IPACertExpirationCheck(IPAPlugin):
+    """
+    Collect the known/tracked certificates and check the validity
+
+    This will check two views:
+    1. The view certmonger has of the certificate in tracking
+    2. The actual certificate file (or NSSDB entry)
+
+    This is to ensure something hasn't changed certmonger's view of
+    the world.
+    """
     def check(self):
-        pass
+        results = Results()
+        requests = get_requests(self.ca, self.ds, self.serverid)
+        cm = certmonger._certmonger()
+
+        all_requests = cm.obj_if.get_requests()
+        for req in all_requests:
+            request = certmonger._cm_dbus_object(cm.bus, cm, req,
+                                                 certmonger.DBUS_CM_REQUEST_IF,
+                                                 certmonger.DBUS_CM_IF, True)
+            id = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                     'nickname')
+            notafter = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                     'not-valid-after')
+            notafter = datetime.datetime.fromtimestamp(notafter)
+            now = datetime.datetime.utcnow()
+
+            if now > notafter:
+                result = Result(self, constants.ERROR,
+                                key=id,
+                                msg='Request id %s is expired: %s'
+                                % (id, e))
+                results.add(result)
+                continue
+
+            delta = notafter - now
+            diff = int(delta.total_seconds() / DAY)
+            if diff < self.config.get('cert_expiration_days'):
+                result = Result(self, constants.WARNING,
+                                key=id,
+                                msg='Request id %s expires in %s days'
+                                % (id, diff))
+                results.add(result)
+
+        return results
 
 
 @registry
