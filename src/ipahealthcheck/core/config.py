@@ -7,6 +7,7 @@ import os
 from configparser import SafeConfigParser, ParsingError
 
 from ipahealthcheck.core.constants import CONFIG_FILE, CONFIG_SECTION
+from ipahealthcheck.core.constants import DEFAULT_CONFIG
 
 logger = logging.getLogger()
 
@@ -32,6 +33,9 @@ def read_config(config_file=CONFIG_FILE):
         return None
         
     items = parser.items(CONFIG_SECTION)
+
+    for (key, value) in DEFAULT_CONFIG:
+        config[key] = value
 
     for (key, value) in items:
         config[key] = value

@@ -58,7 +58,7 @@ def source_or_check_matches(plugin, source, check):
     return True
 
 
-def run_service_plugins(plugins, source, check):
+def run_service_plugins(plugins, config, source, check):
     """Execute plugins with the base class of ServiceCheck
 
        This is a specialized check to use systemd to determine
@@ -88,7 +88,7 @@ def run_service_plugins(plugins, source, check):
     return results, set(available)
 
 
-def run_plugins(plugins, available, source, check):
+def run_plugins(plugins, config, available, source, check):
     """Execute plugins without the base class of ServiceCheck
 
        These are the remaining, non-service checking checks
@@ -184,10 +184,11 @@ def main():
             output = out(options)
 
     if not output.output_only:
-        results, available = run_service_plugins(plugins, options.source,
+        results, available = run_service_plugins(plugins, config,
+                                                 options.source,
                                                  options.check)
-        results.extend(run_plugins(plugins, available, options.source,
-                                   options.check))
+        results.extend(run_plugins(plugins, config, available,
+                                   options.source, options.check))
     else:
         results = None
 

@@ -30,3 +30,6 @@ def getLevelName(level):
 
 CONFIG_FILE = '/etc/ipahealthcheck/ipahealthcheck.conf'
 CONFIG_SECTION = 'default'
+
+DEFAULT_CONFIG = {
+}
