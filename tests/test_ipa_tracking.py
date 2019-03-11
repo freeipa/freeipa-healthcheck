@@ -10,7 +10,8 @@ from ipahealthcheck.ipa.certs import IPACertTracking
 from ipaplatform.paths import paths
 from unittest.mock import patch
 
-# Fake dbus-tracked request list
+# Fake certmonger tracked request list. This is similar but can be
+# distinct from the value from the overrident get_defaults() method.
 template = paths.CERTMONGER_COMMAND_TEMPLATE
 cm_requests = [
     {
@@ -38,10 +39,7 @@ class mock_property:
     def Get(self, object_path, name):
         """Always return a match"""
         if self.index is None:
-            print('%s %s = No index' % (object_path, name))
             return None
-        print('%s %s = %s' %
-              (object_path, name, cm_requests[self.index].get(name)))
         return cm_requests[self.index].get(name)
 
 
@@ -57,8 +55,6 @@ class mock_dbus:
             if request_id == cm_requests[i].get('nickname'):
                 self.index = i
                 break
-        print('new dbus object for id %s is index %s' %
-              (request_id, self.index))
         self.prop_if = mock_property(self.index)
         self.obj_if = mock_obj_if(self.index)
 
@@ -72,16 +68,12 @@ class mock_obj_if:
 
     def get_requests(self):
         """Return list of request ids that dbus would have returned"""
-        print("\nget_requests")
-        print([n.get('nickname') for n in cm_requests])
         return [n.get('nickname') for n in cm_requests]
 
     def get_nickname(self):
         """Retrieve the certmonger CA nickname"""
         if self.index is None:
             return None
-        print('get_nickname (%s) %s' %
-              (self.index, cm_requests[self.index].get('ca-name')))
         return cm_requests[self.index].get('ca-name')
 
     def get_ca(self):
@@ -139,7 +131,6 @@ def test_known_cert_tracking(mock_certmonger,
     f = IPACertTracking(registry)
 
     results = f.check()
-    print(results.results)
 
     assert len(results) == 0
 
@@ -164,7 +155,6 @@ def test_missing_cert_tracking(mock_certmonger,
     f = IPACertTracking(registry)
 
     results = f.check()
-    print(results.results)
 
     assert len(results) == 1
 
@@ -208,7 +198,6 @@ def test_unknown_cert_tracking(mock_certmonger,
     f = IPACertTracking(registry)
 
     results = f.check()
-    print(results.results)
 
     assert len(results) == 1
 
