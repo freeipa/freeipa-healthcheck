@@ -104,6 +104,7 @@ def run_plugins(plugins, config, available, source, check):
             continue
 
         logger.debug('Calling check %s' % plugin)
+        plugin.config = config
         # TODO: make this not the default
         if not set(plugin.requires).issubset(available):
             result = Result(plugin, constants.ERROR,

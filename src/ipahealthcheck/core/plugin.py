@@ -76,6 +76,7 @@ class Plugin:
     def __init__(self, registry):
         self.registry = registry
         self.requires = set()
+        self.config = dict()
 
 
 class Result:

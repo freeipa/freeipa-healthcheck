@@ -32,4 +32,5 @@ CONFIG_FILE = '/etc/ipahealthcheck/ipahealthcheck.conf'
 CONFIG_SECTION = 'default'
 
 DEFAULT_CONFIG = {
+    'cert_expiration_days': 30,
 }

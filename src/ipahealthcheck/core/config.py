@@ -34,8 +34,8 @@ def read_config(config_file=CONFIG_FILE):
         
     items = parser.items(CONFIG_SECTION)
 
-    for (key, value) in DEFAULT_CONFIG:
-        config[key] = value
+    for c in DEFAULT_CONFIG:
+        config[c] = DEFAULT_CONFIG[c]
 
     for (key, value) in items:
         config[key] = value
