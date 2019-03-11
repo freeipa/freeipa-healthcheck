@@ -7,6 +7,7 @@ import logging
 import pkg_resources
 import sys
 
+from ipahealthcheck.core.config import read_config
 from ipahealthcheck.core.plugin import Result, Results
 from ipahealthcheck.core.output import output_registry
 from ipahealthcheck.core import constants
@@ -164,6 +165,10 @@ def main():
 
     if options.debug:
         logger.setLevel(logging.DEBUG)
+
+    config = read_config()
+    if config is None:
+        sys.exit(1)
 
     for name, registry in find_registries().items():
         try:
