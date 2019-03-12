@@ -16,6 +16,16 @@ class Config:
 
        Let one treat config items as properties instead of using
        a dict. It just allows for an easier-to-read shorthand.
+
+       >>> config = Config()
+       >>> config.foo = 'bar'
+       >>> config.foo
+       'bar'
+
+       Return a list of the configuration option keys.
+
+       >>> list(config)
+       ['foo']
     """
 
     def __init__(self):
@@ -40,6 +50,13 @@ class Config:
         Return the value corresponding to ``key``.
         """
         return self.__d[key]
+
+    def __iter__(self):
+        """
+        Iterate through keys in ascending order.
+        """
+        for key in sorted(self.__d):
+            yield key
 
     def merge(self, d):
         """
