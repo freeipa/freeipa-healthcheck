@@ -2,8 +2,6 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-import copy
-
 from ipahealthcheck.core import constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertTracking
@@ -23,7 +21,6 @@ def test_known_cert_tracking(mock_certmonger,
     mock_cm_dbus_object.side_effect = create_mock_dbus
     mock_certmonger.return_value = _certmonger()
     mock_get_requests.return_value = get_requests()
-
 
     framework = object()
     registry.initialize(framework)

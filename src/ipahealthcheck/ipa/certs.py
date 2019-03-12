@@ -13,7 +13,7 @@ from ipalib import api
 from ipalib import x509
 from ipalib.install import certmonger
 from ipaplatform.paths import paths
-from ipapython.certdb import unparse_trust_flags
+from ipapython.certdb import unparse_trust_flags, NSSDatabase
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
 
@@ -160,20 +160,18 @@ def get_requests(ca, ds, serverid):
 
 
 @registry
-class IPACertExpirationCheck(IPAPlugin):
+class IPACertmongerExpirationCheck(IPAPlugin):
     """
     Collect the known/tracked certificates and check the validity
 
-    This will check two views:
-    1. The view certmonger has of the certificate in tracking
-    2. The actual certificate file (or NSSDB entry)
+    This verifies only the information that certmonger has and uses
+    to schedule renewal.
 
     This is to ensure something hasn't changed certmonger's view of
     the world.
     """
     def check(self):
         results = Results()
-        requests = get_requests(self.ca, self.ds, self.serverid)
         cm = certmonger._certmonger()
 
         all_requests = cm.obj_if.get_requests()
@@ -184,21 +182,112 @@ class IPACertExpirationCheck(IPAPlugin):
             id = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
                                      'nickname')
             notafter = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
-                                     'not-valid-after')
+                                           'not-valid-after')
             notafter = datetime.datetime.fromtimestamp(notafter)
             now = datetime.datetime.utcnow()
 
             if now > notafter:
                 result = Result(self, constants.ERROR,
                                 key=id,
-                                msg='Request id %s is expired: %s'
-                                % (id, e))
+                                msg='Request id %s is expired' % id)
                 results.add(result)
                 continue
 
             delta = notafter - now
             diff = int(delta.total_seconds() / DAY)
-            if diff < self.config.get('cert_expiration_days'):
+            if diff < self.config.cert_expiration_days:
+                result = Result(self, constants.WARNING,
+                                key=id,
+                                msg='Request id %s expires in %s days'
+                                % (id, diff))
+                results.add(result)
+
+        return results
+
+
+@registry
+class IPACertfileExpirationCheck(IPAPlugin):
+    """
+    Collect the known/tracked certificates and check file validity
+
+    Look into the certificate file or NSS database to check the
+    validity of the on-disk certificate.
+
+    This is to ensure a certificate wasn't replaced without
+    certmonger being notified.
+    """
+    def check(self):
+        results = Results()
+        cm = certmonger._certmonger()
+
+        all_requests = cm.obj_if.get_requests()
+        for req in all_requests:
+            request = certmonger._cm_dbus_object(cm.bus, cm, req,
+                                                 certmonger.DBUS_CM_REQUEST_IF,
+                                                 certmonger.DBUS_CM_IF, True)
+            id = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                     'nickname')
+
+            store = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                        'cert-storage')
+            if store == 'FILE':
+                certfile = str(request.prop_if.Get(
+                               certmonger.DBUS_CM_REQUEST_IF, 'cert-file'))
+                try:
+                    cert = x509.load_certificate_from_file(certfile)
+                except Exception as e:
+                    result = Result(self, constants.ERROR,
+                                    key=id,
+                                    msg='Unable to open cert file %s: %s'
+                                    % (certfile, e))
+                    results.add(result)
+                    continue
+            elif store == 'NSSDB':
+                nickname = str(request.prop_if.Get(
+                               certmonger.DBUS_CM_REQUEST_IF, 'key_nickname'))
+                dbdir = str(request.prop_if.Get(
+                            certmonger.DBUS_CM_REQUEST_IF, 'cert_database'))
+                try:
+                    db = NSSDatabase(dbdir)
+                except Exception as e:
+                    result = Result(self, constants.ERROR,
+                                    key=id,
+                                    msg='Unable to open NSS database %s: %s'
+                                    % (dbdir, e))
+                    results.add(result)
+                    continue
+
+                try:
+                    cert = db.get_cert(nickname)
+                except Exception as e:
+                    result = Result(self, constants.ERROR,
+                                    key=id,
+                                    msg='Unable to retrieve cert %s from '
+                                    '%s: %s'
+                                    % (nickname, dbdir, e))
+                    results.add(result)
+                    continue
+            else:
+                result = Result(self, constants.ERROR,
+                                key=id,
+                                msg='Unknown storage type: %s'
+                                % store)
+                results.add(result)
+                continue
+
+            now = datetime.datetime.utcnow()
+            notafter = cert.not_valid_after
+
+            if now > notafter:
+                result = Result(self, constants.ERROR,
+                                key=id,
+                                msg='Request id %s is expired: %s' % id)
+                results.add(result)
+                continue
+
+            delta = notafter - now
+            diff = int(delta.total_seconds() / DAY)
+            if diff < self.config.cert_expiration_days:
                 result = Result(self, constants.WARNING,
                                 key=id,
                                 msg='Request id %s expires in %s days'

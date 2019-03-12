@@ -53,6 +53,7 @@ class dbus_results:
     def __repr__(self):
         return repr(self.requests)
 
+
 cm_requests = []
 
 
@@ -138,6 +139,7 @@ def get_requests():
             pass
 
     return requests
+
 
 def set_requests(add=None, remove=None):
     """Set the list of requests within a test"""
