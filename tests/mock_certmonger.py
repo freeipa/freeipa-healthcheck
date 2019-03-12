@@ -18,6 +18,7 @@ pristine_cm_requests = [
         'ca-name': 'dogtag-ipa-ca-renew-agent',
         'cert-presave-command': template % 'renew_ra_cert_pre',
         'cert-postsave-command': template % 'renew_ra_cert',
+        'not-valid-after': 1024,
     },
     {
         'nickname': '5678',
@@ -25,6 +26,7 @@ pristine_cm_requests = [
         'key-file': paths.HTTPD_KEY_FILE,
         'ca-name': 'IPA',
         'cert-postsave-command': template % 'restart_httpd',
+        'not-valid-after': 1607204930,
     },
 ]
 
@@ -135,6 +137,7 @@ def get_requests():
     for request in requests:
         try:
             request.pop('nickname')
+            request.pop('not-valid-after')
         except KeyError:
             pass
 
