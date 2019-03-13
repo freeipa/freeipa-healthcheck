@@ -13,9 +13,9 @@ from ipalib import api
 from ipalib import x509
 from ipalib.install import certmonger
 from ipaplatform.paths import paths
-from ipapython.certdb import unparse_trust_flags, NSSDatabase
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
+from ipapython import certdb
 
 
 logger = logging.getLogger()
@@ -248,7 +248,7 @@ class IPACertfileExpirationCheck(IPAPlugin):
                 dbdir = str(request.prop_if.Get(
                             certmonger.DBUS_CM_REQUEST_IF, 'cert_database'))
                 try:
-                    db = NSSDatabase(dbdir)
+                    db = certdb.NSSDatabase(dbdir)
                 except Exception as e:
                     result = Result(self, constants.ERROR,
                                     key=id,
@@ -364,6 +364,7 @@ class IPACertTracking(IPAPlugin):
 
 @registry
 class IPACertNSSTrust(IPAPlugin):
+    """Compare the NSS trust for the CA certs to a known good value"""
     def check(self):
         results = Results()
 
@@ -379,7 +380,7 @@ class IPACertNSSTrust(IPAPlugin):
 
         db = certs.CertDB(api.env.realm, paths.PKI_TOMCAT_ALIAS_DIR)
         for nickname, _trust_flags in db.list_certs():
-            flags = unparse_trust_flags(_trust_flags)
+            flags = certdb.unparse_trust_flags(_trust_flags)
             if nickname.startswith('caSigningCert cert-pki-ca'):
                 expected = 'CTu,Cu,Cu'
             else:
@@ -389,11 +390,24 @@ class IPACertNSSTrust(IPAPlugin):
                     # FIXME: is this a warning, skip?
                     print("%s not found, assuming 3rd party" % nickname)
                     continue
+            try:
+                expected_trust.pop(nickname)
+            except KeyError:
+                pass
             if flags != expected:
                 result = Result(
                     self, constants.ERROR, key=nickname,
                     msg='Incorrect NSS trust for %s. Got %s expected %s'
                     % (nickname, flags, expected))
-                results.add(result)
+            else:
+                result = Result(self, constants.SUCCESS, key=nickname)
+            results.add(result)
+
+        for nickname in expected_trust:
+            result = Result(
+                self, constants.ERROR, key=nickname,
+                msg='Certificate %s missing while verifying trust'
+                % nickname)
+            results.add(result)
 
         return results
