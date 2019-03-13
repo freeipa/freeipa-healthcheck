@@ -2,8 +2,10 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-import logging
 import datetime
+import logging
+import os
+import tempfile
 
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
 from ipahealthcheck.core.plugin import Result, Results
@@ -15,7 +17,9 @@ from ipalib.install import certmonger
 from ipaplatform.paths import paths
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
+from ipaserver.install import installutils
 from ipapython import certdb
+from ipapython import ipautil
 
 
 logger = logging.getLogger()
@@ -157,6 +161,23 @@ def get_requests(ca, ds, serverid):
         logger.debug('KDC cert not issued by IPA, %s', cert.issuer)
 
     return requests
+
+
+def get_dogtag_cert_password(self):
+    """Return the NSSDB token password
+
+       Will raise IOError if there is a problem reading the file.
+    """
+    ca_passwd = None
+    token = 'internal'
+    with open(paths.PKI_TOMCAT_PASSWORD_CONF, 'r') as f:
+        for line in f:
+            (tok, pin) = line.split('=', 1)
+            if token == tok:
+                ca_passwd = pin.strip()
+                break
+
+    return ca_passwd
 
 
 @registry
@@ -408,6 +429,129 @@ class IPACertNSSTrust(IPAPlugin):
                 self, constants.ERROR, key=nickname,
                 msg='Certificate %s missing while verifying trust'
                 % nickname)
+            results.add(result)
+
+        return results
+
+
+@registry
+class IPANSSChainValidation(IPAPlugin):
+    """Validate the certificate chain of the certs to ensure trust is ok"""
+
+    def check(self):
+        results = Results()
+
+        validate = []
+        ca_pw_fname = None
+
+        if self.ca.is_configured():
+            try:
+                ca_passwd = get_dogtag_cert_password()
+            except IOError as e:
+                result = Result(
+                    self, constants.ERROR,
+                    msg='Unable to read CA NSSDB token password: %s'
+                    % e)
+                results.add(result)
+            else:
+                with tempfile.NamedTemporaryFile(mode='w',
+                                                 delete=False) as ca_pw_file:
+                    ca_pw_file.write(ca_passwd)
+                    ca_pw_fname = ca_pw_file.name
+
+                validate.append(
+                    (
+                        paths.PKI_TOMCAT_ALIAS_DIR,
+                        'Server-Cert cert-pki-ca',
+                        ca_pw_fname,
+                    ),
+                )
+
+        validate.append(
+            (
+                dsinstance.config_dirname(self.serverid),
+                self.ds.get_server_cert_nickname(self.serverid),
+                os.path.join(dsinstance.config_dirname(self.serverid),
+                             'pwdfile.txt'),
+            )
+        )
+
+        # Wrap in try/except to ensure the temporary password file is
+        # removed
+        try:
+            for (dbdir, nickname, pinfile) in validate:
+                args = [paths.CERTUTIL, "-V", "-u", "V", "-e"]
+                args.extend(["-d", dbdir])
+                args.extend(["-n", nickname])
+                args.extend(["-f", pinfile])
+
+                key = os.path.normpath(dbdir) + ':' + nickname
+                try:
+                    response = ipautil.run(args)
+                except ipautil.CalledProcessError as e:
+                    result = Result(
+                        self, constants.ERROR, key=key,
+                        msg='Validation of %s in %s failed: %s'
+                            % (nickname, dbdir, e))
+                else:
+                    if 'certificate is valid' not in \
+                            response.raw_output.decode('utf-8'):
+                        result = Result(
+                            self, constants.ERROR, key=key,
+                            msg='Validation of %s in %s failed: '
+                                '%s %s' % (
+                                    nickname, dbdir,
+                                    response.raw_output.decode('utf-8'),
+                                    response.error_log)
+                                )
+                    else:
+                        result = Result(self, constants.SUCCESS,
+                                        key=key)
+                results.add(result)
+        finally:
+            if ca_pw_fname:
+                installutils.remove_file(ca_pw_fname)
+
+        return results
+
+
+@registry
+class IPAOpenSSLChainValidation(IPAPlugin):
+    """Validate the certificate chain of the certs to ensure trust is ok"""
+
+    def validate_openssl(self, file):
+        """Call out to openssl to verify a certificate against global chain
+
+           The caller must handle the exceptions
+        """
+        args = [paths.OPENSSL, "verify", file]
+
+        return ipautil.run(args)
+
+    def check(self):
+        results = Results()
+
+        certs = [paths.HTTPD_CERT_FILE]
+        if self.ca.is_configured():
+            certs.append(paths.RA_AGENT_PEM)
+
+        for cert in certs:
+            try:
+                response = self.validate_openssl(cert)
+            except Exception as e:
+                result = Result(
+                    self, constants.ERROR, key=cert,
+                    msg='Certificate validation for %s failed: %s' %
+                        (cert, e))
+            else:
+                if ': OK' not in response.raw_output.decode('utf-8'):
+                    result = Result(
+                        self, constants.ERROR, key=cert,
+                        msg='Certificate validation for %s failed: %s' %
+                            (cert, response.raw_output.decode('utf-8')))
+                else:
+                    result = Result(
+                        self, constants.SUCCESS, key=cert)
             results.add(result)
 
         return results
