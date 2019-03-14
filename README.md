@@ -56,6 +56,15 @@ A check returns either a Result or Results object. This contains the outcome of 
 
 msg and kw are optional if severity is SUCCESS.
 
+If a check consist of only a single test then it is not required to return
+a Result, one will be added automatically.
+
+If a check is complex enough that it checks multiple values then it should
+return a SUCCESS Result for each one.
+
+A Result is required for every test done so that one can know that the
+check was executed.
+
 # Registering a source
 
 The list of sources is stored in setup.py in the top-level of the tree.
