@@ -1,4 +1,4 @@
-#
+
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
@@ -12,14 +12,17 @@ from ipahealthcheck.core.plugin import Result, Results
 from ipahealthcheck.core import constants
 
 from ipalib import api
+from ipalib import errors
 from ipalib import x509
 from ipalib.install import certmonger
 from ipaplatform.paths import paths
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
 from ipaserver.install import installutils
+from ipaserver.plugins import ldap2
 from ipapython import certdb
 from ipapython import ipautil
+from ipapython.dn import DN
 
 
 logger = logging.getLogger()
@@ -163,7 +166,7 @@ def get_requests(ca, ds, serverid):
     return requests
 
 
-def get_dogtag_cert_password(self):
+def get_dogtag_cert_password():
     """Return the NSSDB token password
 
        Will raise IOError if there is a problem reading the file.
@@ -549,3 +552,68 @@ class IPAOpenSSLChainValidation(IPAPlugin):
             results.add(result)
 
         return results
+
+
+@registry
+class IPARAAgent(IPAPlugin):
+    """Validate the RA Agent used to talk to the CA"""
+
+    def check(self):
+        try:
+            cert = x509.load_certificate_from_file(paths.RA_AGENT_PEM)
+        except Exception as e:
+            return Result(self, constants.ERROR,
+                          msg='Unable to load RA cert: %s' % e)
+
+        serial_number = cert.serial_number
+        subject = DN(cert.subject)
+        issuer = DN(cert.issuer)
+        description = '2;%d;%s;%s' % (serial_number, issuer, subject)
+
+        logger.debug('RA agent description should be %s', description)
+
+        db_filter = ldap2.ldap2.combine_filters(
+            [
+                ldap2.ldap2.make_filter({'objectClass': 'inetOrgPerson'}),
+                ldap2.ldap2.make_filter(
+                    {'description': ';%s;%s' % (issuer, subject)},
+                    exact=False, trailing_wildcard=False),
+            ],
+            ldap2.ldap2.MATCH_ALL)
+
+        base_dn = DN(('o', 'ipaca'))
+        try:
+            entries = self.conn.get_entries(base_dn,
+                                            self.conn.SCOPE_SUBTREE,
+                                            db_filter)
+        except errors.NotFound:
+            return Result(self, constants.ERROR,
+                          msg='RA agent not found in LDAP')
+        except Exception as e:
+            return Result(self, constants.ERROR,
+                          msg='RA agent check failed %s' % e)
+        else:
+            logger.debug('RA agent description is %s', description)
+            if len(entries) != 1:
+                return Result(self, constants.ERROR,
+                              msg='Too many RA agent entries found')
+            entry = entries[0]
+            raw_desc = entry.get('description')
+            if raw_desc is None:
+                return Result(self, constants.ERROR,
+                              msg='RA agent is missing description')
+            ra_desc = raw_desc[0]
+            ra_certs = entry.get('usercertificate')
+            if ra_desc != description:
+                return Result(self, constants.ERROR,
+                              msg='RA agent description does not match '
+                              '%s in LDAP and %s expected' %
+                              (ra_desc, description))
+            found = False
+            for candidate in ra_certs:
+                if candidate == cert:
+                    found = True
+                    break
+            if not found:
+                return Result(self, constants.ERROR,
+                              msg='RA agent certificate not found in LDAP')

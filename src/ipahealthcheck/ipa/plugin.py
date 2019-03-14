@@ -20,6 +20,7 @@ class IPAPlugin(Plugin):
         self.http = httpinstance.HTTPInstance()
         self.ds = dsinstance.DsInstance()
         self.serverid = realm_to_serverid(api.env.realm)
+        self.conn = api.Backend.ldap2
 
 
 class IPARegistry(Registry):
