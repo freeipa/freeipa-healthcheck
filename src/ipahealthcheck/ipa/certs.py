@@ -319,12 +319,6 @@ class IPACertfileExpirationCheck(IPAPlugin):
 
 
 @registry
-class IPANSSCheck(IPAPlugin):
-    def check(self):
-        pass
-
-
-@registry
 class IPACertTracking(IPAPlugin):
     """Compare the certificates tracked by certmonger to those that
        are configured by default.
