@@ -1,4 +1,4 @@
-
+#
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
@@ -617,3 +617,93 @@ class IPARAAgent(IPAPlugin):
             if not found:
                 return Result(self, constants.ERROR,
                               msg='RA agent certificate not found in LDAP')
+
+
+@registry
+class IPACertRevocation(IPAPlugin):
+    """Confirm that the IPA certificates are not revoked"""
+
+    revocation_reason = [
+        "unspecified",
+        "key compromise",
+        "CA compromise",
+        "affiliation changed",
+        "superseded",
+        "cessation of operation",
+        "certificate hold",
+        "",  # unused
+        "remove from CRL",
+        "privilege withdrawn",
+        "AA compromise",
+    ]
+
+    def check(self):
+        results = Results()
+
+        # For simplicity use the expected certmonger tracking for the
+        # list of certificates to check because it already filters out
+        # based on whether the CA system is configure and whether the
+        # certificates were issued by IPA.
+        requests = get_requests(self.ca, self.ds, self.serverid)
+        for request in requests:
+            id = certmonger.get_request_id(request)
+            if request.get('cert-file') is not None:
+                certfile = request.get('cert-file')
+                try:
+                    cert = x509.load_certificate_from_file(certfile)
+                except Exception as e:
+                    result = Result(self, constants.ERROR,
+                                    key=id,
+                                    msg='Unable to open cert file %s: %s'
+                                    % (certfile, e))
+                    results.add(result)
+                    continue
+            elif request.get('cert-database') is not None:
+                nickname = request.get('cert-nickname')
+                dbdir = request.get('cert-database')
+                try:
+                    db = certdb.NSSDatabase(dbdir)
+                except Exception as e:
+                    result = Result(self, constants.ERROR,
+                                    key=id,
+                                    msg='Unable to open NSS database %s: %s'
+                                    % (dbdir, e))
+                    results.add(result)
+                    continue
+                try:
+                    cert = db.get_cert(nickname)
+                except Exception as e:
+                    result = Result(self, constants.ERROR,
+                                    key=id,
+                                    msg='Unable to retrieve cert %s from '
+                                    '%s: %s'
+                                    % (nickname, dbdir, e))
+                    results.add(result)
+                    continue
+            else:
+                    result = Result(self, constants.ERROR,
+                                    key=id,
+                                    msg='Unable to to identify cert type')
+                    results.add(result)
+                    continue
+
+            # Now we have the cert either way, check the recovation
+            result = api.Command['cert_show'](cert.serial_number, all=True)
+            try:
+                if result['result']['revoked']:
+                    reason = result['result']['revocation_reason']
+                    reason_txt = revocation_reason[reason]
+                    result = Result(self, constants.ERROR,
+                                    key=id,
+                                    msg='Certificate is revoked, %s' %
+                                        reason_txt)
+                else:
+                    result = Result(self, constants.SUCCESS, key=id)
+            except Exception as e:
+                result = Result(self, constants.ERROR,
+                                key=id,
+                                msg='Unable to determine revocation '
+                                    'status: %s' % e)
+            results.add(result)
+
+        return results
