@@ -29,6 +29,7 @@ setup(
         'ipahealthcheck.ipa': [
             'ipacerts = ipahealthcheck.ipa.certs',
             'ipafiles = ipahealthcheck.ipa.files',
+            'ipahost = ipahealthcheck.ipa.host',
         ],
     },
     classifiers=[
