@@ -707,3 +707,34 @@ class IPACertRevocation(IPAPlugin):
             results.add(result)
 
         return results
+
+
+@registry
+class IPACertmongerCA(IPAPlugin):
+    """Ensure that the required CAs are available in certmonger"""
+
+    def find_ca(self, name):
+        cm = certmonger._certmonger()
+        ca_path = cm.obj_if.find_ca_by_nickname(name)
+        return certmonger._cm_dbus_object(cm.bus, cm, ca_path,
+                                          certmonger.DBUS_CM_CA_IF,
+                                          certmonger.DBUS_CM_IF, True)
+
+    def check(self):
+        results = Results()
+
+        for ca in ['IPA',
+                   'dogtag-ipa-ca-renew-agent',
+                   'dogtag-ipa-ca-renew-agent-reuse']:
+            try:
+                self.find_ca(ca)
+            except Exception as e:
+                result = Result(self, constants.ERROR,
+                                key=ca,
+                                msg='Certmonger CA \'%s\' missing' % ca)
+            else:
+                result = Result(self, constants.SUCCESS,
+                                key=ca)
+            results.add(result)
+
+        return results
