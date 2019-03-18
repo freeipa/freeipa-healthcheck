@@ -359,6 +359,9 @@ class IPACertTracking(IPAPlugin):
             try:
                 if request_id is not None:
                     ids.remove(request_id)
+                    result = Result(self, constants.SUCCESS,
+                                    key=request_id)
+                    results.add(result)
             except ValueError as e:
                 result = Result(self, constants.ERROR,
                                 key=request_id,

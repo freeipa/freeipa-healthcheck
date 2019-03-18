@@ -28,7 +28,7 @@ def test_known_cert_tracking(mock_certmonger,
 
     results = f.check()
 
-    assert len(results) == 0
+    assert len(results) == 2
 
 
 @patch('ipahealthcheck.ipa.certs.get_requests')
@@ -51,7 +51,7 @@ def test_missing_cert_tracking(mock_certmonger,
 
     results = f.check()
 
-    assert len(results) == 1
+    assert len(results) == 2
 
     result = results.results[0]
     assert result.severity == constants.ERROR
@@ -91,9 +91,9 @@ def test_unknown_cert_tracking(mock_certmonger,
 
     results = f.check()
 
-    assert len(results) == 1
+    assert len(results) == 3
 
-    result = results.results[0]
+    result = results.results[2]
     assert result.severity == constants.WARNING
     assert result.source == 'ipahealthcheck.ipa.certs'
     assert result.check == 'IPACertTracking'
