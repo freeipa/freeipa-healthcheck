@@ -2,6 +2,9 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+import uuid
+from datetime import datetime
+
 from ipahealthcheck.core.constants import getLevelName
 
 
@@ -102,9 +105,12 @@ class Result:
         msg: A message that can take other keywords as input
         exception: used when a check raises an exception
     """
-    def __init__(self, plugin, severity, source=None, check=None, **kw):
+    def __init__(self, plugin, severity, source=None, check=None,
+                 **kw):
         self.severity = severity
         self.kw = kw
+        self.when = datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
+        self.uuid = str(uuid.uuid4())
         if None not in (check, source):
             self.check = check
             self.source = source
@@ -153,6 +159,8 @@ class Results:
             yield dict(source=result.source,
                        check=result.check,
                        severity=result.severity,
+                       uuid=result.uuid,
+                       when=result.when,
                        kw=result.kw)
 
 
