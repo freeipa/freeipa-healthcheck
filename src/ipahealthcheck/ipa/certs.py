@@ -480,8 +480,10 @@ class IPANSSChainValidation(IPAPlugin):
         # removed
         try:
             for (dbdir, nickname, pinfile) in validate:
+                # detect the database type so we have the right prefix
+                db = certdb.NSSDatabase(dbdir)
                 args = [paths.CERTUTIL, "-V", "-u", "V", "-e"]
-                args.extend(["-d", "sql:" + dbdir])
+                args.extend(["-d", db.dbtype + ':' + dbdir])
                 args.extend(["-n", nickname])
                 args.extend(["-f", pinfile])
 
