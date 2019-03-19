@@ -8,7 +8,7 @@ import os
 import tempfile
 
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
-from ipahealthcheck.core.plugin import Result, Results
+from ipahealthcheck.core.plugin import Result, Results, generalized_time
 from ipahealthcheck.core import constants
 
 from ipalib import api
@@ -213,7 +213,9 @@ class IPACertmongerExpirationCheck(IPAPlugin):
             if now > notafter:
                 result = Result(self, constants.ERROR,
                                 key=id,
-                                msg='Request id %s is expired' % id)
+                                expiration_date=generalized_time(notafter),
+                                msg='Request id %s expired on %s' %
+                                    (id, generalized_time(notafter)))
                 results.add(result)
                 continue
 
@@ -222,6 +224,7 @@ class IPACertmongerExpirationCheck(IPAPlugin):
             if diff < self.config.cert_expiration_days:
                 result = Result(self, constants.WARNING,
                                 key=id,
+                                expiration_date=generalized_time(notafter),
                                 msg='Request id %s expires in %s days'
                                 % (id, diff))
                 results.add(result)
@@ -262,6 +265,7 @@ class IPACertfileExpirationCheck(IPAPlugin):
                 except Exception as e:
                     result = Result(self, constants.ERROR,
                                     key=id,
+                                    certfile=certfile,
                                     msg='Unable to open cert file %s: %s'
                                     % (certfile, e))
                     results.add(result)
@@ -276,6 +280,7 @@ class IPACertfileExpirationCheck(IPAPlugin):
                 except Exception as e:
                     result = Result(self, constants.ERROR,
                                     key=id,
+                                    dbdir=dbdir,
                                     msg='Unable to open NSS database %s: %s'
                                     % (dbdir, e))
                     results.add(result)
@@ -286,6 +291,8 @@ class IPACertfileExpirationCheck(IPAPlugin):
                 except Exception as e:
                     result = Result(self, constants.ERROR,
                                     key=id,
+                                    dbdir=dbdir,
+                                    nickname=nickname,
                                     msg='Unable to retrieve cert %s from '
                                     '%s: %s'
                                     % (nickname, dbdir, e))
@@ -294,6 +301,7 @@ class IPACertfileExpirationCheck(IPAPlugin):
             else:
                 result = Result(self, constants.ERROR,
                                 key=id,
+                                store=store,
                                 msg='Unknown storage type: %s'
                                 % store)
                 results.add(result)
@@ -305,7 +313,8 @@ class IPACertfileExpirationCheck(IPAPlugin):
             if now > notafter:
                 result = Result(self, constants.ERROR,
                                 key=id,
-                                msg='Request id %s is expired' % id)
+                                msg='Request id %s expired on %s' %
+                                (id, generalized_time(notafter)))
                 results.add(result)
                 continue
 
@@ -418,6 +427,10 @@ class IPACertNSSTrust(IPAPlugin):
             if flags != expected:
                 result = Result(
                     self, constants.ERROR, key=nickname,
+                    expected=expected,
+                    got=flags,
+                    nickname=nickname,
+                    dbdir=paths.PKI_TOMCAT_ALIAS_DIR,
                     msg='Incorrect NSS trust for %s. Got %s expected %s'
                     % (nickname, flags, expected))
             else:
@@ -493,6 +506,7 @@ class IPANSSChainValidation(IPAPlugin):
                 except ipautil.CalledProcessError as e:
                     result = Result(
                         self, constants.ERROR, key=key,
+                        dbdir=dbdir, nickname=nickname,
                         msg='Validation of %s in %s failed: %s'
                             % (nickname, dbdir, response.output_error))
                 else:
@@ -500,6 +514,7 @@ class IPANSSChainValidation(IPAPlugin):
                             response.raw_output.decode('utf-8'):
                         result = Result(
                             self, constants.ERROR, key=key,
+                            dbdir=dbdir, nickname=nickname,
                             msg='Validation of %s in %s failed: '
                                 '%s %s' % (
                                     nickname, dbdir,
@@ -508,6 +523,7 @@ class IPANSSChainValidation(IPAPlugin):
                                 )
                     else:
                         result = Result(self, constants.SUCCESS,
+                                        dbdir=dbdir, nickname=nickname,
                                         key=key)
                 results.add(result)
         finally:
@@ -596,12 +612,14 @@ class IPARAAgent(IPAPlugin):
                           msg='RA agent not found in LDAP')
         except Exception as e:
             return Result(self, constants.ERROR,
-                          msg='RA agent check failed %s' % e)
+                          msg='Retrieving RA agent from LDAP failed %s' % e)
         else:
             logger.debug('RA agent description is %s', description)
             if len(entries) != 1:
                 return Result(self, constants.ERROR,
-                              msg='Too many RA agent entries found')
+                              found=len(entries),
+                              msg='Too many RA agent entries found, %d' %
+                                  len(entries))
             entry = entries[0]
             raw_desc = entry.get('description')
             if raw_desc is None:
@@ -611,6 +629,8 @@ class IPARAAgent(IPAPlugin):
             ra_certs = entry.get('usercertificate')
             if ra_desc != description:
                 return Result(self, constants.ERROR,
+                              expected=description,
+                              got=ra_desc,
                               msg='RA agent description does not match '
                               '%s in LDAP and %s expected' %
                               (ra_desc, description))
@@ -659,6 +679,7 @@ class IPACertRevocation(IPAPlugin):
                 except Exception as e:
                     result = Result(self, constants.ERROR,
                                     key=id,
+                                    certfile=certfile,
                                     msg='Unable to open cert file %s: %s'
                                     % (certfile, e))
                     results.add(result)
@@ -671,6 +692,7 @@ class IPACertRevocation(IPAPlugin):
                 except Exception as e:
                     result = Result(self, constants.ERROR,
                                     key=id,
+                                    dbdir=dbdir,
                                     msg='Unable to open NSS database %s: %s'
                                     % (dbdir, e))
                     results.add(result)
@@ -680,6 +702,8 @@ class IPACertRevocation(IPAPlugin):
                 except Exception as e:
                     result = Result(self, constants.ERROR,
                                     key=id,
+                                    dbdir=dbdir,
+                                    nickname=nickname,
                                     msg='Unable to retrieve cert %s from '
                                     '%s: %s'
                                     % (nickname, dbdir, e))
@@ -699,6 +723,7 @@ class IPACertRevocation(IPAPlugin):
                     reason = result['result']['revocation_reason']
                     reason_txt = self.revocation_reason[reason]
                     result = Result(self, constants.ERROR,
+                                    revocation_reason=reason_txt,
                                     key=id,
                                     msg='Certificate is revoked, %s' %
                                         reason_txt)

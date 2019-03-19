@@ -109,7 +109,7 @@ class Result:
                  **kw):
         self.severity = severity
         self.kw = kw
-        self.when = datetime.utcnow().strftime('%Y%m%d%H%M%SZ')
+        self.when = generalized_time(datetime.utcnow())
         self.uuid = str(uuid.uuid4())
         if None not in (check, source):
             self.check = check
@@ -182,3 +182,12 @@ def json_to_results(data):
         results.add(result)
 
     return results
+
+
+def generalized_time(intime):
+    """Convert a datetime.datetime object to LDAP generalized time format
+
+       :param intime: a datetime.datetime object
+    """
+    assert isinstance(intime, datetime)
+    return intime.strftime('%Y%m%d%H%M%SZ')

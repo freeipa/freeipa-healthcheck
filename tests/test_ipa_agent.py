@@ -150,7 +150,7 @@ def test_nss_agent_too_many(mock_load_cert):
     result = f.check()
 
     assert result.severity == constants.ERROR
-    assert result.kw.get('msg') == 'Too many RA agent entries found'
+    assert result.kw.get('msg') == 'Too many RA agent entries found, 2'
 
 
 @patch('ipalib.x509.load_certificate_from_file')

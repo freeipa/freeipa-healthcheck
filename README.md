@@ -54,6 +54,9 @@ A check returns either a Result or Results object. This contains the outcome of 
 * msg containing a message to be displayed to the user.
 * kw, a python dictionary of name value pairs that provide details on the error
 
+The kw dict is meant to provide context for the check. Err on the side of
+too much information.
+
 msg and kw are optional if severity is SUCCESS.
 
 If a check consist of only a single test then it is not required to return
