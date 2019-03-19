@@ -22,7 +22,7 @@ def test_nss_validation_ok(mock_run,
                            mock_dsinstance,
                            mock_get_dogtag_cert_password):
 
-    def run(args):
+    def run(args, raiseonerr=True):
         result = _RunResult('', '', 0)
         result.raw_output = b'certutil: certificate is valid\n'
         result.raw_error_output = b''
@@ -54,7 +54,7 @@ def test_nss_validation_bad(mock_run,
                             mock_dsinstance,
                             mock_get_dogtag_cert_password):
 
-    def run(args):
+    def run(args, raiseonerr=True):
         result = _RunResult('', '', 255)
         result.raw_output = str.encode(
             'certutil: certificate is invalid: Peer\'s certificate issuer '
@@ -93,7 +93,7 @@ def test_nss_validation_ok_no_ca(mock_run,
        be a DS certificate to check.
     """
 
-    def run(args):
+    def run(args, raiseonerr=True):
         result = _RunResult('', '', 0)
         result.raw_output = b'certutil: certificate is valid\n'
         result.raw_error_output = b''

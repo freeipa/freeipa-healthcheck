@@ -13,7 +13,7 @@ from ipapython.ipautil import _RunResult
 @patch('ipapython.ipautil.run')
 def test_openssl_validation_ok(mock_run):
 
-    def run(args):
+    def run(args, raiseonerr=True):
         result = _RunResult('', '', 0)
         result.raw_output = bytes('%s: OK'.format(args[-1]).encode('utf-8'))
         result.raw_error_output = b''
