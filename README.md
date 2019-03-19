@@ -68,6 +68,40 @@ return a SUCCESS Result for each one.
 A Result is required for every test done so that one can know that the
 check was executed.
 
+The runtime duration of each check will be calculated. The mechanism
+differs depending on complexity.
+
+If a check can only return a single Result then use the decorator
+@duration.
+
+
+        @registry
+        class MyPlugin(Plugin):
+            @duration
+            def check(self):
+                return Result(self, constants.SUCCESS)
+
+
+If a check can return multiple values then you will need to set the
+start time when execution of an individual piece begins and pass that
+start time into the Result creation so that each part of the check
+represents its own duration. This could be useful to determine why
+a check is failing or which part is taking a long time to execute.
+
+
+        from datetime import datetime
+
+        @registry
+        class MyPlugin(Plugin):
+            def check(self):
+                results = Results()
+                for i in range(0,2):
+                    start = datetime.utcnow()
+                    results.add(Result(self, constants.SUCCESS, start = start))
+
+                return results
+
+
 # Registering a source
 
 The list of sources is stored in setup.py in the top-level of the tree.

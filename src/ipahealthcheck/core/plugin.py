@@ -4,8 +4,23 @@
 
 import uuid
 from datetime import datetime
+from functools import wraps
 
 from ipahealthcheck.core.constants import getLevelName
+
+
+def duration(f):
+    """Compute the duration of execution"""
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        start = datetime.utcnow()
+        result = f(*args, **kwds)
+        if isinstance(result, Result):
+            end = datetime.utcnow()
+            duration = end - start
+            result.duration = '%6.6f' % duration.total_seconds()
+        return result
+    return wrapper
 
 
 class Registry:
@@ -106,10 +121,11 @@ class Result:
         exception: used when a check raises an exception
     """
     def __init__(self, plugin, severity, source=None, check=None,
-                 **kw):
+                 start=None, **kw):
         self.severity = severity
         self.kw = kw
         self.when = generalized_time(datetime.utcnow())
+        self.duration = None
         self.uuid = str(uuid.uuid4())
         if None not in (check, source):
             self.check = check
@@ -119,6 +135,9 @@ class Result:
                 raise TypeError('source and check or plugin must be provided')
             self.check = plugin.__class__.__name__
             self.source = plugin.__class__.__module__
+        if start is not None:
+            duration = datetime.utcnow() - start
+            self.duration = '%6.6f' % duration.total_seconds()
 
         assert getLevelName(severity) is not None
 
@@ -161,6 +180,7 @@ class Results:
                        severity=result.severity,
                        uuid=result.uuid,
                        when=result.when,
+                       duration=result.duration,
                        kw=result.kw)
 
 

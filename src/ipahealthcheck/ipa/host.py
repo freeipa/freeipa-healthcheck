@@ -8,7 +8,7 @@ import os
 import tempfile
 
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
-from ipahealthcheck.core.plugin import Result
+from ipahealthcheck.core.plugin import Result, duration
 from ipahealthcheck.core import constants
 
 from ipalib import api
@@ -23,6 +23,7 @@ logger = logging.getLogger()
 @registry
 class IPAHostKeytab(IPAPlugin):
     """Ensure the host keytab can get a TGT"""
+    @duration
     def check(self):
         ccache_dir = tempfile.mkdtemp()
         ccache_name = os.path.join(ccache_dir, 'ccache')
@@ -32,7 +33,7 @@ class IPAHostKeytab(IPAPlugin):
                 host_princ = str('host/%s@%s' % (api.env.host, api.env.realm))
                 kinit_keytab(host_princ, paths.KRB5_KEYTAB, ccache_name)
             except gssapi.exceptions.GSSError as e:
-                return Result(constants.FAILURE,
+                return Result(constants.ERROR,
                               'Failed to obtain host TGT: %s' % e)
         finally:
             installutils.remove_file(ccache_name)

@@ -7,6 +7,8 @@ import logging
 import pkg_resources
 import sys
 
+from datetime import datetime
+
 from ipahealthcheck.core.config import read_config
 from ipahealthcheck.core.plugin import Result, Results
 from ipahealthcheck.core.output import output_registry
@@ -33,14 +35,16 @@ def find_plugins(name, registry):
 
 
 def run_plugin(plugin, available=()):
+    start = datetime.utcnow()
     try:
         result = plugin.check()
         if type(result) not in (Result, Results):
             # Treat no result as success
-            result = Result(plugin, constants.SUCCESS)
+            result = Result(plugin, constants.SUCCESS, start=start)
     except Exception as e:
         logger.debug('Exception raised: %s', e)
-        result = Result(plugin, constants.CRITICAL, exception=str(e))
+        result = Result(plugin, constants.CRITICAL, exception=str(e),
+                        start=start)
 
     return result
 
