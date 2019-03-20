@@ -360,6 +360,7 @@ class IPACertTracking(IPAPlugin):
             request_id = certmonger.get_request_id(request)
             try:
                 if request_id is not None:
+                    # Tracking found, move onto the next
                     ids.remove(request_id)
                     yield Result(self, constants.SUCCESS,
                                  key=request_id)
