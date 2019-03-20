@@ -33,8 +33,8 @@ class IPAHostKeytab(IPAPlugin):
                 host_princ = str('host/%s@%s' % (api.env.host, api.env.realm))
                 kinit_keytab(host_princ, paths.KRB5_KEYTAB, ccache_name)
             except gssapi.exceptions.GSSError as e:
-                return Result(constants.ERROR,
-                              'Failed to obtain host TGT: %s' % e)
+                yield Result(constants.ERROR,
+                             'Failed to obtain host TGT: %s' % e)
         finally:
             installutils.remove_file(ccache_name)
             os.rmdir(ccache_dir)

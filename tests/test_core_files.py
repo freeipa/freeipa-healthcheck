@@ -9,6 +9,8 @@ from ipahealthcheck.core import constants
 from ipahealthcheck.core.plugin import Results
 from unittest.mock import patch
 
+from util import capture_results
+
 nobody = pwd.getpwnam('nobody')
 
 # Mock files to test
@@ -46,18 +48,14 @@ def test_files_owner(mock_stat):
     f = FileCheck()
     f.files = files
 
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     my_results = get_results(results, 'owner')
     assert my_results.results[0].severity == constants.SUCCESS
     assert my_results.results[1].severity == constants.WARNING
 
     mock_stat.return_value = make_stat(uid=nobody.pw_uid)
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
     my_results = get_results(results, 'owner')
     assert my_results.results[0].severity == constants.WARNING
     assert my_results.results[1].severity == constants.SUCCESS
@@ -70,18 +68,14 @@ def test_files_group(mock_stat):
     f = FileCheck()
     f.files = files
 
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     my_results = get_results(results, 'group')
     assert my_results.results[0].severity == constants.SUCCESS
     assert my_results.results[1].severity == constants.WARNING
 
     mock_stat.return_value = make_stat(gid=nobody.pw_gid)
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
     my_results = get_results(results, 'group')
     assert my_results.results[0].severity == constants.WARNING
     assert my_results.results[1].severity == constants.SUCCESS
@@ -94,18 +88,14 @@ def test_files_mode(mock_stat):
     f = FileCheck()
     f.files = files
 
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     my_results = get_results(results, 'mode')
     assert my_results.results[0].severity == constants.SUCCESS
     assert my_results.results[1].severity == constants.WARNING
 
     mock_stat.return_value = make_stat(mode=33204)
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
     my_results = get_results(results, 'mode')
     assert my_results.results[0].severity == constants.WARNING
     assert my_results.results[1].severity == constants.SUCCESS

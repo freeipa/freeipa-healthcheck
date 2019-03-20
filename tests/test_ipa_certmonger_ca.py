@@ -3,10 +3,11 @@
 #
 
 from ipahealthcheck.core import constants
-from ipahealthcheck.core.plugin import Results
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertmongerCA
 from unittest.mock import patch
+
+from util import capture_results
 
 
 @patch('ipahealthcheck.ipa.certs.IPACertmongerCA.find_ca')
@@ -22,9 +23,7 @@ def test_certmogner_ok(mock_find_ca):
     registry.initialize(framework)
     f = IPACertmongerCA(registry)
 
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     assert len(results) == 3
 
@@ -46,9 +45,7 @@ def test_certmogner_missing(mock_find_ca):
     registry.initialize(framework)
     f = IPACertmongerCA(registry)
 
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     assert len(results) == 3
 

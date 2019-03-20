@@ -3,10 +3,11 @@
 #
 
 from ipahealthcheck.core import config, constants
-from ipahealthcheck.core.plugin import Results
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertNSSTrust
 from unittest.mock import patch
+
+from util import capture_results
 
 
 class mock_CertDB:
@@ -45,9 +46,7 @@ def test_trust_default_ok(mock_unparse_trust_flags,
     f = IPACertNSSTrust(registry)
 
     f.config = config.Config()
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     assert len(results) == 4
 
@@ -76,9 +75,7 @@ def test_trust_ocsp_missing(mock_unparse_trust_flags,
     f = IPACertNSSTrust(registry)
 
     f.config = config.Config()
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     # The check reports success for those that it found and are correct and
     # reports missing certs last.
@@ -120,9 +117,7 @@ def test_trust_bad(mock_unparse_trust_flags,
     f = IPACertNSSTrust(registry)
 
     f.config = config.Config()
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     result = results.results[1]
 

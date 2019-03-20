@@ -217,6 +217,7 @@ class IPACertmongerExpirationCheck(IPAPlugin):
                              expiration_date=generalized_time(notafter),
                              msg='Request id %s expired on %s' %
                                  (id, generalized_time(notafter)))
+                return
             else:
                 delta = notafter - now
                 diff = int(delta.total_seconds() / DAY)
@@ -362,10 +363,12 @@ class IPACertTracking(IPAPlugin):
                              key=request_id,
                              msg='Request id %s is not tracked: %s'
                              % (request_id, e))
+                continue
 
             if request_id is None:
                 yield Result(self, constants.ERROR,
                              msg='Missing tracking for %s' % request)
+                continue
 
         if ids:
             for id in ids:
@@ -413,6 +416,7 @@ class IPACertNSSTrust(IPAPlugin):
                     dbdir=paths.PKI_TOMCAT_ALIAS_DIR,
                     msg='Incorrect NSS trust for %s. Got %s expected %s'
                     % (nickname, flags, expected))
+                continue
             else:
                 yield Result(self, constants.SUCCESS, key=nickname)
 
@@ -440,6 +444,7 @@ class IPANSSChainValidation(IPAPlugin):
                     self, constants.ERROR,
                     msg='Unable to read CA NSSDB token password: %s'
                     % e)
+                return
             else:
                 with tempfile.NamedTemporaryFile(mode='w',
                                                  delete=False) as ca_pw_file:
@@ -531,6 +536,7 @@ class IPAOpenSSLChainValidation(IPAPlugin):
                     self, constants.ERROR, key=cert,
                     msg='Certificate validation for %s failed: %s' %
                         (cert, e))
+                continue
             else:
                 if ': OK' not in response.raw_output.decode('utf-8'):
                     yield Result(
@@ -551,8 +557,9 @@ class IPARAAgent(IPAPlugin):
         try:
             cert = x509.load_certificate_from_file(paths.RA_AGENT_PEM)
         except Exception as e:
-            return Result(self, constants.ERROR,
-                          msg='Unable to load RA cert: %s' % e)
+            yield Result(self, constants.ERROR,
+                         msg='Unable to load RA cert: %s' % e)
+            return
 
         serial_number = cert.serial_number
         subject = DN(cert.subject)
@@ -576,40 +583,45 @@ class IPARAAgent(IPAPlugin):
                                             self.conn.SCOPE_SUBTREE,
                                             db_filter)
         except errors.NotFound:
-            return Result(self, constants.ERROR,
-                          msg='RA agent not found in LDAP')
+            yield Result(self, constants.ERROR,
+                         msg='RA agent not found in LDAP')
+            return
         except Exception as e:
-            return Result(self, constants.ERROR,
-                          msg='Retrieving RA agent from LDAP failed %s' % e)
+            yield Result(self, constants.ERROR,
+                         msg='Retrieving RA agent from LDAP failed %s' % e)
+            return
         else:
             logger.debug('RA agent description is %s', description)
             if len(entries) != 1:
-                return Result(self, constants.ERROR,
-                              found=len(entries),
-                              msg='Too many RA agent entries found, %d' %
-                                  len(entries))
+                yield Result(self, constants.ERROR,
+                             found=len(entries),
+                             msg='Too many RA agent entries found, %d' %
+                                 len(entries))
+                return
             entry = entries[0]
             raw_desc = entry.get('description')
             if raw_desc is None:
-                return Result(self, constants.ERROR,
-                              msg='RA agent is missing description')
+                yield Result(self, constants.ERROR,
+                             msg='RA agent is missing description')
+                return
             ra_desc = raw_desc[0]
             ra_certs = entry.get('usercertificate')
             if ra_desc != description:
-                return Result(self, constants.ERROR,
-                              expected=description,
-                              got=ra_desc,
-                              msg='RA agent description does not match '
-                              '%s in LDAP and %s expected' %
-                              (ra_desc, description))
+                yield Result(self, constants.ERROR,
+                             expected=description,
+                             got=ra_desc,
+                             msg='RA agent description does not match '
+                             '%s in LDAP and %s expected' %
+                             (ra_desc, description))
+                return
             found = False
             for candidate in ra_certs:
                 if candidate == cert:
                     found = True
                     break
             if not found:
-                return Result(self, constants.ERROR,
-                              msg='RA agent certificate not found in LDAP')
+                yield Result(self, constants.ERROR,
+                             msg='RA agent certificate not found in LDAP')
 
 
 @registry

@@ -11,6 +11,8 @@ from ipalib import errors
 from ipapython.dn import DN
 from ipapython.ipaldap import LDAPClient, LDAPEntry
 
+from util import capture_results
+
 
 class IPACertificate:
     def __init__(self, serial_number=1):
@@ -56,10 +58,10 @@ def test_nss_agent_ok(mock_load_cert):
 
     f.conn = mock_ldap([ldapentry])
     f.config = config.Config()
-    result = f.check()
+    results = capture_results(f)
 
     # A valid call relies on a success to be set by core
-    assert result is None
+    assert len(results) == 0
 
 
 @patch('ipalib.x509.load_certificate_from_file')
@@ -82,7 +84,8 @@ def test_nss_agent_no_description(mock_load_cert):
 
     f.conn = mock_ldap([ldapentry])
     f.config = config.Config()
-    result = f.check()
+    results = capture_results(f)
+    result = results.results[0]
 
     assert result.severity == constants.ERROR
     assert result.kw.get('msg') == 'RA agent is missing description'
@@ -98,7 +101,8 @@ def test_nss_agent_load_failure(mock_load_cert):
     f = IPARAAgent(registry)
 
     f.config = config.Config()
-    result = f.check()
+    results = capture_results(f)
+    result = results.results[0]
 
     assert result.severity == constants.ERROR
     assert result.kw.get('msg') == 'Unable to load RA cert: test'
@@ -116,7 +120,8 @@ def test_nss_agent_no_entry_found(mock_load_cert):
 
     f.conn = mock_ldap(None)  # None == NotFound
     f.config = config.Config()
-    result = f.check()
+    results = capture_results(f)
+    result = results.results[0]
 
     assert result.severity == constants.ERROR
     assert result.kw.get('msg') == 'RA agent not found in LDAP'
@@ -147,7 +152,8 @@ def test_nss_agent_too_many(mock_load_cert):
 
     f.conn = mock_ldap([ldapentry, ldapentry2])
     f.config = config.Config()
-    result = f.check()
+    results = capture_results(f)
+    result = results.results[0]
 
     assert result.severity == constants.ERROR
     assert result.kw.get('msg') == 'Too many RA agent entries found, 2'
@@ -175,7 +181,8 @@ def test_nss_agent_nonmatching_cert(mock_load_cert):
 
     f.conn = mock_ldap([ldapentry])
     f.config = config.Config()
-    result = f.check()
+    results = capture_results(f)
+    result = results.results[0]
 
     assert result.severity == constants.ERROR
     assert result.kw.get('msg') == 'RA agent certificate not found in LDAP'
@@ -203,6 +210,6 @@ def test_nss_agent_multiple_certs(mock_load_cert):
 
     f.conn = mock_ldap([ldapentry])
     f.config = config.Config()
-    result = f.check()
+    results = capture_results(f)
 
-    assert result is None
+    assert len(results) == 0

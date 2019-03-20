@@ -40,8 +40,8 @@ def run_plugin(plugin, available=()):
     try:
         for result in plugin.check():
             if result is None:
-                # Treat no result as success
-                result = Result(plugin, constants.SUCCESS)
+                # Treat no result as success, fudge start time
+                result = Result(plugin, constants.SUCCESS, start=start)
             yield result
     except Exception as e:
         logger.debug('Exception raised: %s', e)
@@ -80,9 +80,9 @@ def run_service_plugins(plugins, config, source, check):
 
         logger.debug('Calling check %s' % plugin)
         for result in plugin.check():
-            if result.severity == constants.SUCCESS:
+            if result is not None and result.severity == constants.SUCCESS:
                 available.append(plugin.service_name)
-            results.add(result)
+                results.add(result)
 
     return results, set(available)
 

@@ -3,12 +3,13 @@
 #
 
 from ipahealthcheck.core import config, constants
-from ipahealthcheck.core.plugin import Results
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertmongerExpirationCheck
 from unittest.mock import patch
 from mock_certmonger import create_mock_dbus, _certmonger, get_requests
 from mock_certmonger import set_requests
+
+from util import capture_results
 
 
 @patch('ipahealthcheck.ipa.certs.get_requests')
@@ -29,9 +30,7 @@ def test_expiration(mock_certmonger,
 
     f.config = config.Config()
     f.config.cert_expiration_days = 7
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     assert len(results) == 1
     result = results.results[0]

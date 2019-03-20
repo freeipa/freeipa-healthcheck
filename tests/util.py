@@ -2,6 +2,8 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+from ipahealthcheck.core.plugin import Results
+
 
 class ExceptionNotRaised(Exception):
     """
@@ -27,3 +29,15 @@ def raises(exception, callback, *args, **kw):
     except exception as e:
         return e
     raise ExceptionNotRaised(exception)
+
+
+def capture_results(f):
+    """
+    Loop over check() and collect the results.
+    """
+    results = Results()
+    for result in f.check():
+        if result is not None:
+            results.add(result)
+
+    return results

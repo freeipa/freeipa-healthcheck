@@ -3,12 +3,13 @@
 #
 
 from ipahealthcheck.core import constants
-from ipahealthcheck.core.plugin import Results
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertTracking
 from unittest.mock import patch
 from mock_certmonger import create_mock_dbus, _certmonger, get_requests
 from mock_certmonger import set_requests
+
+from util import capture_results
 
 
 @patch('ipahealthcheck.ipa.certs.get_requests')
@@ -27,9 +28,7 @@ def test_known_cert_tracking(mock_certmonger,
     registry.initialize(framework)
     f = IPACertTracking(registry)
 
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     assert len(results) == 2
 
@@ -52,9 +51,7 @@ def test_missing_cert_tracking(mock_certmonger,
     registry.initialize(framework)
     f = IPACertTracking(registry)
 
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     assert len(results) == 2
 
@@ -94,9 +91,7 @@ def test_unknown_cert_tracking(mock_certmonger,
     registry.initialize(framework)
     f = IPACertTracking(registry)
 
-    results = Results()
-    for result in f.check():
-        results.add(result)
+    results = capture_results(f)
 
     assert len(results) == 3
 
