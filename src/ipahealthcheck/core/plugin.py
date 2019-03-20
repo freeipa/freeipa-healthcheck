@@ -150,7 +150,8 @@ class Results:
     """
     A list-like collection of Result values.
 
-    Provides a very limited subset of list operations.
+    Provides a very limited subset of list operations. Is intended for
+    internal-use only and not by check functions.
 
     Usage::
 

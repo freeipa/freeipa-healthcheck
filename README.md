@@ -24,7 +24,7 @@ A source provides a registry so its checks are discoverable.
 
 The base class for a check is ipahealthcheck.core.plugin::Plugin
 
-The only method that needs to be implemented is check(). This implements the test against the system and should return either a Result or a Results object.
+The only method that needs to be implemented is check(). This implements the test against the system and should yield a Result object. Because check() is a generator multiple results can be yielded from a single check.
 
 Typically each source defines its own plugin.py which contains the registry. This looks like:
 
@@ -44,11 +44,11 @@ A basic check module consists of:
         @registry
         class MyPlugin(Plugin):
             def check(self):
-                return Result(self, constants.SUCCESS)
+                yield Result(self, constants.SUCCESS)
 
 # Return value
 
-A check returns either a Result or Results object. This contains the outcome of the check including:
+A check yields a Result. This contains the outcome of the check including:
 
 * severity as defined in ipahealthcheck/core/constants.py
 * msg containing a message to be displayed to the user.
@@ -59,11 +59,11 @@ too much information.
 
 msg and kw are optional if severity is SUCCESS.
 
-If a check consist of only a single test then it is not required to return
-a Result, one will be added automatically.
+If a check consist of only a single test then it is not required to yield
+a Result, one marking the check as successful will be added automatically.
 
 If a check is complex enough that it checks multiple values then it should
-return a SUCCESS Result for each one.
+yield a SUCCESS Result() for each one.
 
 A Result is required for every test done so that one can know that the
 check was executed.
@@ -79,7 +79,7 @@ If a check can only return a single Result then use the decorator
         class MyPlugin(Plugin):
             @duration
             def check(self):
-                return Result(self, constants.SUCCESS)
+                yield Result(self, constants.SUCCESS)
 
 
 If a check can return multiple values then you will need to set the
@@ -97,9 +97,8 @@ a check is failing or which part is taking a long time to execute.
                 results = Results()
                 for i in range(0,2):
                     start = datetime.utcnow()
-                    results.add(Result(self, constants.SUCCESS, start = start))
-
-                return results
+                    do_work()
+                    yield Result(self, constants.SUCCESS, start=start)
 
 
 # Registering a source

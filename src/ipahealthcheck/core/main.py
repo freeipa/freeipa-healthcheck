@@ -37,16 +37,15 @@ def find_plugins(name, registry):
 def run_plugin(plugin, available=()):
     start = datetime.utcnow()
     try:
-        result = plugin.check()
-        if type(result) not in (Result, Results):
-            # Treat no result as success
-            result = Result(plugin, constants.SUCCESS, start=start)
+        for result in plugin.check():
+            if type(result) not in (Result, Results):
+                # Treat no result as success
+                result = Result(plugin, constants.SUCCESS, start=start)
+            yield result
     except Exception as e:
         logger.debug('Exception raised: %s', e)
-        result = Result(plugin, constants.CRITICAL, exception=str(e),
-                        start=start)
-
-    return result
+        yield Result(plugin, constants.CRITICAL, exception=str(e),
+                     start=start)
 
 
 def source_or_check_matches(plugin, source, check):
@@ -79,15 +78,10 @@ def run_service_plugins(plugins, config, source, check):
             continue
 
         logger.debug('Calling check %s' % plugin)
-        result = run_plugin(plugin)
-
-        if result.severity == constants.SUCCESS:
-            available.append(plugin.service_name)
-
-        if isinstance(result, Result):
+        for result in plugin.check():
+            if result.severity == constants.SUCCESS:
+                available.append(plugin.service_name)
             results.add(result)
-        elif isinstance(result, Results):
-            results.extend(result)
 
     return results, set(available)
 
@@ -115,12 +109,8 @@ def run_plugins(plugins, config, available, source, check):
                             msg='%s service(s) not running' %
                             (', '.join(set(plugin.requires) - available)))
         else:
-            result = run_plugin(plugin, available)
-
-        if isinstance(result, Result):
-            results.add(result)
-        elif isinstance(result, Results):
-            results.extend(result)
+            for result in run_plugin(plugin, available):
+                results.add(result)
 
     return results
 

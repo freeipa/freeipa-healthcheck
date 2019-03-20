@@ -16,16 +16,14 @@ class ServiceCheck(Plugin, SystemdService):
         status, msg = SystemdService.check_service(self)
 
         if msg:
-            result = Result(self, constants.ERROR,
-                            start=start,
-                            status=status, msg='%s: %s' %
-                            (self.service_name, msg))
+            yield Result(self, constants.ERROR,
+                         start=start,
+                         status=status, msg='%s: %s' %
+                         (self.service_name, msg))
         else:
-            result = Result(self, constants.SUCCESS,
-                            start=start,
-                            status=status)
-
-        return result
+            yield Result(self, constants.SUCCESS,
+                         start=start,
+                         status=status)
 
 
 @registry

@@ -3,6 +3,7 @@
 #
 
 from ipahealthcheck.core import config, constants
+from ipahealthcheck.core.plugin import Results
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPAOpenSSLChainValidation
 from unittest.mock import patch
@@ -26,7 +27,9 @@ def test_openssl_validation_ok(mock_run):
     f = IPAOpenSSLChainValidation(registry)
 
     f.config = config.Config()
-    results = f.check()
+    results = Results()
+    for result in f.check():
+        results.add(result)
 
     assert len(results) == 2
 
@@ -57,7 +60,9 @@ def test_openssl_validation_bad(mock_run):
     f = IPAOpenSSLChainValidation(registry)
 
     f.config = config.Config()
-    results = f.check()
+    results = Results()
+    for result in f.check():
+        results.add(result)
 
     assert len(results) == 2
 

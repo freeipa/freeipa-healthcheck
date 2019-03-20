@@ -12,6 +12,5 @@ from ipahealthcheck.meta.plugin import Plugin, registry
 class MetaCheck(Plugin):
     @duration
     def check(self):
-        result = Result(self, constants.SUCCESS,
-                        fqdn=socket.getfqdn(),)
-        return result
+        yield Result(self, constants.SUCCESS,
+                     fqdn=socket.getfqdn(),)

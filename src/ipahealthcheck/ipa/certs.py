@@ -8,7 +8,7 @@ import os
 import tempfile
 
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
-from ipahealthcheck.core.plugin import Result, Results, generalized_time
+from ipahealthcheck.core.plugin import Result, generalized_time
 from ipahealthcheck.core.plugin import duration
 from ipahealthcheck.core import constants
 
@@ -196,7 +196,6 @@ class IPACertmongerExpirationCheck(IPAPlugin):
     the world.
     """
     def check(self):
-        results = Results()
         cm = certmonger._certmonger()
 
         all_requests = cm.obj_if.get_requests()
@@ -213,27 +212,22 @@ class IPACertmongerExpirationCheck(IPAPlugin):
             now = datetime.utcnow()
 
             if now > notafter:
-                result = Result(self, constants.ERROR,
-                                start=start,
-                                key=id,
-                                expiration_date=generalized_time(notafter),
-                                msg='Request id %s expired on %s' %
-                                    (id, generalized_time(notafter)))
-                results.add(result)
-                continue
-
-            delta = notafter - now
-            diff = int(delta.total_seconds() / DAY)
-            if diff < self.config.cert_expiration_days:
-                result = Result(self, constants.WARNING,
-                                start=start,
-                                key=id,
-                                expiration_date=generalized_time(notafter),
-                                msg='Request id %s expires in %s days'
-                                % (id, diff))
-                results.add(result)
-
-        return results
+                yield Result(self, constants.ERROR,
+                             start=start,
+                             key=id,
+                             expiration_date=generalized_time(notafter),
+                             msg='Request id %s expired on %s' %
+                                 (id, generalized_time(notafter)))
+            else:
+                delta = notafter - now
+                diff = int(delta.total_seconds() / DAY)
+                if diff < self.config.cert_expiration_days:
+                    yield Result(self, constants.WARNING,
+                                 start=start,
+                                 key=id,
+                                 expiration_date=generalized_time(notafter),
+                                 msg='Request id %s expires in %s days'
+                                 % (id, diff))
 
 
 @registry
@@ -248,7 +242,6 @@ class IPACertfileExpirationCheck(IPAPlugin):
     certmonger being notified.
     """
     def check(self):
-        results = Results()
         cm = certmonger._certmonger()
 
         all_requests = cm.obj_if.get_requests()
@@ -268,13 +261,12 @@ class IPACertfileExpirationCheck(IPAPlugin):
                 try:
                     cert = x509.load_certificate_from_file(certfile)
                 except Exception as e:
-                    result = Result(self, constants.ERROR,
-                                    start=start,
-                                    key=id,
-                                    certfile=certfile,
-                                    msg='Unable to open cert file %s: %s'
-                                    % (certfile, e))
-                    results.add(result)
+                    yield Result(self, constants.ERROR,
+                                 start=start,
+                                 key=id,
+                                 certfile=certfile,
+                                 msg='Unable to open cert file %s: %s'
+                                 % (certfile, e))
                     continue
             elif store == 'NSSDB':
                 nickname = str(request.prop_if.Get(
@@ -284,61 +276,54 @@ class IPACertfileExpirationCheck(IPAPlugin):
                 try:
                     db = certdb.NSSDatabase(dbdir)
                 except Exception as e:
-                    result = Result(self, constants.ERROR,
-                                    start=start,
-                                    key=id,
-                                    dbdir=dbdir,
-                                    msg='Unable to open NSS database %s: %s'
-                                    % (dbdir, e))
-                    results.add(result)
+                    yield Result(self, constants.ERROR,
+                                 start=start,
+                                 key=id,
+                                 dbdir=dbdir,
+                                 msg='Unable to open NSS database %s: %s'
+                                 % (dbdir, e))
                     continue
 
                 try:
                     cert = db.get_cert(nickname)
                 except Exception as e:
-                    result = Result(self, constants.ERROR,
-                                    start=start,
-                                    key=id,
-                                    dbdir=dbdir,
-                                    nickname=nickname,
-                                    msg='Unable to retrieve cert %s from '
-                                    '%s: %s'
-                                    % (nickname, dbdir, e))
-                    results.add(result)
+                    yield Result(self, constants.ERROR,
+                                 start=start,
+                                 key=id,
+                                 dbdir=dbdir,
+                                 nickname=nickname,
+                                 msg='Unable to retrieve cert %s from '
+                                 '%s: %s'
+                                 % (nickname, dbdir, e))
                     continue
             else:
-                result = Result(self, constants.ERROR,
-                                start=start,
-                                key=id,
-                                store=store,
-                                msg='Unknown storage type: %s'
-                                % store)
-                results.add(result)
+                yield Result(self, constants.ERROR,
+                             start=start,
+                             key=id,
+                             store=store,
+                             msg='Unknown storage type: %s'
+                             % store)
                 continue
 
             now = datetime.utcnow()
             notafter = cert.not_valid_after
 
             if now > notafter:
-                result = Result(self, constants.ERROR,
-                                start=start,
-                                key=id,
-                                msg='Request id %s expired on %s' %
-                                (id, generalized_time(notafter)))
-                results.add(result)
+                yield Result(self, constants.ERROR,
+                             start=start,
+                             key=id,
+                             msg='Request id %s expired on %s' %
+                             (id, generalized_time(notafter)))
                 continue
 
             delta = notafter - now
             diff = int(delta.total_seconds() / DAY)
             if diff < self.config.cert_expiration_days:
-                result = Result(self, constants.WARNING,
-                                start=start,
-                                key=id,
-                                msg='Request id %s expires in %s days'
-                                % (id, diff))
-                results.add(result)
-
-        return results
+                yield Result(self, constants.WARNING,
+                             start=start,
+                             key=id,
+                             msg='Request id %s expires in %s days'
+                             % (id, diff))
 
 
 @registry
@@ -359,8 +344,6 @@ class IPACertTracking(IPAPlugin):
     """
 
     def check(self):
-        results = Results()
-
         requests = get_requests(self.ca, self.ds, self.serverid)
         cm = certmonger._certmonger()
 
@@ -380,40 +363,32 @@ class IPACertTracking(IPAPlugin):
             try:
                 if request_id is not None:
                     ids.remove(request_id)
-                    result = Result(self, constants.SUCCESS,
-                                    start=start,
-                                    key=request_id)
-                    results.add(result)
+                    yield Result(self, constants.SUCCESS,
+                                 start=start,
+                                 key=request_id)
             except ValueError as e:
-                result = Result(self, constants.ERROR,
-                                start=start,
-                                key=request_id,
-                                msg='Request id %s is not tracked: %s'
-                                % (request_id, e))
-                results.add(result)
+                yield Result(self, constants.ERROR,
+                             start=start,
+                             key=request_id,
+                             msg='Request id %s is not tracked: %s'
+                             % (request_id, e))
 
             if request_id is None:
-                result = Result(self, constants.ERROR,
-                                start=start,
-                                msg='Missing tracking for %s' % request)
-                results.add(result)
+                yield Result(self, constants.ERROR,
+                             start=start,
+                             msg='Missing tracking for %s' % request)
 
         if ids:
             for id in ids:
-                result = Result(self, constants.WARNING, key=id,
-                                start=start,
-                                msg='Unknown certmonger id %s' % id)
-                results.add(result)
-
-        return results
+                yield Result(self, constants.WARNING, key=id,
+                             start=start,
+                             msg='Unknown certmonger id %s' % id)
 
 
 @registry
 class IPACertNSSTrust(IPAPlugin):
     """Compare the NSS trust for the CA certs to a known good value"""
     def check(self):
-        results = Results()
-
         expected_trust = {
             'ocspSigningCert cert-pki-ca': 'u,u,u',
             'subsystemCert cert-pki-ca': 'u,u,u',
@@ -442,7 +417,7 @@ class IPACertNSSTrust(IPAPlugin):
             except KeyError:
                 pass
             if flags != expected:
-                result = Result(
+                yield Result(
                     self, constants.ERROR, key=nickname,
                     start=start,
                     expected=expected,
@@ -452,19 +427,15 @@ class IPACertNSSTrust(IPAPlugin):
                     msg='Incorrect NSS trust for %s. Got %s expected %s'
                     % (nickname, flags, expected))
             else:
-                result = Result(self, constants.SUCCESS, key=nickname,
-                                start=start)
-            results.add(result)
+                yield Result(self, constants.SUCCESS, key=nickname,
+                             start=start)
 
         for nickname in expected_trust:
-            result = Result(
+            yield Result(
                 self, constants.ERROR, key=nickname,
                 start=start,
                 msg='Certificate %s missing while verifying trust'
                 % nickname)
-            results.add(result)
-
-        return results
 
 
 @registry
@@ -472,8 +443,6 @@ class IPANSSChainValidation(IPAPlugin):
     """Validate the certificate chain of the certs to ensure trust is ok"""
 
     def check(self):
-        results = Results()
-
         validate = []
         ca_pw_fname = None
 
@@ -481,11 +450,10 @@ class IPANSSChainValidation(IPAPlugin):
             try:
                 ca_passwd = get_dogtag_cert_password()
             except IOError as e:
-                result = Result(
+                yield Result(
                     self, constants.ERROR,
                     msg='Unable to read CA NSSDB token password: %s'
                     % e)
-                results.add(result)
             else:
                 with tempfile.NamedTemporaryFile(mode='w',
                                                  delete=False) as ca_pw_file:
@@ -525,7 +493,7 @@ class IPANSSChainValidation(IPAPlugin):
                 try:
                     response = ipautil.run(args, raiseonerr=False)
                 except ipautil.CalledProcessError as e:
-                    result = Result(
+                    yield Result(
                         self, constants.ERROR, key=key,
                         start=start,
                         dbdir=dbdir, nickname=nickname,
@@ -534,7 +502,7 @@ class IPANSSChainValidation(IPAPlugin):
                 else:
                     if 'certificate is valid' not in \
                             response.raw_output.decode('utf-8'):
-                        result = Result(
+                        yield Result(
                             self, constants.ERROR, key=key,
                             start=start,
                             dbdir=dbdir, nickname=nickname,
@@ -543,18 +511,15 @@ class IPANSSChainValidation(IPAPlugin):
                                     nickname, dbdir,
                                     response.raw_output.decode('utf-8'),
                                     response.error_log)
-                                )
+                        )
                     else:
-                        result = Result(self, constants.SUCCESS,
-                                        start=start,
-                                        dbdir=dbdir, nickname=nickname,
-                                        key=key)
-                results.add(result)
+                        yield Result(self, constants.SUCCESS,
+                                     start=start,
+                                     dbdir=dbdir, nickname=nickname,
+                                     key=key)
         finally:
             if ca_pw_fname:
                 installutils.remove_file(ca_pw_fname)
-
-        return results
 
 
 @registry
@@ -571,8 +536,6 @@ class IPAOpenSSLChainValidation(IPAPlugin):
         return ipautil.run(args, raiseonerr=False)
 
     def check(self):
-        results = Results()
-
         certs = [paths.HTTPD_CERT_FILE]
         if self.ca.is_configured():
             certs.append(paths.RA_AGENT_PEM)
@@ -582,25 +545,22 @@ class IPAOpenSSLChainValidation(IPAPlugin):
             try:
                 response = self.validate_openssl(cert)
             except Exception as e:
-                result = Result(
+                yield Result(
                     self, constants.ERROR, key=cert,
                     start=start,
                     msg='Certificate validation for %s failed: %s' %
                         (cert, e))
             else:
                 if ': OK' not in response.raw_output.decode('utf-8'):
-                    result = Result(
+                    yield Result(
                         self, constants.ERROR, key=cert,
                         start=start,
                         msg='Certificate validation for %s failed: %s' %
                             (cert, response.raw_error_output.decode('utf-8')))
                 else:
-                    result = Result(
+                    yield Result(
                         self, constants.SUCCESS, key=cert,
                         start=start)
-            results.add(result)
-
-        return results
 
 
 @registry
@@ -692,8 +652,6 @@ class IPACertRevocation(IPAPlugin):
     ]
 
     def check(self):
-        results = Results()
-
         # For simplicity use the expected certmonger tracking for the
         # list of certificates to check because it already filters out
         # based on whether the CA system is configure and whether the
@@ -707,13 +665,12 @@ class IPACertRevocation(IPAPlugin):
                 try:
                     cert = x509.load_certificate_from_file(certfile)
                 except Exception as e:
-                    result = Result(self, constants.ERROR,
-                                    key=id,
-                                    start=start,
-                                    certfile=certfile,
-                                    msg='Unable to open cert file %s: %s'
-                                    % (certfile, e))
-                    results.add(result)
+                    yield Result(self, constants.ERROR,
+                                 key=id,
+                                 start=start,
+                                 certfile=certfile,
+                                 msg='Unable to open cert file %s: %s'
+                                 % (certfile, e))
                     continue
             elif request.get('cert-database') is not None:
                 nickname = request.get('cert-nickname')
@@ -721,33 +678,30 @@ class IPACertRevocation(IPAPlugin):
                 try:
                     db = certdb.NSSDatabase(dbdir)
                 except Exception as e:
-                    result = Result(self, constants.ERROR,
-                                    key=id,
-                                    start=start,
-                                    dbdir=dbdir,
-                                    msg='Unable to open NSS database %s: %s'
-                                    % (dbdir, e))
-                    results.add(result)
+                    yield Result(self, constants.ERROR,
+                                 key=id,
+                                 start=start,
+                                 dbdir=dbdir,
+                                 msg='Unable to open NSS database %s: %s'
+                                 % (dbdir, e))
                     continue
                 try:
                     cert = db.get_cert(nickname)
                 except Exception as e:
-                    result = Result(self, constants.ERROR,
-                                    key=id,
-                                    start=start,
-                                    dbdir=dbdir,
-                                    nickname=nickname,
-                                    msg='Unable to retrieve cert %s from '
-                                    '%s: %s'
-                                    % (nickname, dbdir, e))
-                    results.add(result)
+                    yield Result(self, constants.ERROR,
+                                 key=id,
+                                 start=start,
+                                 dbdir=dbdir,
+                                 nickname=nickname,
+                                 msg='Unable to retrieve cert %s from '
+                                 '%s: %s'
+                                 % (nickname, dbdir, e))
                     continue
             else:
-                    result = Result(self, constants.ERROR,
-                                    key=id,
-                                    start=start,
-                                    msg='Unable to to identify cert type')
-                    results.add(result)
+                    yield Result(self, constants.ERROR,
+                                 key=id,
+                                 start=start,
+                                 msg='Unable to to identify cert type')
                     continue
 
             # Now we have the cert either way, check the recovation
@@ -756,24 +710,21 @@ class IPACertRevocation(IPAPlugin):
                 if result['result']['revoked']:
                     reason = result['result']['revocation_reason']
                     reason_txt = self.revocation_reason[reason]
-                    result = Result(self, constants.ERROR,
-                                    revocation_reason=reason_txt,
-                                    key=id,
-                                    start=start,
-                                    msg='Certificate is revoked, %s' %
-                                        reason_txt)
+                    yield Result(self, constants.ERROR,
+                                 revocation_reason=reason_txt,
+                                 key=id,
+                                 start=start,
+                                 msg='Certificate is revoked, %s' %
+                                     reason_txt)
                 else:
-                    result = Result(self, constants.SUCCESS, key=id,
-                                    start=start)
+                    yield Result(self, constants.SUCCESS, key=id,
+                                 start=start)
             except Exception as e:
-                result = Result(self, constants.ERROR,
-                                key=id,
-                                start=start,
-                                msg='Unable to determine revocation '
-                                    'status: %s' % e)
-            results.add(result)
-
-        return results
+                yield Result(self, constants.ERROR,
+                             key=id,
+                             start=start,
+                             msg='Unable to determine revocation '
+                                 'status: %s' % e)
 
 
 @registry
@@ -788,8 +739,6 @@ class IPACertmongerCA(IPAPlugin):
                                           certmonger.DBUS_CM_IF, True)
 
     def check(self):
-        results = Results()
-
         for ca in ['IPA',
                    'dogtag-ipa-ca-renew-agent',
                    'dogtag-ipa-ca-renew-agent-reuse']:
@@ -797,14 +746,11 @@ class IPACertmongerCA(IPAPlugin):
             try:
                 self.find_ca(ca)
             except Exception as e:
-                result = Result(self, constants.ERROR,
-                                key=ca,
-                                start=start,
-                                msg='Certmonger CA \'%s\' missing' % ca)
+                yield Result(self, constants.ERROR,
+                             key=ca,
+                             start=start,
+                             msg='Certmonger CA \'%s\' missing' % ca)
             else:
-                result = Result(self, constants.SUCCESS,
-                                key=ca,
-                                start=start)
-            results.add(result)
-
-        return results
+                yield Result(self, constants.SUCCESS,
+                             key=ca,
+                             start=start)
