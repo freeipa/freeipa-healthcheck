@@ -11,6 +11,7 @@ from ipaplatform.paths import paths
 from ipapython.certdb import NSS_SQL_FILES
 
 from ipaserver.install import dsinstance
+from ipaserver.install import krbinstance
 
 
 @registry
@@ -40,7 +41,20 @@ class IPAFileNSSDBCheck(IPAPlugin, FileCheck):
             self.collect_files(paths.PKI_TOMCAT_ALIAS_DIR, NSS_SQL_FILES,
                                'pkiuser', 'pkiuser', '0600')
 
+        return FileCheck.check(self)
+
+
+@registry
+class IPAFileCheck(IPAPlugin, FileCheck):
+    def check(self):
+        self.files = []
+
+        if self.ca.is_configured():
             self.files.append((paths.RA_AGENT_PEM, 'root', 'ipaapi', '0440'))
             self.files.append((paths.RA_AGENT_KEY, 'root', 'ipaapi', '0440'))
+
+        if krbinstance.is_pkinit_enabled():
+            self.files.append((paths.KDC_CERT, 'root', 'root', '0644'))
+            self.files.append((paths.KDC_KEY, 'root', 'root', '0600'))
 
         return FileCheck.check(self)
