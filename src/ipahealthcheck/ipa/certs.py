@@ -320,6 +320,8 @@ class IPACertfileExpirationCheck(IPAPlugin):
                              key=id,
                              msg='Request id %s expires in %s days'
                              % (id, diff))
+            else:
+                yield Result(self, constants.SUCCESS, key=id)
 
 
 @registry
