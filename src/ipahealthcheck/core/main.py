@@ -35,12 +35,13 @@ def find_plugins(name, registry):
 
 
 def run_plugin(plugin, available=()):
+    # manually calculate duration when we create results of our own
     start = datetime.utcnow()
     try:
         for result in plugin.check():
-            if type(result) not in (Result, Results):
+            if result is None:
                 # Treat no result as success
-                result = Result(plugin, constants.SUCCESS, start=start)
+                result = Result(plugin, constants.SUCCESS)
             yield result
     except Exception as e:
         logger.debug('Exception raised: %s', e)

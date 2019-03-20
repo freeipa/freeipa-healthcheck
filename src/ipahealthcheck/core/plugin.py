@@ -14,12 +14,11 @@ def duration(f):
     @wraps(f)
     def wrapper(*args, **kwds):
         start = datetime.utcnow()
-        result = f(*args, **kwds)
-        if isinstance(result, Result):
+        for result in f(*args, **kwds):
             end = datetime.utcnow()
             duration = end - start
             result.duration = '%6.6f' % duration.total_seconds()
-        return result
+            yield result
     return wrapper
 
 

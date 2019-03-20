@@ -71,8 +71,8 @@ check was executed.
 The runtime duration of each check will be calculated. The mechanism
 differs depending on complexity.
 
-If a check can only return a single Result then use the decorator
-@duration.
+A check should normally use the @duration decorator to track the
+duration it took to execute the check.
 
 
         @registry
@@ -80,25 +80,6 @@ If a check can only return a single Result then use the decorator
             @duration
             def check(self):
                 yield Result(self, constants.SUCCESS)
-
-
-If a check can return multiple values then you will need to set the
-start time when execution of an individual piece begins and pass that
-start time into the Result creation so that each part of the check
-represents its own duration. This could be useful to determine why
-a check is failing or which part is taking a long time to execute.
-
-
-        from datetime import datetime
-
-        @registry
-        class MyPlugin(Plugin):
-            def check(self):
-                results = Results()
-                for i in range(0,2):
-                    start = datetime.utcnow()
-                    do_work()
-                    yield Result(self, constants.SUCCESS, start=start)
 
 
 # Registering a source
