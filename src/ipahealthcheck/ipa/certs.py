@@ -227,6 +227,9 @@ class IPACertmongerExpirationCheck(IPAPlugin):
                                  expiration_date=generalized_time(notafter),
                                  msg='Request id %s expires in %s days'
                                  % (id, diff))
+                else:
+                    yield Result(self, constants.SUCCESS,
+                                 key=id)
 
 
 @registry
