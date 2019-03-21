@@ -124,7 +124,7 @@ def create_mock_dbus(bus, parent, object_path, object_dbus_interface,
     return mock_dbus(object_path)
 
 
-def get_requests():
+def get_expected_requests():
     """The list of requests known by the IPACertCheck plugin
 
        The list is copied and the nickname popped off to match the

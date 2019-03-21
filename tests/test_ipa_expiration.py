@@ -6,23 +6,23 @@ from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertmongerExpirationCheck
 from unittest.mock import patch
-from mock_certmonger import create_mock_dbus, _certmonger, get_requests
-from mock_certmonger import set_requests
+from mock_certmonger import create_mock_dbus, _certmonger
+from mock_certmonger import get_expected_requests, set_requests
 
 from util import capture_results
 
 
-@patch('ipahealthcheck.ipa.certs.get_requests')
+@patch('ipahealthcheck.ipa.certs.get_expected_requests')
 @patch('ipalib.install.certmonger._cm_dbus_object')
 @patch('ipalib.install.certmonger._certmonger')
 def test_expiration(mock_certmonger,
                     mock_cm_dbus_object,
-                    mock_get_requests):
+                    mock_get_expected_requests):
     set_requests()
 
     mock_cm_dbus_object.side_effect = create_mock_dbus
     mock_certmonger.return_value = _certmonger()
-    mock_get_requests.return_value = get_requests()
+    mock_get_expected_requests.return_value = get_expected_requests()
 
     framework = object()
     registry.initialize(framework)

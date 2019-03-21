@@ -30,8 +30,15 @@ logger = logging.getLogger()
 DAY = 60 * 60 * 24
 
 
-def get_requests(ca, ds, serverid):
+def get_expected_requests(ca, ds, serverid):
     """Provide the expected certmonger tracking request data
+
+       This list is based in part on certificate_renewal_update() in
+       ipaserver/install/server/upgrade.py and various
+       start_tracking_certificates() methods in *instance.py.
+
+       The list is filtered depending on whether a CA is running
+       and the certificates have been issued by IPA.
 
       :param ca: the CAInstance
       :param ds: the DSInstance
@@ -343,7 +350,7 @@ class IPACertTracking(IPAPlugin):
 
     @duration
     def check(self):
-        requests = get_requests(self.ca, self.ds, self.serverid)
+        requests = get_expected_requests(self.ca, self.ds, self.serverid)
         cm = certmonger._certmonger()
 
         ids = []
@@ -654,7 +661,7 @@ class IPACertRevocation(IPAPlugin):
         # list of certificates to check because it already filters out
         # based on whether the CA system is configure and whether the
         # certificates were issued by IPA.
-        requests = get_requests(self.ca, self.ds, self.serverid)
+        requests = get_expected_requests(self.ca, self.ds, self.serverid)
         for request in requests:
             id = certmonger.get_request_id(request)
             if request.get('cert-file') is not None:
