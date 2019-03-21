@@ -6,8 +6,7 @@ from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertNSSTrust
 from unittest.mock import patch
-
-from util import capture_results
+from util import capture_results, CAInstance
 
 
 class mock_CertDB:
@@ -27,10 +26,12 @@ def my_unparse_trust_flags(trust_flags):
 # results are returned.
 
 
+@patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipaserver.install.certs.CertDB')
 @patch('ipapython.certdb.unparse_trust_flags')
 def test_trust_default_ok(mock_unparse_trust_flags,
-                          mock_certdb):
+                          mock_certdb, mock_cainstance):
+    """Test what should be the standard case"""
     trust = {
         'ocspSigningCert cert-pki-ca': 'u,u,u',
         'subsystemCert cert-pki-ca': 'u,u,u',
@@ -38,6 +39,7 @@ def test_trust_default_ok(mock_unparse_trust_flags,
         'Server-Cert cert-pki-ca': 'u,u,u'
     }
 
+    mock_cainstance.return_value = CAInstance()
     mock_certdb.return_value = mock_CertDB(trust)
     mock_unparse_trust_flags.side_effect = my_unparse_trust_flags
 
@@ -57,16 +59,19 @@ def test_trust_default_ok(mock_unparse_trust_flags,
         assert 'cert-pki-ca' in result.kw.get('key')
 
 
+@patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipaserver.install.certs.CertDB')
 @patch('ipapython.certdb.unparse_trust_flags')
 def test_trust_ocsp_missing(mock_unparse_trust_flags,
-                            mock_certdb):
+                            mock_certdb, mock_cainstance):
+    """Test a missing certificate"""
     trust = {
         'subsystemCert cert-pki-ca': 'u,u,u',
         'auditSigningCert cert-pki-ca': 'u,u,Pu',
         'Server-Cert cert-pki-ca': 'u,u,u'
     }
 
+    mock_cainstance.return_value = CAInstance()
     mock_certdb.return_value = mock_CertDB(trust)
     mock_unparse_trust_flags.side_effect = my_unparse_trust_flags
 
@@ -98,10 +103,12 @@ def test_trust_ocsp_missing(mock_unparse_trust_flags,
     assert len(results) == 4
 
 
+@patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipaserver.install.certs.CertDB')
 @patch('ipapython.certdb.unparse_trust_flags')
 def test_trust_bad(mock_unparse_trust_flags,
-                   mock_certdb):
+                   mock_certdb, mock_cainstance):
+    """Test multiple unexpected trust flags"""
     trust = {
         'ocspSigningCert cert-pki-ca': 'u,u,u',
         'subsystemCert cert-pki-ca': 'X,u,u',
@@ -109,6 +116,7 @@ def test_trust_bad(mock_unparse_trust_flags,
         'Server-Cert cert-pki-ca': 'X,u,u'
     }
 
+    mock_cainstance.return_value = CAInstance()
     mock_certdb.return_value = mock_CertDB(trust)
     mock_unparse_trust_flags.side_effect = my_unparse_trust_flags
 
@@ -140,3 +148,19 @@ def test_trust_bad(mock_unparse_trust_flags,
                                    'expected u,u,u'
 
     assert len(results) == 4
+
+
+@patch('ipaserver.install.cainstance.CAInstance')
+def test_trust_caless(mock_cainstance):
+    """Nothing to check if the master is CALess"""
+
+    mock_cainstance.return_value = CAInstance(False)
+
+    framework = object()
+    registry.initialize(framework)
+    f = IPACertNSSTrust(registry)
+
+    f.config = config.Config()
+    results = capture_results(f)
+
+    assert len(results) == 0

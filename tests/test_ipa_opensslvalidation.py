@@ -6,14 +6,15 @@ from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPAOpenSSLChainValidation
 from unittest.mock import patch
+from util import capture_results, CAInstance
 
 from ipapython.ipautil import _RunResult
 
-from util import capture_results
 
-
+@patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipapython.ipautil.run')
-def test_openssl_validation_ok(mock_run):
+def test_openssl_validation_ok(mock_run,
+                               mock_cainstance):
 
     def run(args, raiseonerr=True):
         result = _RunResult('', '', 0)
@@ -22,6 +23,7 @@ def test_openssl_validation_ok(mock_run):
         return result
 
     mock_run.side_effect = run
+    mock_cainstance.return_value = CAInstance()
 
     framework = object()
     registry.initialize(framework)
@@ -38,8 +40,10 @@ def test_openssl_validation_ok(mock_run):
         assert result.check == 'IPAOpenSSLChainValidation'
 
 
+@patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipapython.ipautil.run')
-def test_openssl_validation_bad(mock_run):
+def test_openssl_validation_bad(mock_run,
+                                mock_cainstance):
 
     def run(args):
         result = _RunResult('', '', 2)
@@ -53,6 +57,7 @@ def test_openssl_validation_bad(mock_run):
         return result
 
     mock_run.side_effect = run
+    mock_cainstance.return_value = CAInstance()
 
     framework = object()
     registry.initialize(framework)

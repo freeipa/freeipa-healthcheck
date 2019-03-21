@@ -41,3 +41,16 @@ def capture_results(f):
             results.add(result)
 
     return results
+
+
+class CAInstance:
+    """A bare-bones CAinistance override
+
+       This is needed to control whether the underlying master is
+       CAless or CAful.
+    """
+    def __init__(self, enabled=True):
+        self.enabled = enabled
+
+    def is_configured(self):
+        return self.enabled

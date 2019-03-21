@@ -6,18 +6,19 @@ from ipahealthcheck.core import constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertmongerCA
 from unittest.mock import patch
+from util import capture_results, CAInstance
 
-from util import capture_results
 
-
+@patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipahealthcheck.ipa.certs.IPACertmongerCA.find_ca')
-def test_certmogner_ok(mock_find_ca):
+def test_certmogner_ok(mock_find_ca, mock_cainstance):
 
     mock_find_ca.side_effect = [
         'IPA',
         'dogtag-ipa-ca-renew-agent',
         'dogtag-ipa-ca-renew-agent-reuse'
     ]
+    mock_cainstance.return_value = CAInstance()
 
     framework = object()
     registry.initialize(framework)
@@ -33,13 +34,15 @@ def test_certmogner_ok(mock_find_ca):
         assert result.check == 'IPACertmongerCA'
 
 
+@patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipahealthcheck.ipa.certs.IPACertmongerCA.find_ca')
-def test_certmogner_missing(mock_find_ca):
+def test_certmogner_missing(mock_find_ca, mock_cainstance):
 
     mock_find_ca.side_effect = [
         'IPA',
         'dogtag-ipa-ca-renew-agent',
     ]
+    mock_cainstance.return_value = CAInstance()
 
     framework = object()
     registry.initialize(framework)

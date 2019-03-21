@@ -6,8 +6,7 @@ from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPANSSChainValidation
 from unittest.mock import patch
-
-from util import capture_results
+from util import capture_results, CAInstance
 
 from ipapython.ipautil import _RunResult
 
@@ -19,8 +18,10 @@ class DsInstance:
 
 @patch('ipahealthcheck.ipa.certs.get_dogtag_cert_password')
 @patch('ipaserver.install.dsinstance.DsInstance')
+@patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipapython.ipautil.run')
 def test_nss_validation_ok(mock_run,
+                           mock_cainstance,
                            mock_dsinstance,
                            mock_get_dogtag_cert_password):
 
@@ -30,6 +31,7 @@ def test_nss_validation_ok(mock_run,
         result.raw_error_output = b''
         return result
 
+    mock_cainstance.return_value = CAInstance()
     mock_dsinstance.return_value = DsInstance()
     mock_run.side_effect = run
     mock_get_dogtag_cert_password.return_value = 'foo'
@@ -51,8 +53,10 @@ def test_nss_validation_ok(mock_run,
 
 @patch('ipahealthcheck.ipa.certs.get_dogtag_cert_password')
 @patch('ipaserver.install.dsinstance.DsInstance')
+@patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipapython.ipautil.run')
 def test_nss_validation_bad(mock_run,
+                            mock_cainstance,
                             mock_dsinstance,
                             mock_get_dogtag_cert_password):
 
@@ -66,6 +70,7 @@ def test_nss_validation_bad(mock_run,
         result.error_log = ''
         return result
 
+    mock_cainstance.return_value = CAInstance()
     mock_dsinstance.return_value = DsInstance()
     mock_run.side_effect = run
     mock_get_dogtag_cert_password.return_value = 'foo'
@@ -101,11 +106,7 @@ def test_nss_validation_ok_no_ca(mock_run,
         result.raw_error_output = b''
         return result
 
-    class CAInstance:
-        def is_configured(self):
-            return False
-
-    mock_cainstance.return_value = CAInstance()
+    mock_cainstance.return_value = CAInstance(False)
     mock_dsinstance.return_value = DsInstance()
     mock_run.side_effect = run
 
