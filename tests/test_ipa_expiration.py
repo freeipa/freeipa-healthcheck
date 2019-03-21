@@ -32,10 +32,17 @@ def test_expiration(mock_certmonger,
     f.config.cert_expiration_days = 7
     results = capture_results(f)
 
-    assert len(results) == 1
+    assert len(results) == 2
+
     result = results.results[0]
     assert result.severity == constants.ERROR
     assert result.source == 'ipahealthcheck.ipa.certs'
     assert result.check == 'IPACertmongerExpirationCheck'
     assert result.kw.get('key') == '1234'
     assert result.kw.get('msg') == 'Request id 1234 expired on 19691231191704Z'
+
+    result = results.results[1]
+    assert result.severity == constants.SUCCESS
+    assert result.source == 'ipahealthcheck.ipa.certs'
+    assert result.check == 'IPACertmongerExpirationCheck'
+    assert result.kw.get('key') == '5678'
