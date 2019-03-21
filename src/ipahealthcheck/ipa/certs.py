@@ -228,7 +228,6 @@ class IPACertmongerExpirationCheck(IPAPlugin):
                              expiration_date=generalized_time(notafter),
                              msg='Request id %s expired on %s' %
                                  (id, generalized_time(notafter)))
-                return
             else:
                 delta = notafter - now
                 diff = int(delta.total_seconds() / DAY)
@@ -310,7 +309,7 @@ class IPACertfileExpirationCheck(IPAPlugin):
                 yield Result(self, constants.ERROR,
                              key=id,
                              store=store,
-                             msg='Unknown storage type: %s'
+                             msg='Unknown certmonger storage type: %s'
                              % store)
                 continue
 
@@ -375,18 +374,23 @@ class IPACertTracking(IPAPlugin):
                     ids.remove(request_id)
                     yield Result(self, constants.SUCCESS,
                                  key=request_id)
+                    continue
             except ValueError as e:
+                # A request was found but the id isn't in the
+                # list from certmonger!?
                 yield Result(self, constants.ERROR,
                              key=request_id,
                              msg='Request id %s is not tracked: %s'
                              % (request_id, e))
                 continue
 
+            # The criteria was not met
             if request_id is None:
                 yield Result(self, constants.ERROR,
                              msg='Missing tracking for %s' % request)
                 continue
 
+        # Report any unknown certmonger requests as warnings
         if ids:
             for id in ids:
                 yield Result(self, constants.WARNING, key=id,
