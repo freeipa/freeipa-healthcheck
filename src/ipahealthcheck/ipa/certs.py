@@ -581,7 +581,10 @@ class IPAOpenSSLChainValidation(IPAPlugin):
 
 @registry
 class IPARAAgent(IPAPlugin):
-    """Validate the RA Agent used to talk to the CA"""
+    """Validate the RA Agent used to talk to the CA
+
+       Compare the description and usercertificate values.
+    """
 
     @duration
     def check(self):
@@ -661,7 +664,11 @@ class IPARAAgent(IPAPlugin):
 
 @registry
 class IPACertRevocation(IPAPlugin):
-    """Confirm that the IPA certificates are not revoked"""
+    """Confirm that the IPA certificates are not revoked
+
+       This uses the certmonger expected tracking list to know which
+       one(s) to consider.
+    """
 
     revocation_reason = [
         "unspecified",
@@ -729,8 +736,22 @@ class IPACertRevocation(IPAPlugin):
                                  msg='Unable to to identify cert type')
                     continue
 
+            if not certs.is_ipa_issued_cert(api, cert):
+                logger.debug('\'%s\' was not by IPA, skipping' %
+                             DN(cert.subject))
+                continue
+
             # Now we have the cert either way, check the recovation
-            result = api.Command['cert_show'](cert.serial_number, all=True)
+            try:
+                result = api.Command['cert_show'](cert.serial_number,
+                                                  all=True)
+            except Exception as e:
+                yield Result(self, constants.ERROR,
+                             key=id,
+                             msg='Request for certificate failed, %s' %
+                                 e)
+                continue
+
             try:
                 if result['result']['revoked']:
                     reason = result['result']['revocation_reason']
@@ -751,7 +772,10 @@ class IPACertRevocation(IPAPlugin):
 
 @registry
 class IPACertmongerCA(IPAPlugin):
-    """Ensure that the required CAs are available in certmonger"""
+    """Ensure that the required CAs are available in certmonger
+
+       Addresses symptom of https://pagure.io/freeipa/issue/7870
+    """
 
     def find_ca(self, name):
         cm = certmonger._certmonger()
