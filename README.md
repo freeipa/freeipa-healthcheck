@@ -148,3 +148,29 @@ An example to provide a way to read and re-parse existing results:
 # Meta
 
 The meta source is intended to collect basic information about the run such as the host it is run on and the time it was run.
+
+# Testing and development
+
+The package can be tested and developed in a python virtual environment.
+
+It requires a full freeIPA deployment so full set of system packages
+need to be installed and an IPA master running.
+
+To create the virtual environment run:
+
+    % python3 -m venv --system-site-packages venv
+    % venv/bin/pip install -e .
+
+To use the environment
+
+    % source venv/bin/activate
+
+To run the healthchecks (must be done as root for proper results):
+
+    # source venv/bin/activate
+    # ipa-healthcheck
+
+To run the tests execute the virtual environment:
+
+    % pip install pytest
+    % pytest
