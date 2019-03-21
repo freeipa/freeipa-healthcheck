@@ -19,6 +19,7 @@ from ipalib.install import certmonger
 from ipaplatform.paths import paths
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
+from ipaserver.install import krbinstance
 from ipaserver.install import installutils
 from ipaserver.plugins import ldap2
 from ipapython import certdb
@@ -137,7 +138,8 @@ def get_expected_requests(ca, ds, serverid):
             }
         )
     else:
-        logger.debug('HTTP cert not issued by IPA, %s', cert.issuer)
+        logger.debug('HTTP cert not issued by IPA, \'%s\', skip tracking '
+                     'check' % DN(cert.issuer))
 
     # Check the ldap server cert if issued by IPA
     ds_nickname = ds.get_server_cert_nickname(serverid)
@@ -154,22 +156,24 @@ def get_expected_requests(ca, ds, serverid):
             }
         )
     else:
-        logger.debug('DS cert not issued by IPA')
+        logger.debug('DS cert is not issued by IPA, \'%s\', skip tracking '
+                     'check' % DN(cert.issuer))
 
-    # Check the KDC cert if issued by IPA
-    cert = x509.load_certificate_from_file(paths.KDC_CERT)
-    if certs.is_ipa_issued_cert(api, cert):
+    # Check if pkinit is enabled
+    if os.path.exists(paths.KDC_CERT):
+        pkinit_request_ca = krbinstance.get_pkinit_request_ca()
+        cert = x509.load_certificate_from_file(paths.KDC_CERT)
         requests.append(
             {
                 'cert-file': paths.KDC_CERT,
                 'key-file': paths.KDC_KEY,
-                'ca-name': 'IPA',
+                'ca-name': pkinit_request_ca,
                 'cert-postsave-command':
                     template % 'renew_kdc_cert',
             }
         )
     else:
-        logger.debug('KDC cert not issued by IPA, %s', cert.issuer)
+        logger.debug('No KDC pkinit certificate')
 
     return requests
 
@@ -402,6 +406,7 @@ class IPACertNSSTrust(IPAPlugin):
         }
 
         if not self.ca.is_configured():
+            logger.debug('CA is not configured, skipping NSS trust check')
             return
 
         db = certs.CertDB(api.env.realm, paths.PKI_TOMCAT_ALIAS_DIR)
@@ -443,6 +448,18 @@ class IPACertNSSTrust(IPAPlugin):
 @registry
 class IPANSSChainValidation(IPAPlugin):
     """Validate the certificate chain of the certs to ensure trust is ok"""
+
+    def validate_nss(self, dbdir, dbtype, pinfile, nickname):
+        """Call out to certutil to verify a certificate.
+
+           The caller must handle the exceptions
+        """
+        args = [paths.CERTUTIL, '-V', '-u', 'V', '-e']
+        args.extend(['-d', dbtype + ':' + dbdir])
+        args.extend(['-n', nickname])
+        args.extend(['-f', pinfile])
+
+        return ipautil.run(args, raiseonerr=False)
 
     @duration
     def check(self):
@@ -487,14 +504,11 @@ class IPANSSChainValidation(IPAPlugin):
             for (dbdir, nickname, pinfile) in validate:
                 # detect the database type so we have the right prefix
                 db = certdb.NSSDatabase(dbdir)
-                args = [paths.CERTUTIL, "-V", "-u", "V", "-e"]
-                args.extend(["-d", db.dbtype + ':' + dbdir])
-                args.extend(["-n", nickname])
-                args.extend(["-f", pinfile])
 
                 key = os.path.normpath(dbdir) + ':' + nickname
                 try:
-                    response = ipautil.run(args, raiseonerr=False)
+                    response = self.validate_nss(dbdir, db.dbtype, pinfile,
+                                                 nickname)
                 except ipautil.CalledProcessError as e:
                     yield Result(
                         self, constants.ERROR, key=key,
@@ -531,7 +545,11 @@ class IPAOpenSSLChainValidation(IPAPlugin):
 
            The caller must handle the exceptions
         """
-        args = [paths.OPENSSL, "verify", file]
+        args = [paths.OPENSSL, 'verify',
+                '-verbose',
+                '-show_chain',
+                '-CAfile', paths.IPA_CA_CRT,
+                file]
 
         return ipautil.run(args, raiseonerr=False)
 
@@ -567,6 +585,10 @@ class IPARAAgent(IPAPlugin):
 
     @duration
     def check(self):
+        if not self.ca.is_configured():
+            logger.debug('CA is not configured, skipping RA Agent check')
+            return
+
         try:
             cert = x509.load_certificate_from_file(paths.RA_AGENT_PEM)
         except Exception as e:
@@ -661,6 +683,9 @@ class IPACertRevocation(IPAPlugin):
         # list of certificates to check because it already filters out
         # based on whether the CA system is configure and whether the
         # certificates were issued by IPA.
+        if not self.ca.is_configured():
+            logger.debug('CA is not configured, skipping revocation check')
+            return
         requests = get_expected_requests(self.ca, self.ds, self.serverid)
         for request in requests:
             id = certmonger.get_request_id(request)
@@ -737,9 +762,15 @@ class IPACertmongerCA(IPAPlugin):
 
     @duration
     def check(self):
-        for ca in ['IPA',
-                   'dogtag-ipa-ca-renew-agent',
-                   'dogtag-ipa-ca-renew-agent-reuse']:
+        ca_list = ['IPA']
+        if self.ca.is_configured():
+            ca_list.extend([
+               'dogtag-ipa-ca-renew-agent',
+               'dogtag-ipa-ca-renew-agent-reuse'
+            ])
+        for ca in ca_list:
+            logger.debug('Checking for existence of certmonger CA \'%s\'' %
+                         ca)
             try:
                 self.find_ca(ca)
             except Exception as e:
