@@ -12,6 +12,7 @@ from ipapython.dn import DN
 from ipapython.ipaldap import LDAPClient, LDAPEntry
 
 from util import capture_results, CAInstance
+from ldap import OPT_X_SASL_SSF_MIN
 
 
 class IPACertificate:
@@ -37,13 +38,28 @@ class mock_ldap:
         return self.results
 
 
+class mock_ldap_conn:
+    def set_option(self, option, invalue):
+        pass
+
+    def get_option(self, option):
+        if option == OPT_X_SASL_SSF_MIN:
+            return 256
+
+    def search_s(self, base, scope, filterstr=None,
+                 attrlist=None, attrsonly=0):
+        return tuple()
+
+
+@patch('ldap.initialize')
 @patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_ok(mock_load_cert, mock_cainstance):
+def test_nss_agent_ok(mock_load_cert, mock_cainstance, mock_ldapinit):
 
     cert = IPACertificate()
     mock_load_cert.return_value = cert
     mock_cainstance.return_value = CAInstance()
+    mock_ldapinit.return_value = mock_ldap_conn()
 
     attrs = dict(
         description=['2;1;CN=ISSUER;CN=RA AGENT'],
@@ -66,13 +82,16 @@ def test_nss_agent_ok(mock_load_cert, mock_cainstance):
     assert len(results) == 0
 
 
+@patch('ldap.initialize')
 @patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_no_description(mock_load_cert, mock_cainstance):
+def test_nss_agent_no_description(mock_load_cert, mock_cainstance,
+                                  mock_ldapinit):
 
     cert = IPACertificate()
     mock_load_cert.return_value = cert
     mock_cainstance.return_value = CAInstance()
+    mock_ldapinit.return_value = mock_ldap_conn()
 
     attrs = dict(
         usercertificate=[cert],
@@ -135,13 +154,15 @@ def test_nss_agent_no_entry_found(mock_load_cert, mock_cainstance):
     assert result.kw.get('msg') == 'RA agent not found in LDAP'
 
 
+@patch('ldap.initialize')
 @patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_too_many(mock_load_cert, mock_cainstance):
+def test_nss_agent_too_many(mock_load_cert, mock_cainstance, mock_ldapinit):
 
     cert = IPACertificate()
     mock_load_cert.return_value = cert
     mock_cainstance.return_value = CAInstance()
+    mock_ldapinit.return_value = mock_ldap_conn()
 
     attrs = dict(
         description=['2;1;CN=ISSUER;CN=RA AGENT'],
@@ -169,14 +190,18 @@ def test_nss_agent_too_many(mock_load_cert, mock_cainstance):
     assert result.kw.get('msg') == 'Too many RA agent entries found, 2'
 
 
+@patch('ldap.initialize')
 @patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_nonmatching_cert(mock_load_cert, mock_cainstance):
+def test_nss_agent_nonmatching_cert(mock_load_cert,
+                                    mock_cainstance,
+                                    mock_ldapinit):
 
     cert = IPACertificate()
     cert2 = IPACertificate(2)
     mock_load_cert.return_value = cert
     mock_cainstance.return_value = CAInstance()
+    mock_ldapinit.return_value = mock_ldap_conn()
 
     attrs = dict(
         description=['2;1;CN=ISSUER;CN=RA AGENT'],
@@ -200,12 +225,14 @@ def test_nss_agent_nonmatching_cert(mock_load_cert, mock_cainstance):
     assert result.kw.get('msg') == 'RA agent certificate not found in LDAP'
 
 
+@patch('ldap.initialize')
 @patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_multiple_certs(mock_load_cert):
+def test_nss_agent_multiple_certs(mock_load_cert, mock_ldapinit):
 
     cert = IPACertificate()
     cert2 = IPACertificate(2)
     mock_load_cert.return_value = cert
+    mock_ldapinit.return_value = mock_ldap_conn()
 
     attrs = dict(
         description=['2;1;CN=ISSUER;CN=RA AGENT'],

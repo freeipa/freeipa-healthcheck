@@ -3,6 +3,8 @@
 #
 
 from ipahealthcheck.core.plugin import Results
+from unittest.mock import patch, Mock
+import ipalib
 
 
 class ExceptionNotRaised(Exception):
@@ -54,3 +56,26 @@ class CAInstance:
 
     def is_configured(self):
         return self.enabled
+
+
+# Mock api. This file needs to be imported before anything that would
+# import ipalib.api in order for it to be replaced properly.
+
+p_api = patch('ipalib.api', autospec=ipalib.api)
+m_api = p_api.start()
+m_api.isdone.return_value = False
+m_api.env = Mock()
+m_api.env.server = 'server.ipa.example'
+m_api.env.realm = u'IPA.EXAMPLE'
+m_api.Backend = Mock()
+m_api.Command = Mock()
+m_api.Command.ping.return_value = {
+    u'summary': u'IPA server version 4.4.3. API version 2.215',
+}
+m_api.Command.cert_show.return_value = {
+    u'result': {
+        u'result': {
+            u"revoked": False,
+        }
+    }
+}
