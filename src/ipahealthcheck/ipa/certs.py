@@ -26,7 +26,6 @@ from ipapython import certdb
 from ipapython import ipautil
 from ipapython.dn import DN
 
-
 logger = logging.getLogger()
 DAY = 60 * 60 * 24
 
@@ -514,6 +513,7 @@ class IPANSSChainValidation(IPAPlugin):
                     response = self.validate_nss(dbdir, db.dbtype, pinfile,
                                                  nickname)
                 except ipautil.CalledProcessError as e:
+                    logger.debug('Validation of NSS certificate failed %s', e)
                     yield Result(
                         self, constants.ERROR, key=key,
                         dbdir=dbdir, nickname=nickname,
@@ -735,10 +735,10 @@ class IPACertRevocation(IPAPlugin):
                                  % (nickname, dbdir, e))
                     continue
             else:
-                    yield Result(self, constants.ERROR,
-                                 key=id,
-                                 msg='Unable to to identify cert type')
-                    continue
+                yield Result(self, constants.ERROR,
+                             key=id,
+                             msg='Unable to to identify cert type')
+                continue
 
             if not certs.is_ipa_issued_cert(api, cert):
                 logger.debug('\'%s\' was not by IPA, skipping' %
@@ -748,7 +748,7 @@ class IPACertRevocation(IPAPlugin):
             # Now we have the cert either way, check the recovation
             try:
                 result = api.Command.cert_show(cert.serial_number,
-                                                  all=True)
+                                               all=True)
             except Exception as e:
                 yield Result(self, constants.ERROR,
                              key=id,
@@ -802,6 +802,7 @@ class IPACertmongerCA(IPAPlugin):
             try:
                 self.find_ca(ca)
             except Exception as e:
+                logger.debug('Search for certmonger CA %s failed: %s', ca, e)
                 yield Result(self, constants.ERROR,
                              key=ca,
                              msg='Certmonger CA \'%s\' missing' % ca)
