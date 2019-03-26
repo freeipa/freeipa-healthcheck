@@ -45,7 +45,7 @@ def test_openssl_validation_ok(mock_run,
 def test_openssl_validation_bad(mock_run,
                                 mock_cainstance):
 
-    def run(args):
+    def run(args, raiseonerr=True):
         result = _RunResult('', '', 2)
         result.raw_output = bytes(
             'O = EXAMPLE.TEST, CN = ipa.example.test\n'
@@ -72,3 +72,4 @@ def test_openssl_validation_bad(mock_run,
         assert result.severity == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPAOpenSSLChainValidation'
+        assert 'failed' in result.kw.get('msg')
