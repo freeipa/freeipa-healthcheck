@@ -2,7 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from util import capture_results, CAInstance
+from util import capture_results, CAInstance, no_exceptions
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertRevocation
@@ -55,6 +55,8 @@ def test_revocation_ok(mock_cainstance,
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertRevocation'
 
+    no_exceptions(results)
+
 
 @patch('ipaserver.install.certs.is_ipa_issued_cert')
 @patch('ipalib.x509.load_certificate_from_file')
@@ -96,3 +98,5 @@ def test_revocation_one_bad(mock_cainstance,
     assert result.source == 'ipahealthcheck.ipa.certs'
     assert result.check == 'IPACertRevocation'
     assert result.kw.get('revocation_reason') == 'superseded'
+
+    no_exceptions(results)

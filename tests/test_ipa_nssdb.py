@@ -6,7 +6,7 @@ from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertNSSTrust
 from unittest.mock import patch
-from util import capture_results, CAInstance
+from util import capture_results, CAInstance, no_exceptions
 
 
 class mock_CertDB:
@@ -58,6 +58,8 @@ def test_trust_default_ok(mock_unparse_trust_flags,
         assert result.check == 'IPACertNSSTrust'
         assert 'cert-pki-ca' in result.kw.get('key')
 
+    no_exceptions(results)
+
 
 @patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipaserver.install.certs.CertDB')
@@ -101,6 +103,8 @@ def test_trust_ocsp_missing(mock_unparse_trust_flags,
     assert result.kw.get('msg') == 'Certificate ocspSigningCert ' \
                                    'cert-pki-ca missing while verifying trust'
     assert len(results) == 4
+    
+    no_exceptions(results)
 
 
 @patch('ipaserver.install.cainstance.CAInstance')
@@ -148,6 +152,8 @@ def test_trust_bad(mock_unparse_trust_flags,
                                    'expected u,u,u'
 
     assert len(results) == 4
+
+    no_exceptions(results)
 
 
 @patch('ipaserver.install.cainstance.CAInstance')

@@ -8,7 +8,7 @@ from ipahealthcheck.ipa.certs import IPACertTracking
 from unittest.mock import patch
 from mock_certmonger import create_mock_dbus, _certmonger
 from mock_certmonger import get_expected_requests, set_requests
-from util import capture_results
+from util import capture_results, no_exceptions
 
 
 @patch('ipaserver.install.installutils.check_server_configuration')
@@ -34,6 +34,8 @@ def test_known_cert_tracking(mock_certmonger,
     results = capture_results(f)
 
     assert len(results) == 2
+
+    no_exceptions(results)
 
 
 @patch('ipahealthcheck.ipa.certs.get_expected_requests')
@@ -70,6 +72,8 @@ def test_missing_cert_tracking(mock_certmonger,
         "'/usr/libexec/ipa/certmonger/renew_ra_cert_pre', " \
         "'cert-postsave-command': '/usr/libexec/ipa/certmonger/renew_ra_cert'}"
 
+    no_exceptions(results)
+
 
 @patch('ipahealthcheck.ipa.certs.get_expected_requests')
 @patch('ipalib.install.certmonger._cm_dbus_object')
@@ -103,3 +107,5 @@ def test_unknown_cert_tracking(mock_certmonger,
     assert result.source == 'ipahealthcheck.ipa.certs'
     assert result.check == 'IPACertTracking'
     assert result.kw.get('msg') == 'Unknown certmonger id 7777'
+
+    no_exceptions(results)

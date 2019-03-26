@@ -95,3 +95,9 @@ m_api.Command.cert_show.side_effect = [
         }
     },
 ]
+
+
+def no_exceptions(results):
+    """Given Results ensure that an except was not raised"""
+    for result in results.results:
+        assert 'exception' not in result.kw

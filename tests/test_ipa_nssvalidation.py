@@ -6,7 +6,7 @@ from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPANSSChainValidation
 from unittest.mock import patch
-from util import capture_results, CAInstance
+from util import capture_results, CAInstance, no_exceptions
 
 from ipapython.ipautil import _RunResult
 
@@ -50,6 +50,8 @@ def test_nss_validation_ok(mock_run,
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPANSSChainValidation'
 
+    no_exceptions(results)
+
 
 @patch('ipahealthcheck.ipa.certs.get_dogtag_cert_password')
 @patch('ipaserver.install.dsinstance.DsInstance')
@@ -89,6 +91,8 @@ def test_nss_validation_bad(mock_run,
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPANSSChainValidation'
 
+    no_exceptions(results)
+
 
 @patch('ipaserver.install.dsinstance.DsInstance')
 @patch('ipaserver.install.cainstance.CAInstance')
@@ -124,3 +128,5 @@ def test_nss_validation_ok_no_ca(mock_run,
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPANSSChainValidation'
         assert 'slapd-' in result.kw.get('key')
+
+    no_exceptions(results)

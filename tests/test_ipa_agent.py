@@ -11,7 +11,7 @@ from ipalib import errors
 from ipapython.dn import DN
 from ipapython.ipaldap import LDAPClient, LDAPEntry
 
-from util import capture_results, CAInstance
+from util import capture_results, CAInstance, no_exceptions
 
 
 class IPACertificate:
@@ -76,6 +76,8 @@ def test_nss_agent_ok(mock_load_cert, mock_cainstance, mock_ldapinit):
     # A valid call relies on a success to be set by core
     assert len(results) == 0
 
+    no_exceptions(results)
+
 
 @patch('ldap.initialize')
 @patch('ipaserver.install.cainstance.CAInstance')
@@ -108,6 +110,8 @@ def test_nss_agent_no_description(mock_load_cert, mock_cainstance,
     assert result.severity == constants.ERROR
     assert result.kw.get('msg') == 'RA agent is missing description'
 
+    no_exceptions(results)
+
 
 @patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipalib.x509.load_certificate_from_file')
@@ -126,6 +130,8 @@ def test_nss_agent_load_failure(mock_load_cert, mock_cainstance):
 
     assert result.severity == constants.ERROR
     assert result.kw.get('msg') == 'Unable to load RA cert: test'
+
+    no_exceptions(results)
 
 
 @patch('ipaserver.install.cainstance.CAInstance')
@@ -147,6 +153,8 @@ def test_nss_agent_no_entry_found(mock_load_cert, mock_cainstance):
 
     assert result.severity == constants.ERROR
     assert result.kw.get('msg') == 'RA agent not found in LDAP'
+
+    no_exceptions(results)
 
 
 @patch('ldap.initialize')

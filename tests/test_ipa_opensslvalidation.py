@@ -6,7 +6,7 @@ from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPAOpenSSLChainValidation
 from unittest.mock import patch
-from util import capture_results, CAInstance
+from util import capture_results, CAInstance, no_exceptions
 
 from ipapython.ipautil import _RunResult
 
@@ -39,6 +39,7 @@ def test_openssl_validation_ok(mock_run,
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPAOpenSSLChainValidation'
 
+    no_exceptions(results)
 
 @patch('ipaserver.install.cainstance.CAInstance')
 @patch('ipapython.ipautil.run')
@@ -73,3 +74,5 @@ def test_openssl_validation_bad(mock_run,
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPAOpenSSLChainValidation'
         assert 'failed' in result.kw.get('msg')
+
+    no_exceptions(results)

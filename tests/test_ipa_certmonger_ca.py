@@ -6,7 +6,7 @@ from ipahealthcheck.core import constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertmongerCA
 from unittest.mock import patch
-from util import capture_results, CAInstance
+from util import capture_results, CAInstance, no_exceptions
 
 
 @patch('ipaserver.install.cainstance.CAInstance')
@@ -32,6 +32,8 @@ def test_certmogner_ok(mock_find_ca, mock_cainstance):
         assert result.severity == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertmongerCA'
+
+    no_exceptions(results)
 
 
 @patch('ipaserver.install.cainstance.CAInstance')
@@ -63,3 +65,5 @@ def test_certmogner_missing(mock_find_ca, mock_cainstance):
         'dogtag-ipa-ca-renew-agent-reuse'
     assert results.results[2].kw.get('msg') == \
         "Certmonger CA 'dogtag-ipa-ca-renew-agent-reuse' missing"
+
+    no_exceptions(results)

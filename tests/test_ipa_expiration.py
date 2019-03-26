@@ -9,7 +9,7 @@ from unittest.mock import patch
 from mock_certmonger import create_mock_dbus, _certmonger
 from mock_certmonger import get_expected_requests, set_requests
 
-from util import capture_results
+from util import capture_results, no_exceptions
 
 
 @patch('ipahealthcheck.ipa.certs.get_expected_requests')
@@ -46,3 +46,5 @@ def test_expiration(mock_certmonger,
     assert result.source == 'ipahealthcheck.ipa.certs'
     assert result.check == 'IPACertmongerExpirationCheck'
     assert result.kw.get('key') == '5678'
+
+    no_exceptions(results)
