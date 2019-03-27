@@ -92,12 +92,17 @@ class mock_obj_if:
     def __init__(self, index):
         self.index = index
 
+    def find_request_by_nickname(self, nickname):
+        return None
+
     def get_requests(self):
         """Return list of request ids that dbus would have returned"""
         return [n.get('nickname') for n in cm_requests]
 
     def get_nickname(self):
         """Retrieve the certmonger CA nickname"""
+        if self.index is None:
+            return None
         return cm_requests[self.index].get('ca-name')
 
     def get_ca(self):
@@ -132,8 +137,11 @@ def get_expected_requests():
     """
     requests = copy.deepcopy(pristine_cm_requests)
     for request in requests:
-        request.pop('nickname')
-        request.pop('not-valid-after')
+        try:
+            request.pop('nickname')
+            request.pop('not-valid-after')
+        except KeyError:
+            pass
 
     return requests
 

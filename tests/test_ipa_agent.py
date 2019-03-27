@@ -12,6 +12,7 @@ from ipapython.dn import DN
 from ipapython.ipaldap import LDAPClient, LDAPEntry
 
 from util import capture_results, CAInstance, no_exceptions
+from ldap import OPT_X_SASL_SSF_MIN
 
 
 class IPACertificate:
@@ -40,6 +41,10 @@ class mock_ldap:
 class mock_ldap_conn:
     def set_option(self, option, invalue):
         pass
+
+    def get_option(self, option):
+        if option == OPT_X_SASL_SSF_MIN:
+            return 256
 
     def search_s(self, base, scope, filterstr=None,
                  attrlist=None, attrsonly=0):
