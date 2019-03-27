@@ -68,6 +68,7 @@ def test_missing_cert_tracking(mock_certmonger,
         "'cert-file': '/var/lib/ipa/ra-agent.pem', " \
         "'key-file': '/var/lib/ipa/ra-agent.key', " \
         "'ca-name': 'dogtag-ipa-ca-renew-agent', " \
+        "'cert-storage': 'FILE', "\
         "'cert-presave-command': " \
         "'/usr/libexec/ipa/certmonger/renew_ra_cert_pre', " \
         "'cert-postsave-command': '/usr/libexec/ipa/certmonger/renew_ra_cert'}"
