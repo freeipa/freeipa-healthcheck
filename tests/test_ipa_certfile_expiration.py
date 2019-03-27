@@ -92,3 +92,40 @@ def test_certfile_expiration_warning(mock_certmonger,
     assert 'expires in 6 days' in result.kw.get('msg') 
 
     no_exceptions(results)
+
+
+@patch('ipalib.x509.load_certificate_from_file')
+@patch('ipahealthcheck.ipa.certs.get_expected_requests')
+@patch('ipalib.install.certmonger._cm_dbus_object')
+@patch('ipalib.install.certmonger._certmonger')
+def test_certfile_expiration_expired(mock_certmonger,
+                                     mock_cm_dbus_object,
+                                     mock_get_expected_requests,
+                                     mock_load_cert):
+
+    set_requests(remove=1)
+
+    cert = IPACertificate(not_valid_after = datetime.utcnow() + timedelta(days=-100))
+    mock_load_cert.return_value = cert
+    mock_cm_dbus_object.side_effect = create_mock_dbus
+    mock_certmonger.return_value = _certmonger()
+    mock_get_expected_requests.return_value = get_expected_requests()
+
+    framework = object()
+    registry.initialize(framework)
+    f = IPACertfileExpirationCheck(registry)
+
+    f.config = config.Config()
+    f.config.cert_expiration_days = 30
+    results = capture_results(f)
+
+    assert len(results) == 1
+
+    result = results.results[0]
+    assert result.severity == constants.ERROR
+    assert result.source == 'ipahealthcheck.ipa.certs'
+    assert result.check == 'IPACertfileExpirationCheck'
+    assert result.kw.get('key') == '1234'
+    assert 'Request id 1234 expired on' in result.kw.get('msg') 
+
+    no_exceptions(results)
