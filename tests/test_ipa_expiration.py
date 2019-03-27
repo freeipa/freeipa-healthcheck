@@ -2,14 +2,16 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+from ipaplatform.paths import paths
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
-from ipahealthcheck.ipa.certs import IPACertmongerExpirationCheck
+from ipahealthcheck.ipa.certs import IPACertmongerExpirationCheck, DAY
 from unittest.mock import patch
 from mock_certmonger import create_mock_dbus, _certmonger
 from mock_certmonger import get_expected_requests, set_requests
 
 from util import capture_results, no_exceptions
+from datetime import datetime, timedelta
 
 
 @patch('ipahealthcheck.ipa.certs.get_expected_requests')
@@ -46,5 +48,53 @@ def test_expiration(mock_certmonger,
     assert result.source == 'ipahealthcheck.ipa.certs'
     assert result.check == 'IPACertmongerExpirationCheck'
     assert result.kw.get('key') == '5678'
+
+    no_exceptions(results)
+
+
+@patch('ipahealthcheck.ipa.certs.get_expected_requests')
+@patch('ipalib.install.certmonger._cm_dbus_object')
+@patch('ipalib.install.certmonger._certmonger')
+def test_expiration_warning(mock_certmonger,
+                            mock_cm_dbus_object,
+                            mock_get_expected_requests):
+
+    warning = datetime.utcnow() + timedelta(days=20)
+    replaceme =  {
+        'nickname': '7777',
+        'cert-file': paths.RA_AGENT_PEM,
+        'key-file': paths.RA_AGENT_KEY,
+        'ca-name': 'dogtag-ipa-ca-renew-agent',
+        'not-valid-after': int(warning.timestamp()),
+    }
+
+    set_requests(remove=0, add=replaceme)
+
+    mock_cm_dbus_object.side_effect = create_mock_dbus
+    mock_certmonger.return_value = _certmonger()
+    mock_get_expected_requests.return_value = get_expected_requests()
+
+    framework = object()
+    registry.initialize(framework)
+    f = IPACertmongerExpirationCheck(registry)
+
+    f.config = config.Config()
+    f.config.cert_expiration_days = 30
+    results = capture_results(f)
+
+    assert len(results) == 2
+
+    result = results.results[0]
+    assert result.severity == constants.SUCCESS
+    assert result.source == 'ipahealthcheck.ipa.certs'
+    assert result.check == 'IPACertmongerExpirationCheck'
+    assert result.kw.get('key') == '5678'
+
+    result = results.results[1]
+    assert result.severity == constants.WARNING
+    assert result.source == 'ipahealthcheck.ipa.certs'
+    assert result.check == 'IPACertmongerExpirationCheck'
+    assert result.kw.get('key') == '7777'
+    assert 'expires in 19 days' in result.kw.get('msg')
 
     no_exceptions(results)
