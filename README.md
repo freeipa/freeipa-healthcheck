@@ -174,3 +174,9 @@ To run the tests execute the virtual environment:
 
     % pip install pytest
     % pytest
+
+The configuration file and directory are not yet created so you'll need
+to do that manually:
+
+    # mkdir /etc/ipahealthcheck
+    # echo "[default]" > /etc/ipahealthcheck/ipahealthcheck.conf
