@@ -58,6 +58,19 @@ class CAInstance:
         return self.enabled
 
 
+class KRAInstance:
+    """A bare-bones KRAinistance override
+
+       This is needed to control whether the underlying master is
+       has a KRA installed or not.
+    """
+    def __init__(self, installed=True):
+        self.installed = installed
+
+    def is_installed(self):
+        return self.installed
+
+
 # Mock api. This file needs to be imported before anything that would
 # import ipalib.api in order for it to be replaced properly.
 

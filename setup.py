@@ -8,6 +8,7 @@ setup(
     # packages=find_packages(where='src'),
     packages=[
         'ipahealthcheck.core',
+        'ipahealthcheck.dogtag',
         'ipahealthcheck.ipa'
     ],
     entry_points={
@@ -17,6 +18,7 @@ setup(
         ],
         # subsystem registries
         'ipahealthcheck.registry': [
+            'ipahealthcheck.dogtag = ipahealthcheck.dogtag.plugin:registry',
             'ipahealthcheck.ipa = ipahealthcheck.ipa.plugin:registry',
             'ipahealthcheck.meta = ipahealthcheck.meta.plugin:registry',
         ],
@@ -31,6 +33,10 @@ setup(
             'ipafiles = ipahealthcheck.ipa.files',
             'ipahost = ipahealthcheck.ipa.host',
         ],
+        # plugin modules for ipahealthcheck.dogtag registry
+        'ipahealthcheck.dogtag': [
+            'dogtagca = ipahealthcheck.dogtag.ca',
+        ]
     },
     classifiers=[
         'Programming Language :: Python :: 2.7',
