@@ -31,6 +31,14 @@ logger = logging.getLogger()
 DAY = 60 * 60 * 24
 
 
+def is_ipa_issued_cert(api, cert):
+    """Thin wrapper around certs.is_ipa_issued to test for LDAP"""
+    if not api.Backend.ldap2.isconnected():
+        return None
+
+    return certs.is_ipa_issued_cert(api, cert)
+
+
 def get_expected_requests(ca, ds, serverid):
     """Provide the expected certmonger tracking request data
 
@@ -161,7 +169,11 @@ def get_expected_requests(ca, ds, serverid):
         logger.debug('CA is not configured, skipping CA tracking')
 
     cert = x509.load_certificate_from_file(paths.HTTPD_CERT_FILE)
-    if certs.is_ipa_issued_cert(api, cert):
+    issued = is_ipa_issued_cert(api, cert)
+    if issued is None:
+        logger.debug('Unable to determine if \'%s\' was issued by IPA '
+                     'because no LDAP connection, assuming yes.')
+    if issued or issued is None:
         requests.append(
             {
                 'cert-file': paths.HTTPD_CERT_FILE,
@@ -178,7 +190,11 @@ def get_expected_requests(ca, ds, serverid):
     ds_nickname = ds.get_server_cert_nickname(serverid)
     ds_db_dirname = dsinstance.config_dirname(serverid)
     ds_db = certs.CertDB(api.env.realm, nssdir=ds_db_dirname)
-    if ds_db.is_ipa_issued_cert(api, ds_nickname):
+    connected = api.Backend.ldap2.isconnected()
+    if not connected:
+        logger.debug('Unable to determine if \'%s\' was issued by IPA '
+                     'because no LDAP connection, assuming yes.')
+    if not connected or ds_db.is_ipa_issued_cert(api, ds_nickname):
         requests.append(
             {
                 'cert-database': ds_db_dirname[:-1],
@@ -638,6 +654,11 @@ class IPARAAgent(IPAPlugin):
             logger.debug('CA is not configured, skipping RA Agent check')
             return
 
+        if not api.Backend.ldap2.isconnected():
+            yield Result(self, constants.CRITICAL,
+                         msg='Skipping because no LDAP connection')
+            return
+
         try:
             cert = x509.load_certificate_from_file(paths.RA_AGENT_PEM)
         except Exception as e:
@@ -783,8 +804,13 @@ class IPACertRevocation(IPAPlugin):
                              msg='Unable to to identify cert type')
                 continue
 
-            if not certs.is_ipa_issued_cert(api, cert):
-                logger.debug('\'%s\' was not by IPA, skipping' %
+            issued = is_ipa_issued_cert(api, cert)
+            if issued is False:
+                logger.debug('\'%s\' was not issued by IPA, skipping' %
+                             DN(cert.subject))
+                continue
+            elif issued is None:
+                logger.debug('LDAP is down, skipping \'%s\'' %
                              DN(cert.subject))
                 continue
 

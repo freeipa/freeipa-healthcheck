@@ -39,6 +39,8 @@ class IPARegistry(Registry):
                 api.Backend.ldap2.connect()
             except errors.CCacheError:
                 pass
+            except errors.NetworkError as e:
+                pass
 
 
 registry = IPARegistry()
