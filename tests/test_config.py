@@ -2,8 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from util import raises
-from ipahealthcheck.core.config import Config, read_config
+from ipahealthcheck.core.config import read_config
 import tempfile
 
 

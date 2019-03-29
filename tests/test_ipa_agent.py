@@ -2,16 +2,18 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+from base import BaseTest
+from unittest.mock import Mock, patch
+from util import capture_results, CAInstance
+
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPARAAgent
-from unittest.mock import patch
 
 from ipalib import errors
 from ipapython.dn import DN
 from ipapython.ipaldap import LDAPClient, LDAPEntry
 
-from util import capture_results, CAInstance, no_exceptions
 from ldap import OPT_X_SASL_SSF_MIN
 
 
@@ -51,212 +53,164 @@ class mock_ldap_conn:
         return tuple()
 
 
-@patch('ldap.initialize')
-@patch('ipaserver.install.cainstance.CAInstance')
-@patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_ok(mock_load_cert, mock_cainstance, mock_ldapinit):
-
+class TestNSSAgent(BaseTest):
     cert = IPACertificate()
-    mock_load_cert.return_value = cert
-    mock_cainstance.return_value = CAInstance()
-    mock_ldapinit.return_value = mock_ldap_conn()
+    patches = {
+        'ipaserver.install.installutils.check_server_configuration':
+        Mock(return_value=None),
+        'ldap.initialize':
+        Mock(return_value=mock_ldap_conn()),
+        'ipaserver.install.cainstance.CAInstance':
+        Mock(return_value=CAInstance()),
+        'ipalib.x509.load_certificate_from_file':
+        Mock(return_value=cert),
+    }
 
-    attrs = dict(
-        description=['2;1;CN=ISSUER;CN=RA AGENT'],
-        usercertificate=[cert],
-    )
-    fake_conn = LDAPClient('ldap://localhost')
-    ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
-    for attr, values in attrs.items():
-        ldapentry[attr] = values
+    def test_nss_agent_ok(self):
 
-    framework = object()
-    registry.initialize(framework)
-    f = IPARAAgent(registry)
+        attrs = dict(
+            description=['2;1;CN=ISSUER;CN=RA AGENT'],
+            usercertificate=[self.cert],
+        )
+        fake_conn = LDAPClient('ldap://localhost')
+        ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
 
-    f.conn = mock_ldap([ldapentry])
-    f.config = config.Config()
-    results = capture_results(f)
+        framework = object()
+        registry.initialize(framework)
+        f = IPARAAgent(registry)
 
-    # A valid call relies on a success to be set by core
-    assert len(results) == 0
+        f.conn = mock_ldap([ldapentry])
+        f.config = config.Config()
+        self.results = capture_results(f)
 
-    no_exceptions(results)
+        # A valid call relies on a success to be set by core
+        assert len(self.results) == 0
 
+    def test_nss_agent_no_description(self):
 
-@patch('ldap.initialize')
-@patch('ipaserver.install.cainstance.CAInstance')
-@patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_no_description(mock_load_cert, mock_cainstance,
-                                  mock_ldapinit):
+        attrs = dict(
+            usercertificate=[self.cert],
+        )
+        fake_conn = LDAPClient('ldap://localhost')
+        ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
 
-    cert = IPACertificate()
-    mock_load_cert.return_value = cert
-    mock_cainstance.return_value = CAInstance()
-    mock_ldapinit.return_value = mock_ldap_conn()
+        framework = object()
+        registry.initialize(framework)
+        f = IPARAAgent(registry)
 
-    attrs = dict(
-        usercertificate=[cert],
-    )
-    fake_conn = LDAPClient('ldap://localhost')
-    ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
-    for attr, values in attrs.items():
-        ldapentry[attr] = values
+        f.conn = mock_ldap([ldapentry])
+        f.config = config.Config()
+        self.results = capture_results(f)
+        result = self.results.results[0]
 
-    framework = object()
-    registry.initialize(framework)
-    f = IPARAAgent(registry)
+        assert result.severity == constants.ERROR
+        assert result.kw.get('msg') == 'RA agent is missing description'
 
-    f.conn = mock_ldap([ldapentry])
-    f.config = config.Config()
-    results = capture_results(f)
-    result = results.results[0]
+    @patch('ipalib.x509.load_certificate_from_file')
+    def test_nss_agent_load_failure(self, mock_load_cert):
 
-    assert result.severity == constants.ERROR
-    assert result.kw.get('msg') == 'RA agent is missing description'
+        mock_load_cert.side_effect = IOError('test')
 
-    no_exceptions(results)
+        framework = object()
+        registry.initialize(framework)
+        f = IPARAAgent(registry)
 
+        f.config = config.Config()
+        self.results = capture_results(f)
+        result = self.results.results[0]
 
-@patch('ipaserver.install.cainstance.CAInstance')
-@patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_load_failure(mock_load_cert, mock_cainstance):
+        assert result.severity == constants.ERROR
+        assert result.kw.get('msg') == 'Unable to load RA cert: test'
 
-    mock_load_cert.side_effect = IOError('test')
-    mock_cainstance.return_value = CAInstance()
+    def test_nss_agent_no_entry_found(self):
 
-    framework = object()
-    registry.initialize(framework)
-    f = IPARAAgent(registry)
+        framework = object()
+        registry.initialize(framework)
+        f = IPARAAgent(registry)
 
-    f.config = config.Config()
-    results = capture_results(f)
-    result = results.results[0]
+        f.conn = mock_ldap(None)  # None == NotFound
+        f.config = config.Config()
+        self.results = capture_results(f)
+        result = self.results.results[0]
 
-    assert result.severity == constants.ERROR
-    assert result.kw.get('msg') == 'Unable to load RA cert: test'
+        assert result.severity == constants.ERROR
+        assert result.kw.get('msg') == 'RA agent not found in LDAP'
 
-    no_exceptions(results)
+    def test_nss_agent_too_many(self):
 
+        attrs = dict(
+            description=['2;1;CN=ISSUER;CN=RA AGENT'],
+            usercertificate=[self.cert],
+        )
+        fake_conn = LDAPClient('ldap://localhost')
+        ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
 
-@patch('ipaserver.install.cainstance.CAInstance')
-@patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_no_entry_found(mock_load_cert, mock_cainstance):
+        ldapentry2 = LDAPEntry(fake_conn, DN('uid=ipara2,ou=people,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
 
-    cert = IPACertificate()
-    mock_load_cert.return_value = cert
-    mock_cainstance.return_value = CAInstance()
+        framework = object()
+        registry.initialize(framework)
+        f = IPARAAgent(registry)
 
-    framework = object()
-    registry.initialize(framework)
-    f = IPARAAgent(registry)
+        f.conn = mock_ldap([ldapentry, ldapentry2])
+        f.config = config.Config()
+        self.results = capture_results(f)
+        result = self.results.results[0]
 
-    f.conn = mock_ldap(None)  # None == NotFound
-    f.config = config.Config()
-    results = capture_results(f)
-    result = results.results[0]
+        assert result.severity == constants.ERROR
+        assert result.kw.get('msg') == 'Too many RA agent entries found, 2'
 
-    assert result.severity == constants.ERROR
-    assert result.kw.get('msg') == 'RA agent not found in LDAP'
+    def test_nss_agent_nonmatching_cert(self):
 
-    no_exceptions(results)
+        cert2 = IPACertificate(2)
 
+        attrs = dict(
+            description=['2;1;CN=ISSUER;CN=RA AGENT'],
+            usercertificate=[cert2],
+        )
+        fake_conn = LDAPClient('ldap://localhost')
+        ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
 
-@patch('ldap.initialize')
-@patch('ipaserver.install.cainstance.CAInstance')
-@patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_too_many(mock_load_cert, mock_cainstance, mock_ldapinit):
+        framework = object()
+        registry.initialize(framework)
+        f = IPARAAgent(registry)
 
-    cert = IPACertificate()
-    mock_load_cert.return_value = cert
-    mock_cainstance.return_value = CAInstance()
-    mock_ldapinit.return_value = mock_ldap_conn()
+        f.conn = mock_ldap([ldapentry])
+        f.config = config.Config()
+        self.results = capture_results(f)
+        result = self.results.results[0]
 
-    attrs = dict(
-        description=['2;1;CN=ISSUER;CN=RA AGENT'],
-        usercertificate=[cert],
-    )
-    fake_conn = LDAPClient('ldap://localhost')
-    ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
-    for attr, values in attrs.items():
-        ldapentry[attr] = values
+        assert result.severity == constants.ERROR
+        assert result.kw.get('msg') == 'RA agent certificate not found in LDAP'
 
-    ldapentry2 = LDAPEntry(fake_conn, DN('uid=ipara2,ou=people,o=ipaca'))
-    for attr, values in attrs.items():
-        ldapentry[attr] = values
+    def test_nss_agent_multiple_certs(self):
 
-    framework = object()
-    registry.initialize(framework)
-    f = IPARAAgent(registry)
+        cert2 = IPACertificate(2)
 
-    f.conn = mock_ldap([ldapentry, ldapentry2])
-    f.config = config.Config()
-    results = capture_results(f)
-    result = results.results[0]
+        attrs = dict(
+            description=['2;1;CN=ISSUER;CN=RA AGENT'],
+            usercertificate=[cert2, self.cert],
+        )
+        fake_conn = LDAPClient('ldap://localhost')
+        ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
 
-    assert result.severity == constants.ERROR
-    assert result.kw.get('msg') == 'Too many RA agent entries found, 2'
+        framework = object()
+        registry.initialize(framework)
+        f = IPARAAgent(registry)
 
+        f.conn = mock_ldap([ldapentry])
+        f.config = config.Config()
+        self.results = capture_results(f)
 
-@patch('ldap.initialize')
-@patch('ipaserver.install.cainstance.CAInstance')
-@patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_nonmatching_cert(mock_load_cert,
-                                    mock_cainstance,
-                                    mock_ldapinit):
-
-    cert = IPACertificate()
-    cert2 = IPACertificate(2)
-    mock_load_cert.return_value = cert
-    mock_cainstance.return_value = CAInstance()
-    mock_ldapinit.return_value = mock_ldap_conn()
-
-    attrs = dict(
-        description=['2;1;CN=ISSUER;CN=RA AGENT'],
-        usercertificate=[cert2],
-    )
-    fake_conn = LDAPClient('ldap://localhost')
-    ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
-    for attr, values in attrs.items():
-        ldapentry[attr] = values
-
-    framework = object()
-    registry.initialize(framework)
-    f = IPARAAgent(registry)
-
-    f.conn = mock_ldap([ldapentry])
-    f.config = config.Config()
-    results = capture_results(f)
-    result = results.results[0]
-
-    assert result.severity == constants.ERROR
-    assert result.kw.get('msg') == 'RA agent certificate not found in LDAP'
-
-
-@patch('ldap.initialize')
-@patch('ipalib.x509.load_certificate_from_file')
-def test_nss_agent_multiple_certs(mock_load_cert, mock_ldapinit):
-
-    cert = IPACertificate()
-    cert2 = IPACertificate(2)
-    mock_load_cert.return_value = cert
-    mock_ldapinit.return_value = mock_ldap_conn()
-
-    attrs = dict(
-        description=['2;1;CN=ISSUER;CN=RA AGENT'],
-        usercertificate=[cert2, cert],
-    )
-    fake_conn = LDAPClient('ldap://localhost')
-    ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
-    for attr, values in attrs.items():
-        ldapentry[attr] = values
-
-    framework = object()
-    registry.initialize(framework)
-    f = IPARAAgent(registry)
-
-    f.conn = mock_ldap([ldapentry])
-    f.config = config.Config()
-    results = capture_results(f)
-
-    assert len(results) == 0
+        assert len(self.results) == 0
