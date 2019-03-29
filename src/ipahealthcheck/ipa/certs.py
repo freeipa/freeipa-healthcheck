@@ -19,6 +19,7 @@ from ipalib.install import certmonger
 from ipaplatform.paths import paths
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
+from ipaserver.install import krainstance
 from ipaserver.install import krbinstance
 from ipaserver.install import installutils
 from ipaserver.plugins import ldap2
@@ -107,6 +108,36 @@ def get_expected_requests(ca, ds, serverid):
         },
     ]
 
+    kra_requests = [
+        {
+            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
+            'cert-nickname': 'auditSigningCert cert-pki-kra',
+            'ca-name': 'dogtag-ipa-ca-renew-agent',
+            'cert-presave-command': template % 'stop_pkicad',
+            'cert-postsave-command': (
+                template %
+                'renew_ca_cert "auditSigningCert cert-pki-kra"'),
+        },
+        {
+            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
+            'cert-nickname': 'transportCert cert-pki-kra',
+            'ca-name': 'dogtag-ipa-ca-renew-agent',
+            'cert-presave-command': template % 'stop_pkicad',
+            'cert-postsave-command': (
+                template %
+                'renew_ca_cert "transportCert cert-pki-kra"'),
+        },
+        {
+            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
+            'cert-nickname': 'storageCert cert-pki-kra',
+            'ca-name': 'dogtag-ipa-ca-renew-agent',
+            'cert-presave-command': template % 'stop_pkicad',
+            'cert-postsave-command': (
+                template %
+                'renew_ca_cert "storageCert cert-pki-kra"'),
+        },
+    ]
+
     if ca.is_configured():
         db = certs.CertDB(api.env.realm, paths.PKI_TOMCAT_ALIAS_DIR)
         for nickname, _trust_flags in db.list_certs():
@@ -123,6 +154,9 @@ def get_expected_requests(ca, ds, serverid):
                     }
                 )
         requests += ca_requests
+        kra = krainstance.KRAInstance(api.env.realm)
+        if kra.is_installed():
+            requests += kra_requests
     else:
         logger.debug('CA is not configured, skipping CA tracking')
 
@@ -405,8 +439,16 @@ class IPACertNSSTrust(IPAPlugin):
             'ocspSigningCert cert-pki-ca': 'u,u,u',
             'subsystemCert cert-pki-ca': 'u,u,u',
             'auditSigningCert cert-pki-ca': 'u,u,Pu',
-            'Server-Cert cert-pki-ca': 'u,u,u'
+            'Server-Cert cert-pki-ca': 'u,u,u',
         }
+        kra = krainstance.KRAInstance(api.env.realm)
+        if kra.is_installed():
+            kra_trust = {
+                'transportCert cert-pki-kra': 'u,u,u',
+                'storageCert cert-pki-kra': 'u,u,u',
+                'auditSigningCert cert-pki-kra': 'u,u,Pu',
+            }
+            expected_trust.update(kra_trust)
 
         if not self.ca.is_configured():
             logger.debug('CA is not configured, skipping NSS trust check')
@@ -613,6 +655,7 @@ class IPARAAgent(IPAPlugin):
         db_filter = ldap2.ldap2.combine_filters(
             [
                 ldap2.ldap2.make_filter({'objectClass': 'inetOrgPerson'}),
+                ldap2.ldap2.make_filter({'sn': 'ipara'}),
                 ldap2.ldap2.make_filter(
                     {'description': ';%s;%s' % (issuer, subject)},
                     exact=False, trailing_wildcard=False),
