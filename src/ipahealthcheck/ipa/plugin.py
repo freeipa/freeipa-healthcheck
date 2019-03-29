@@ -7,7 +7,7 @@ from ipapython.ipaldap import realm_to_serverid
 from ipaserver.install import cainstance
 from ipaserver.install import dsinstance
 from ipaserver.install import httpinstance
-from ipaserver.install.installutils import check_server_configuration
+from ipaserver.install import installutils
 
 
 from ipahealthcheck.core.plugin import Plugin, Registry
@@ -26,7 +26,7 @@ class IPAPlugin(Plugin):
 
 class IPARegistry(Registry):
     def initialize(self, framework):
-        check_server_configuration()
+        installutils.check_server_configuration()
         if not api.isdone('bootstrap'):
             api.bootstrap(in_server=True,
                           context='ipahealthcheck',
