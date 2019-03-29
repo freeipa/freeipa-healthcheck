@@ -3,7 +3,7 @@
 #
 
 import logging
-from configparser import SafeConfigParser, ParsingError
+from configparser import ConfigParser, ParsingError
 
 from ipahealthcheck.core.constants import CONFIG_FILE, CONFIG_SECTION
 from ipahealthcheck.core.constants import DEFAULT_CONFIG
@@ -79,7 +79,7 @@ def read_config(config_file=CONFIG_FILE):
     Returns a dict on success, None on failure
     """
     config = Config()
-    parser = SafeConfigParser()
+    parser = ConfigParser()
     try:
         parser.read(config_file)
     except ParsingError as e:
