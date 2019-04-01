@@ -85,29 +85,6 @@ m_api.Command = Mock()
 m_api.Command.ping.return_value = {
     u'summary': u'IPA server version 4.4.3. API version 2.215',
 }
-m_api.Command.cert_show.side_effect = [
-    {
-        u'result': {
-            u"revoked": False,
-        }
-    },
-    {
-        u'result': {
-            u"revoked": False,
-        }
-    },
-    {
-        u'result': {
-            u"revoked": False,
-        }
-    },
-    {
-        u'result': {
-            u"revoked": True,
-            u"revocation_reason": 4,
-        }
-    },
-]
 
 
 def no_exceptions(results):

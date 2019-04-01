@@ -9,7 +9,7 @@ from ipahealthcheck.core.plugin import Result
 from ipahealthcheck.core.plugin import duration
 from ipahealthcheck.core import constants
 
-from ipalib import api
+from ipalib import api, errors
 from ipaplatform.paths import paths
 from ipaserver.install import certs
 from ipaserver.install import krainstance
@@ -87,3 +87,33 @@ class DogtagCertsConfigCheck(DogtagPlugin):
                 yield Result(self, constants.SUCCESS,
                              key=nickname,
                              configfile=paths.CA_CS_CFG_PATH)
+
+
+@registry
+class DogtagCertsConnectivityCheck(DogtagPlugin):
+    """
+    Test basic connectivity by using cert-show to fetch a cert
+    """
+    @duration
+    def check(self):
+        if not self.ca.is_configured():
+            logger.debug('CA is not configured, skipping connectivity check')
+            return
+
+        # There is nothing special about cert 1. Even if there is no cert
+        # serial number 1 but the connection is ok it is considered passing.
+        try:
+            api.Command.cert_show(1, all=True)
+        except errors.CertificateOperationError as e:
+            if not 'not found' in str(e):
+                yield Result(self, constants.ERROR,
+                             msg='Request for certificate failed, %s' %
+                                 e)
+            else:
+                yield Result(self, constants.SUCCESS)
+        except Exception as e:
+            yield Result(self, constants.ERROR,
+                         msg='Request for certificate failed, %s' %
+                             e)
+        else:
+            yield Result(self, constants.SUCCESS)

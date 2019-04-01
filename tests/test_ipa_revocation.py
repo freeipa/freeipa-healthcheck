@@ -3,6 +3,7 @@
 #
 
 from util import capture_results, CAInstance
+from util import m_api
 from base import BaseTest
 from unittest.mock import Mock
 
@@ -39,6 +40,19 @@ class TestRevocation(BaseTest):
     }
 
     def test_revocation_ok(self):
+        m_api.Command.cert_show.side_effect = [
+            {
+                u'result': {
+                    u"revoked": False,
+                }
+            },
+            {
+                u'result': {
+                    u"revoked": False,
+                }
+            },
+        ]
+
         set_requests()
 
         framework = object()
@@ -56,6 +70,19 @@ class TestRevocation(BaseTest):
             assert result.check == 'IPACertRevocation'
 
     def test_revocation_one_bad(self):
+        m_api.Command.cert_show.side_effect = [
+            {
+                u'result': {
+                    u"revoked": False,
+                }
+            },
+            {
+                u'result': {
+                    u"revoked": True,
+                    u"revocation_reason": 4,
+                }
+            },
+        ]
         set_requests()
 
         framework = object()
@@ -67,8 +94,6 @@ class TestRevocation(BaseTest):
 
         assert len(self.results) == 2
 
-        # Note that this fails because the second side-efffect of
-        # ipa cert-show
         result = self.results.results[0]
         assert result.severity == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.certs'
