@@ -9,7 +9,8 @@ setup(
     packages=[
         'ipahealthcheck.core',
         'ipahealthcheck.dogtag',
-        'ipahealthcheck.ipa'
+        'ipahealthcheck.ipa',
+        'ipahealthcheck.meta'
     ],
     entry_points={
         # creates bin/ipahealthcheck
