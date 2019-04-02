@@ -105,7 +105,7 @@ class DogtagCertsConnectivityCheck(DogtagPlugin):
         try:
             api.Command.cert_show(1, all=True)
         except errors.CertificateOperationError as e:
-            if not 'not found' in str(e):
+            if 'not found' not in str(e):
                 yield Result(self, constants.ERROR,
                              msg='Request for certificate failed, %s' %
                                  e)

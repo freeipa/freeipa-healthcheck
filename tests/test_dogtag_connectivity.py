@@ -2,13 +2,13 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from util import capture_results, CAInstance, KRAInstance
+from util import capture_results, CAInstance
 from util import m_api
 from base import BaseTest
 from ipahealthcheck.core import constants
 from ipahealthcheck.dogtag.plugin import registry
 from ipahealthcheck.dogtag.ca import DogtagCertsConnectivityCheck
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from ipalib.errors import CertificateOperationError
 
 
@@ -24,7 +24,7 @@ class TestCAConnectivity(BaseTest):
         """CA connectivity check when cert_show returns a valid value"""
         m_api.Command.cert_show.side_effect = None
         m_api.Command.cert_show.return_value = {
-            u'result': { u'revoked': False }
+            u'result': {u'revoked': False}
         }
 
         framework = object()
@@ -45,7 +45,7 @@ class TestCAConnectivity(BaseTest):
         """CA connectivity check for a cert that doesn't exist"""
         m_api.Command.cert_show.reset_mock()
         m_api.Command.cert_show.side_effect = CertificateOperationError(
-            message='Certificate operation cannot be completed: ' \
+            message='Certificate operation cannot be completed: '
                     'EXCEPTION (Certificate serial number 0x0 not found)'
         )
 
@@ -66,7 +66,7 @@ class TestCAConnectivity(BaseTest):
     def test_ca_connection_down(self):
         """CA connectivity check with the CA down"""
         m_api.Command.cert_show.side_effect = CertificateOperationError(
-            message='Certificate operation cannot be completed: ' \
+            message='Certificate operation cannot be completed: '
                     'Unable to communicate with CMS (503)'
         )
 
