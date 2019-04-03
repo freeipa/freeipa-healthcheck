@@ -34,6 +34,7 @@ setup(
             'ipacerts = ipahealthcheck.ipa.certs',
             'ipafiles = ipahealthcheck.ipa.files',
             'ipahost = ipahealthcheck.ipa.host',
+            'ipatopology = ipahealthcheck.ipa.topology',
         ],
         # plugin modules for ipahealthcheck.dogtag registry
         'ipahealthcheck.dogtag': [
