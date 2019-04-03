@@ -80,6 +80,7 @@ m_api.isdone.return_value = False
 m_api.env = Mock()
 m_api.env.server = 'server.ipa.example'
 m_api.env.realm = u'IPA.EXAMPLE'
+m_api.env.domain = u'dc=ipa,dc=example'
 m_api.Backend = Mock()
 m_api.Command = Mock()
 m_api.Command.ping.return_value = {

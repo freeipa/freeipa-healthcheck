@@ -10,6 +10,7 @@ setup(
     packages=[
         'ipahealthcheck.core',
         'ipahealthcheck.dogtag',
+        'ipahealthcheck.ds',
         'ipahealthcheck.ipa',
         'ipahealthcheck.meta'
     ],
@@ -23,6 +24,7 @@ setup(
             'ipahealthcheck.dogtag = ipahealthcheck.dogtag.plugin:registry',
             'ipahealthcheck.ipa = ipahealthcheck.ipa.plugin:registry',
             'ipahealthcheck.meta = ipahealthcheck.meta.plugin:registry',
+            'ipahealthcheck.ds = ipahealthcheck.ds.plugin:registry',
         ],
         # plugin modules for ipahealthcheck.meta registry
         'ipahealthcheck.meta': [
@@ -38,7 +40,11 @@ setup(
         # plugin modules for ipahealthcheck.dogtag registry
         'ipahealthcheck.dogtag': [
             'dogtagca = ipahealthcheck.dogtag.ca',
-        ]
+        ],
+        # plugin modules for ipahealthcheck.ds registry
+        'ipahealthcheck.ds': [
+            'dsreplication = ipahealthcheck.ds.replication',
+        ],
     },
     classifiers=[
         'Programming Language :: Python :: 3.6',
