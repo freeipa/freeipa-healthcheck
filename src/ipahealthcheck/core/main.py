@@ -188,6 +188,14 @@ def main():
     else:
         results = None
 
+    if options.source and len(results.results) == 0:
+        if options.check:
+            print("Check '%s' not found in Source '%s'" %
+                  (options.check, options.source))
+        else:
+            print("Source '%s' not found" % options.source)
+        sys.exit(1)
+
     try:
         output.render(results)
     except Exception as e:
