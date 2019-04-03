@@ -12,6 +12,12 @@ setup(
         'ipahealthcheck.ipa',
         'ipahealthcheck.meta'
     ],
+    install_requires=[
+          'ipaplatform',
+          'ipalib',
+          'ipaserver',
+          'ipapython',
+      ],
     entry_points={
         # creates bin/ipahealthcheck
         'console_scripts': [
