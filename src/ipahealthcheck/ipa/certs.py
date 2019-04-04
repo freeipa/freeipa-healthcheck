@@ -55,18 +55,15 @@ def get_expected_requests(ca, ds, serverid):
     """
     template = paths.CERTMONGER_COMMAND_TEMPLATE
 
-    if ca.is_configured():
-        requests = [
-            {
-                'cert-file': paths.RA_AGENT_PEM,
-                'key-file': paths.RA_AGENT_KEY,
-                'ca-name': 'dogtag-ipa-ca-renew-agent',
-                'cert-presave-command': template % 'renew_ra_cert_pre',
-                'cert-postsave-command': template % 'renew_ra_cert',
-            },
-        ]
-    else:
-        requests = []
+    requests = [
+        {
+            'cert-file': paths.RA_AGENT_PEM,
+            'key-file': paths.RA_AGENT_KEY,
+            'ca-name': 'dogtag-ipa-ca-renew-agent',
+            'cert-presave-command': template % 'renew_ra_cert_pre',
+            'cert-postsave-command': template % 'renew_ra_cert',
+        },
+    ]
 
     ca_requests = [
         {
