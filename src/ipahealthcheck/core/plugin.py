@@ -17,8 +17,8 @@ def duration(f):
         end = None
         for result in f(*args, **kwds):
             end = datetime.utcnow()
-            duration = end - start
-            result.duration = '%6.6f' % duration.total_seconds()
+            dur = end - start
+            result.duration = '%6.6f' % dur.total_seconds()
             yield result
         if end is None:
             # no results, yield None so a SUCCESS result will be created
@@ -139,8 +139,8 @@ class Result:
             self.check = plugin.__class__.__name__
             self.source = plugin.__class__.__module__
         if start is not None:
-            duration = datetime.utcnow() - start
-            self.duration = '%6.6f' % duration.total_seconds()
+            dur = datetime.utcnow() - start
+            self.duration = '%6.6f' % dur.total_seconds()
 
         assert getLevelName(severity) is not None
 
