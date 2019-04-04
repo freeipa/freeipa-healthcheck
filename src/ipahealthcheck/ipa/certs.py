@@ -31,12 +31,12 @@ logger = logging.getLogger()
 DAY = 60 * 60 * 24
 
 
-def is_ipa_issued_cert(api, cert):
+def is_ipa_issued_cert(myapi, cert):
     """Thin wrapper around certs.is_ipa_issued to test for LDAP"""
-    if not api.Backend.ldap2.isconnected():
+    if not myapi.Backend.ldap2.isconnected():
         return None
 
-    return certs.is_ipa_issued_cert(api, cert)
+    return certs.is_ipa_issued_cert(myapi, cert)
 
 
 def get_expected_requests(ca, ds, serverid):
@@ -181,7 +181,7 @@ def get_expected_requests(ca, ds, serverid):
         )
     else:
         logger.debug('HTTP cert not issued by IPA, \'%s\', skip tracking '
-                     'check' % DN(cert.issuer))
+                     'check', DN(cert.issuer))
 
     # Check the ldap server cert if issued by IPA
     ds_nickname = ds.get_server_cert_nickname(serverid)
@@ -203,7 +203,7 @@ def get_expected_requests(ca, ds, serverid):
         )
     else:
         logger.debug('DS cert is not issued by IPA, \'%s\', skip tracking '
-                     'check' % DN(cert.issuer))
+                     'check', DN(cert.issuer))
 
     # Check if pkinit is enabled
     if os.path.exists(paths.KDC_CERT):
@@ -614,11 +614,11 @@ class IPAOpenSSLChainValidation(IPAPlugin):
 
     @duration
     def check(self):
-        certs = [paths.HTTPD_CERT_FILE]
+        certlist = [paths.HTTPD_CERT_FILE]
         if self.ca.is_configured():
-            certs.append(paths.RA_AGENT_PEM)
+            certlist.append(paths.RA_AGENT_PEM)
 
-        for cert in certs:
+        for cert in certlist:
             try:
                 response = self.validate_openssl(cert)
             except Exception as e:
@@ -803,11 +803,11 @@ class IPACertRevocation(IPAPlugin):
 
             issued = is_ipa_issued_cert(api, cert)
             if issued is False:
-                logger.debug('\'%s\' was not issued by IPA, skipping' %
+                logger.debug('\'%s\' was not issued by IPA, skipping',
                              DN(cert.subject))
                 continue
             elif issued is None:
-                logger.debug('LDAP is down, skipping \'%s\'' %
+                logger.debug('LDAP is down, skipping \'%s\'',
                              DN(cert.subject))
                 continue
 
@@ -863,7 +863,7 @@ class IPACertmongerCA(IPAPlugin):
                'dogtag-ipa-ca-renew-agent-reuse'
             ])
         for ca in ca_list:
-            logger.debug('Checking for existence of certmonger CA \'%s\'' %
+            logger.debug('Checking for existence of certmonger CA \'%s\'',
                          ca)
             try:
                 self.find_ca(ca)

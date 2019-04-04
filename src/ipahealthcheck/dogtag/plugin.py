@@ -9,8 +9,8 @@ from ipalib import api, errors
 
 
 class DogtagPlugin(Plugin):
-    def __init__(self, registry):
-        super(DogtagPlugin, self).__init__(registry)
+    def __init__(self, reg):
+        super(DogtagPlugin, self).__init__(reg)
         self.ca = cainstance.CAInstance(api.env.realm,
                                         host_name=api.env.host)
 
@@ -30,7 +30,7 @@ class DogtagRegistry(Registry):
                 api.Backend.ldap2.connect()
             except errors.CCacheError:
                 pass
-            except errors.NetworkError as e:
+            except errors.NetworkError:
                 pass
 
 

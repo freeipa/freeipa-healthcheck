@@ -14,8 +14,8 @@ from ipahealthcheck.core.plugin import Plugin, Registry
 
 
 class IPAPlugin(Plugin):
-    def __init__(self, registry):
-        super(IPAPlugin, self).__init__(registry)
+    def __init__(self, reg):
+        super(IPAPlugin, self).__init__(reg)
         self.ca = cainstance.CAInstance(api.env.realm,
                                         host_name=api.env.host)
         self.http = httpinstance.HTTPInstance()
@@ -39,7 +39,7 @@ class IPARegistry(Registry):
                 api.Backend.ldap2.connect()
             except errors.CCacheError:
                 pass
-            except errors.NetworkError as e:
+            except errors.NetworkError:
                 pass
 
 
