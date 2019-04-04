@@ -1,0 +1,89 @@
+.\" A man page for ipa-healthcheck
+.\" Copyright (C) 2019  FreeIPA Contributors see COPYING for license
+.\"
+.TH "ipa-healthcheck" "1" "Apr  4 2019" "FreeIPA" "FreeIPA Manual Pages"
+.SH "NAME"
+ipa\-healthcheck \- Check on the health of an IPA installation
+.SH "SYNOPSIS"
+ipa\-healthcheck [\fIOPTION\fR]...
+
+.SH "DESCRIPTION"
+An IPA installation is a complex system and identifing real or potential issues can be difficult and require a lot of analysis. This tool aims to reduce the burden of that and attempts to identify issues in advance so they can be corrected, ideally before the issue is critical.
+
+.SS "ORGANIZATION"
+These areas of the system to check can be logically grouped together. This grouping is called a source. A source consists of one or more checks.
+
+A check is as atomic as possible to limit the scope and complexity and provide a yes/no answer on whether that particular configuration is correct.
+
+Each check will return a result, either a severity of WARNING, ERROR or CRITICAL or SUCCESS. Returning SUCCESS tells you that the check was done and was deemed correct. This should help track when the last time something was examined.
+
+Upon failure the output will include the source and check that detected the failure along with a message and name/value pairs indicating the problem. It may very well be that the check can't make a final determination and generally defaults to WARNING if it can't be sure so that it can be examined.
+
+.SH "OPTIONS"
+.SS "OPTIONAL ARGUMENTS"
+.TP
+\fB\-\-source\fR=\fISOURCE\fR
+Execute one or more checks within this given source.
+.TP
+\fB\-\-check\fR=\fICHECK\fR
+Execute this particular check within a source. A source must be supplied as well with this option.
+.TP
+\fB\-\-output\-type\fR=\fITYPE\fR
+Set the output type. The default is JSON.
+.TP
+\fB\-\-failures\-only\fR
+Only report failures. Drop the successful results.
+.TP
+\fB\-\-debug\fR
+Generate additional debugging output.
+
+.SS "JSON OUTPUT"
+The results are displayed as a list of result messages for each check executed in JSON format. This could be input for a monitoring system.
+.TP
+\fB\-\-output\-file\fR=\fIFILENAME\fR
+Write the output to this filename rather than stdout.
+.TP
+\fB\-\-indent\fR=\fIINDENT\fR
+Pretty\-print the JSON with this indention level. This can make the output more human\-readable.
+
+.SS "HUMAN\-READABLE OUTPUT"
+The results are displayed in a more human\-readable format.
+.TP
+\fB\-\-input\-file\fR=\fIFILENAME\fR
+Take as input a JSON results output and convert it to a more human\-readable form.
+
+.SH "EXAMPLES"
+.PP
+Execute healthcheck with the default JSON output:
+.PP
+.Vb 1
+\& ipa\-healthcheck
+.Ve
+.PP
+Execute healthcheck with a prettier JSON output:
+.PP
+.Vb 1
+\& ipa\-healthcheck \-\-indent 2
+.Ve
+.PP
+Execute healthcheck and only display errors:
+.PP
+.Vb 1
+\& ipa\-healthcheck \-\-failures\-only
+.Ve
+.PP
+Display in human\-readble output a previous report:
+.PP
+.Vb 2
+\& ipa\-healthcheck \-\-output\-format human \-\-input\-file \e
+\&        /var/log/ipa/check.json
+.Ve
+
+.SH "FILES"
+.TP
+/etc/ipahealthcheck/ipahealthcheck.conf
+
+.SH "EXIT STATUS"
+0 if all checks were successful
+
+1 if any one check failed or the command failed to execute properly
