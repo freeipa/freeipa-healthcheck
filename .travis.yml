@@ -1,0 +1,22 @@
+language: python
+
+branches:
+
+services:
+    - docker
+
+python:
+    - 3.6
+
+cache: pip
+
+before_install:
+    - docker pull fedora:29
+
+install:
+    - pip3 install --upgrade pip
+    - pip3 install pycodestyle tox
+
+script:
+    - tox -epep8,flake8
+    - docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ fedora:29 /bin/sh -c "dnf -y install freeipa-server tox; cd /root/src; tox -epy3"
