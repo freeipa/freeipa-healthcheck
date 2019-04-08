@@ -3,7 +3,10 @@
 #
 
 from ipalib import api, errors
-from ipapython.ipaldap import realm_to_serverid
+try:
+    from ipapython.ipaldap import realm_to_serverid
+except ImportError:
+    from ipaserver.install.installutils import realm_to_serverid
 from ipaserver.install import cainstance
 from ipaserver.install import dsinstance
 from ipaserver.install import httpinstance
