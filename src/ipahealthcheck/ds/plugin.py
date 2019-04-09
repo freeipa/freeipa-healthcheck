@@ -5,7 +5,7 @@
 from ipahealthcheck.core.plugin import Plugin, Registry
 from ipaserver.install import dsinstance
 from ipaserver.install import installutils
-from ipalib import api, errors
+from ipalib import api
 
 
 class DSPlugin(Plugin):
