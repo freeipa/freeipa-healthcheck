@@ -11,12 +11,7 @@ from ipahealthcheck.core.plugin import duration
 from ipahealthcheck.core import constants
 
 from ipalib import api, errors
-from ipaplatform.paths import paths
 from ipapython import ipaldap
-from ipaserver.install import certs
-from ipaserver.install import krainstance
-from ipapython.directivesetter import get_directive
-from cryptography.hazmat.primitives.serialization import Encoding
 
 logger = logging.getLogger()
 
