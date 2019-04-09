@@ -2,6 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+import pytest
 from base import BaseTest
 from unittest.mock import Mock, patch
 from util import capture_results, m_api
@@ -12,6 +13,7 @@ from ipahealthcheck.ds.replication import ReplicationConflictCheck
 
 from ipalib import errors
 from ipapython.dn import DN
+from ipapython.version import NUM_VERSION
 from ipapython.ipaldap import LDAPClient, LDAPEntry
 
 
@@ -40,6 +42,8 @@ class TestReplicationConflicts(BaseTest):
         Mock(return_value=None),
     }
 
+    @pytest.mark.skipif(NUM_VERSION < 40790,
+                        reason="no way of currently testing this")
     @patch('ipapython.ipaldap.LDAPClient.from_realm')
     def test_no_conflicts(self, mock_conn):
         mock_conn.return_value = mock_ldap(None)
@@ -59,6 +63,8 @@ class TestReplicationConflicts(BaseTest):
         assert result.source == 'ipahealthcheck.ds.replication'
         assert result.check == 'ReplicationConflictCheck'
 
+    @pytest.mark.skipif(NUM_VERSION < 40790,
+                        reason="no way of currently testing this")
     @patch('ipapython.ipaldap.LDAPClient.from_realm')
     def test_conflicts(self, mock_conn):
 
