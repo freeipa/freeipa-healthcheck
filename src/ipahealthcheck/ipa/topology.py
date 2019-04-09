@@ -72,5 +72,6 @@ class IPATopologyDomainCheck(IPAPlugin):
 
         for y in self.run_check(u'domain'):
             yield y
-        for y in self.run_check(u'ca'):
-            yield y
+        if api.Command.ca_is_enabled()['result']:
+            for y in self.run_check(u'ca'):
+                yield y

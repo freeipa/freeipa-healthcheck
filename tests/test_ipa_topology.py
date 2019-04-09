@@ -31,6 +31,7 @@ class TestTopology(BaseTest):
                 }
             },
         ]
+        m_api.Command.ca_is_enabled.return_value = {'result': True}
 
         framework = object()
         registry.initialize(framework)
@@ -73,6 +74,7 @@ class TestTopology(BaseTest):
                 }
             },
         ]
+        m_api.Command.ca_is_enabled.return_value = {'result': True}
 
         framework = object()
         registry.initialize(framework)
@@ -136,6 +138,7 @@ class TestTopology(BaseTest):
                 }
             },
         ]
+        m_api.Command.ca_is_enabled.return_value = {'result': True}
 
         framework = object()
         registry.initialize(framework)
@@ -193,6 +196,7 @@ class TestTopology(BaseTest):
                 }
             },
         ]
+        m_api.Command.ca_is_enabled.return_value = {'result': True}
 
         framework = object()
         registry.initialize(framework)
