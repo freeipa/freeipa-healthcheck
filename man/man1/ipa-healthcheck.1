@@ -20,6 +20,11 @@ Each check will return a result, either a severity of WARNING, ERROR or CRITICAL
 Upon failure the output will include the source and check that detected the failure along with a message and name/value pairs indicating the problem. It may very well be that the check can't make a final determination and generally defaults to WARNING if it can't be sure so that it can be examined.
 
 .SH "OPTIONS"
+.SS "COMMANDS"
+.TP
+\fB\-\-list\-sources\fR
+Display a list of the available sources and the checks associated with those sources.
+
 .SS "OPTIONAL ARGUMENTS"
 .TP
 \fB\-\-source\fR=\fISOURCE\fR

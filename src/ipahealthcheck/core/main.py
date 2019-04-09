@@ -116,12 +116,27 @@ def run_plugins(plugins, config, available, source, check):
     return results
 
 
+def list_sources(plugins):
+    """Print list of all sources and checks"""
+    source = None
+    for plugin in plugins:
+        if source != plugin.__class__.__module__:
+            print(plugin.__class__.__module__)
+            source = plugin.__class__.__module__
+        print("  ", plugin.__class__.__name__)
+
+    return 0
+
+
 def parse_options(output_registry):
     output_names = [plugin.__name__.lower() for
                     plugin in output_registry.plugins]
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', dest='debug', action='store_true',
                         default=False, help='Include debug output')
+    parser.add_argument('--list-sources', dest='list_sources',
+                        action='store_true', default=False,
+                        help='List all available sources')
     parser.add_argument('--source', dest='source',
                         default=None,
                         help='Source of checks, e.g. ipahealthcheck.foo.bar')
@@ -178,6 +193,9 @@ def main():
     for out in output_registry.plugins:
         if out.__name__.lower() == options.output:
             output = out(options)
+
+    if options.list_sources:
+        return list_sources(plugins)
 
     if not output.output_only:
         results, available = run_service_plugins(plugins, config,
