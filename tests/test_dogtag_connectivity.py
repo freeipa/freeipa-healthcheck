@@ -32,7 +32,6 @@ class TestCAConnectivity(BaseTest):
         f = DogtagCertsConnectivityCheck(registry)
 
         self.results = capture_results(f)
-        print(self.results.results)
 
         assert len(self.results) == 1
 
@@ -54,7 +53,6 @@ class TestCAConnectivity(BaseTest):
         f = DogtagCertsConnectivityCheck(registry)
 
         self.results = capture_results(f)
-        print(self.results.results)
 
         assert len(self.results) == 1
 
@@ -75,7 +73,6 @@ class TestCAConnectivity(BaseTest):
         f = DogtagCertsConnectivityCheck(registry)
 
         self.results = capture_results(f)
-        print(self.results.results)
 
         assert len(self.results) == 1
 
