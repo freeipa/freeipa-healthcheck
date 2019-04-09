@@ -2,7 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import os
 import tempfile
@@ -265,22 +265,22 @@ class IPACertmongerExpirationCheck(IPAPlugin):
                                      'nickname')
             notafter = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
                                            'not-valid-after')
-            notafter = datetime.fromtimestamp(notafter)
-            now = datetime.utcnow()
+            nafter = datetime.fromtimestamp(notafter, timezone.utc)
+            now = datetime.now(timezone.utc)
 
-            if now > notafter:
+            if now > nafter:
                 yield Result(self, constants.ERROR,
                              key=id,
-                             expiration_date=generalized_time(notafter),
+                             expiration_date=generalized_time(nafter),
                              msg='Request id %s expired on %s' %
-                                 (id, generalized_time(notafter)))
+                                 (id, generalized_time(nafter)))
             else:
-                delta = notafter - now
+                delta = nafter - now
                 diff = int(delta.total_seconds() / DAY)
                 if diff < self.config.cert_expiration_days:
                     yield Result(self, constants.WARNING,
                                  key=id,
-                                 expiration_date=generalized_time(notafter),
+                                 expiration_date=generalized_time(nafter),
                                  msg='Request id %s expires in %s days'
                                  % (id, diff))
                 else:

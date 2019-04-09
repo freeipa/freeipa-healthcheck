@@ -12,7 +12,7 @@ from unittest.mock import Mock
 from mock_certmonger import create_mock_dbus, _certmonger
 from mock_certmonger import get_expected_requests, set_requests
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 class TestExpiration(BaseTest):
@@ -46,7 +46,7 @@ class TestExpiration(BaseTest):
         assert result.check == 'IPACertmongerExpirationCheck'
         assert result.kw.get('key') == '1234'
         assert result.kw.get('msg') == 'Request id 1234 expired on ' \
-                                       '19691231191704Z'
+                                       '19700101001704Z'
 
         result = self.results.results[1]
         assert result.severity == constants.SUCCESS
@@ -55,7 +55,7 @@ class TestExpiration(BaseTest):
         assert result.kw.get('key') == '5678'
 
     def test_expiration_warning(self):
-        warning = datetime.utcnow() + timedelta(days=20)
+        warning = datetime.now(timezone.utc) + timedelta(days=20)
         replaceme = {
             'nickname': '7777',
             'cert-file': paths.RA_AGENT_PEM,
