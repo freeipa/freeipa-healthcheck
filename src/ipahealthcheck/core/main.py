@@ -81,7 +81,8 @@ def run_service_plugins(plugins, config, source, check):
         logger.debug('Calling check %s', plugin)
         for result in plugin.check():
             if result is not None and result.severity == constants.SUCCESS:
-                available.append(plugin.service_name)
+                available.append(plugin.service.service_name)
+            if result is not None:
                 results.add(result)
 
     return results, set(available)
