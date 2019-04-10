@@ -1,0 +1,9 @@
+[Unit]
+Description=Execute IPA Healthcheck
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/ipa/ipa-healthcheck.sh
+
+[Install]
+WantedBy=multi-user.target
