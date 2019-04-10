@@ -72,7 +72,7 @@ class TestNSSAgent(BaseTest):
             description=['2;1;CN=ISSUER;CN=RA AGENT'],
             usercertificate=[self.cert],
         )
-        fake_conn = LDAPClient('ldap://localhost')
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
         ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
         for attr, values in attrs.items():
             ldapentry[attr] = values
@@ -93,7 +93,7 @@ class TestNSSAgent(BaseTest):
         attrs = dict(
             usercertificate=[self.cert],
         )
-        fake_conn = LDAPClient('ldap://localhost')
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
         ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
         for attr, values in attrs.items():
             ldapentry[attr] = values
@@ -146,7 +146,7 @@ class TestNSSAgent(BaseTest):
             description=['2;1;CN=ISSUER;CN=RA AGENT'],
             usercertificate=[self.cert],
         )
-        fake_conn = LDAPClient('ldap://localhost')
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
         ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
         for attr, values in attrs.items():
             ldapentry[attr] = values
@@ -175,7 +175,7 @@ class TestNSSAgent(BaseTest):
             description=['2;1;CN=ISSUER;CN=RA AGENT'],
             usercertificate=[cert2],
         )
-        fake_conn = LDAPClient('ldap://localhost')
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
         ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
         for attr, values in attrs.items():
             ldapentry[attr] = values
@@ -200,7 +200,7 @@ class TestNSSAgent(BaseTest):
             description=['2;1;CN=ISSUER;CN=RA AGENT'],
             usercertificate=[cert2, self.cert],
         )
-        fake_conn = LDAPClient('ldap://localhost')
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
         ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
         for attr, values in attrs.items():
             ldapentry[attr] = values

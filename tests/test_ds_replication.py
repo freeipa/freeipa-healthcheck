@@ -67,12 +67,11 @@ class TestReplicationConflicts(BaseTest):
                         reason="no way of currently testing this")
     @patch('ipapython.ipaldap.LDAPClient.from_realm')
     def test_conflicts(self, mock_conn):
-
         attrs = dict(
             nsds5ReplConflict=['deletedEntryHasChildren'],
             objectclass=['top']
         )
-        fake_conn = LDAPClient('ldap://localhost')
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
         ldapentry = LDAPEntry(fake_conn, DN('cn=conflict', m_api.env.domain))
         for attr, values in attrs.items():
             ldapentry[attr] = values
