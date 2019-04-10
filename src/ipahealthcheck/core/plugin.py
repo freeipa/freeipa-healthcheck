@@ -202,7 +202,8 @@ def json_to_results(data):
         severity = line.pop('severity')
         source = line.pop('source')
         check = line.pop('check')
-        result = Result(None, severity, source, check, **line)
+        kw = line.pop('kw')
+        result = Result(None, severity, source, check, **kw)
         results.add(result)
 
     return results
