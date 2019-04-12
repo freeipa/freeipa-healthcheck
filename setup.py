@@ -12,7 +12,8 @@ setup(
         'ipahealthcheck.dogtag',
         'ipahealthcheck.ds',
         'ipahealthcheck.ipa',
-        'ipahealthcheck.meta'
+        'ipahealthcheck.meta',
+        'ipahealthcheck.system'
     ],
     entry_points={
         # creates bin/ipahealthcheck
@@ -25,6 +26,7 @@ setup(
             'ipahealthcheck.ipa = ipahealthcheck.ipa.plugin:registry',
             'ipahealthcheck.meta = ipahealthcheck.meta.plugin:registry',
             'ipahealthcheck.ds = ipahealthcheck.ds.plugin:registry',
+            'ipahealthcheck.system = ipahealthcheck.system.plugin:registry'
         ],
         # plugin modules for ipahealthcheck.meta registry
         'ipahealthcheck.meta': [
@@ -45,6 +47,10 @@ setup(
         # plugin modules for ipahealthcheck.ds registry
         'ipahealthcheck.ds': [
             'dsreplication = ipahealthcheck.ds.replication',
+        ],
+        # plugin modules for ipahealthcheck.system registry
+        'ipahealthcheck.system': [
+            'filesystemspace = ipahealthcheck.system.filesystemspace',
         ],
     },
     classifiers=[
