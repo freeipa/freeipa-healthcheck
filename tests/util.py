@@ -5,6 +5,7 @@
 from ipahealthcheck.core.plugin import Results
 from unittest.mock import patch, Mock
 import ipalib
+from ipapython.dn import DN
 
 
 class ExceptionNotRaised(Exception):
@@ -78,9 +79,16 @@ p_api = patch('ipalib.api', autospec=ipalib.api)
 m_api = p_api.start()
 m_api.isdone.return_value = False
 m_api.env = Mock()
+m_api.env.host = 'server.ipa.example'
 m_api.env.server = 'server.ipa.example'
 m_api.env.realm = u'IPA.EXAMPLE'
-m_api.env.domain = u'dc=ipa,dc=example'
+m_api.env.domain = u'ipa.example'
+m_api.env.basedn = u'dc=ipa,dc=example'
+m_api.env.container_group = DN(('cn', 'groups'), ('cn', 'accounts'))
+m_api.env.container_host = DN(('cn', 'computers'), ('cn', 'accounts'))
+m_api.env.container_sysaccounts = DN(('cn', 'sysaccounts'), ('cn', 'etc'))
+m_api.env.container_service = DN(('cn', 'services'), ('cn', 'accounts'))
+m_api.env.container_masters = DN(('cn', 'masters'))
 m_api.Backend = Mock()
 m_api.Command = Mock()
 m_api.Command.ping.return_value = {
