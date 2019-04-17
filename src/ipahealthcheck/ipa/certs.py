@@ -728,6 +728,7 @@ class IPARAAgent(IPAPlugin):
             if not found:
                 yield Result(self, constants.ERROR,
                              msg='RA agent certificate not found in LDAP')
+            yield Result(self, constants.SUCCESS)
 
 
 @registry

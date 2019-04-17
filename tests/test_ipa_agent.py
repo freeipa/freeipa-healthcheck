@@ -85,8 +85,12 @@ class TestNSSAgent(BaseTest):
         f.config = config.Config()
         self.results = capture_results(f)
 
-        # A valid call relies on a success to be set by core
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.severity == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.certs'
+        assert result.check == 'IPARAAgent'
 
     def test_nss_agent_no_description(self):
 
@@ -213,4 +217,9 @@ class TestNSSAgent(BaseTest):
         f.config = config.Config()
         self.results = capture_results(f)
 
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.severity == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.certs'
+        assert result.check == 'IPARAAgent'
