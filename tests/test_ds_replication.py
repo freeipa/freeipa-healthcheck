@@ -72,7 +72,7 @@ class TestReplicationConflicts(BaseTest):
             objectclass=['top']
         )
         fake_conn = LDAPClient('ldap://localhost', no_schema=True)
-        ldapentry = LDAPEntry(fake_conn, DN('cn=conflict', m_api.env.domain))
+        ldapentry = LDAPEntry(fake_conn, DN('cn=conflict', m_api.env.basedn))
         for attr, values in attrs.items():
             ldapentry[attr] = values
         mock_conn.return_value = mock_ldap([ldapentry])
