@@ -77,7 +77,7 @@ class KRAInstance:
 
 p_api = patch('ipalib.api', autospec=ipalib.api)
 m_api = p_api.start()
-m_api.isdone.return_value = False
+m_api.isdone.return_value = True
 m_api.env = Mock()
 m_api.env.host = 'server.ipa.example'
 m_api.env.server = 'server.ipa.example'
