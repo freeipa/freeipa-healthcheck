@@ -17,11 +17,17 @@ from ipahealthcheck.ipa.trust import (IPATrustAgentCheck,
                                       IPATrustAgentMemberCheck,
                                       IPATrustControllerPrincipalCheck,
                                       IPATrustControllerServiceCheck,
-                                      IPATrustControllerGroupSIDCheck)
+                                      IPATrustControllerGroupSIDCheck,
+                                      IPATrustControllerConfCheck)
 
 from ipalib import errors
 from ipapython.dn import DN
 from ipapython.ipaldap import LDAPClient, LDAPEntry
+
+try:
+    from ipapython.ipaldap import realm_to_serverid
+except ImportError:
+    from ipaserver.install.installutils import realm_to_serverid
 
 from ldap import OPT_X_SASL_SSF_MIN
 from SSSDConfig import NoOptionError
@@ -212,30 +218,6 @@ class TestTrustDomains(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain_list_error'
-
-    @patch('ipapython.ipautil.run')
-    def test_trust_domain_list_no_implicit_files(self, mock_run):
-        run_result = namedtuple('run', ['returncode', 'error_log'])
-        run_result.returncode = 0
-        run_result.error_log = ''
-        run_result.output = 'ipa.example\nad.example\n'
-        mock_run.return_value = run_result
-
-        framework = object()
-        registry.initialize(framework)
-        registry.trust_agent = True
-        f = IPATrustDomainsCheck(registry)
-
-        f.config = config.Config()
-        self.results = capture_results(f)
-
-        # There are more than one result I just care about this particular
-        # value. The error is not fatal.
-        result = self.results.results[0]
-        assert result.severity == constants.WARNING
-        assert result.source == 'ipahealthcheck.ipa.trust'
-        assert result.check == 'IPATrustDomainsCheck'
-        assert result.kw.get('key') == 'implicit_files'
 
     @patch('ipapython.ipautil.run')
     @patch('ipahealthcheck.ipa.trust.get_trust_domains')
@@ -888,3 +870,49 @@ class TestControllerGroupSID(BaseTest):
         assert result.check == 'IPATrustControllerGroupSIDCheck'
         assert result.kw.get('key') == 'ipantsecurityidentifier'
         assert result.kw.get('rid') == 'S-1-5-21-1234-5678-1976041503-500'
+
+
+class TestControllerConf(BaseTest):
+    patches = {
+        'ipaserver.install.installutils.check_server_configuration':
+        Mock(return_value=None),
+        'ldap.initialize':
+        Mock(return_value=mock_ldap_conn()),
+    }
+
+    def test_not_trust_controller(self):
+        framework = object()
+        registry.initialize(framework)
+        registry.trust_controller = False
+        f = IPATrustControllerConfCheck(registry)
+
+        f.config = config.Config()
+        self.results = capture_results(f)
+
+        # Zero because the call was skipped altogether
+        assert len(self.results) == 0
+
+    @patch('ipapython.ipautil.run')
+    def test_ldapi_ok(self, mock_run):
+        ldapi_socket = "ipasam:ldapi://%%2fvar%%2frun%%2fslapd-%s.socket" % \
+                       realm_to_serverid(m_api.env.realm)
+        run_result = namedtuple('run', ['returncode', 'output'])
+        run_result.returncode = 0
+        run_result.output = '[global]\n\tpassdb backend=%s' % ldapi_socket
+        mock_run.return_value = run_result
+
+        framework = object()
+        registry.initialize(framework)
+        registry.trust_controller = True
+        f = IPATrustControllerConfCheck(registry)
+
+        f.config = config.Config()
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.severity == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustControllerConfCheck'
+        assert result.kw.get('key') == 'net conf list'

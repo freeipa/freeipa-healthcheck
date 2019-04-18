@@ -2,8 +2,8 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+import configparser
 import logging
-import os
 import SSSDConfig
 
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
@@ -24,8 +24,6 @@ try:
     from ipapython.ipaldap import realm_to_serverid
 except ImportError:
     from ipaserver.install.installutils import realm_to_serverid
-from ipaserver.install.adtrust import retrieve_netbios_name
-from ipaserver.install.adtrustinstance import make_netbios_name
 
 logger = logging.getLogger()
 
@@ -122,12 +120,7 @@ class IPATrustDomainsCheck(IPAPlugin):
                          msg='Execution of {sslctl} failed: {error}')
             return
         sssd_domains = result.output.strip().split('\n')
-        if 'implicit_files' not in sssd_domains:
-            yield Result(self, constants.WARNING,
-                         key='implicit_files',
-                         sslctl=paths.SSSCTL,
-                         msg='{key} not in {sslctl} output')
-        else:
+        if 'implicit_files' in sssd_domains:
             sssd_domains.remove('implicit_files')
 
         try:
@@ -414,7 +407,9 @@ class IPATrustControllerServiceCheck(IPAPlugin):
 @registry
 class IPATrustControllerConfCheck(IPAPlugin):
     """
-    Verify that smb.conf matches the template
+    Verify that certain elements of the configuration are unchanged
+
+    This is expected to be expanded over time.
     """
     @duration
     def check(self):
@@ -422,43 +417,53 @@ class IPATrustControllerConfCheck(IPAPlugin):
             logger.debug('Not a trust controller, skipping')
             return
 
-        netbios_name = retrieve_netbios_name(api)
-        host_netbios_name = make_netbios_name(api.env.host)
-        ldapi_socket = "%%2fvar%%2frun%%2fslapd-%s.socket" % \
+        ldapi_socket = "ipasam:ldapi://%%2fvar%%2frun%%2fslapd-%s.socket" % \
                        realm_to_serverid(api.env.realm)
-
-        sub_dict = dict(REALM=api.env.realm,
-                        SUFFIX=api.env.basedn,
-                        NETBIOS_NAME=netbios_name,
-                        HOST_NETBIOS_NAME=host_netbios_name,
-                        LDAPI_SOCKET=ldapi_socket)
-
-        template = os.path.join(paths.USR_SHARE_IPA_DIR, "smb.conf.template")
-        expected_conf = ipautil.template_file(template, sub_dict)
 
         try:
             result = ipautil.run(['net', 'conf', 'list'], capture_output=True)
         except Exception as e:
             yield Result(self, constants.ERROR,
-                         key='net_conf_list',
+                         key='net conf list',
                          error=str(e),
                          msg='Execution of {key} failed: {error}')
-        else:
-            conf = result.output.replace('\n', '')
-            conf = conf.replace('\t', '')
-            conf = conf.replace(' ', '')
-            expected_conf = expected_conf.replace('\n', '')
-            expected_conf = expected_conf.replace(' ', '')
+            return
 
-            if conf != expected_conf:
-                yield Result(self, constants.ERROR,
-                             key='net_conf_list',
-                             template=template,
-                             msg='net conf list output doesn\'t match '
-                             '{template}')
-            else:
-                yield Result(self, constants.SUCCESS,
-                             key='net_conf_list')
+        conf = result.output.replace('\t', '')
+        config = configparser.ConfigParser(delimiters=('='),
+                                           interpolation=None)
+        try:
+            config.read_string(conf)
+        except Exception as e:
+            yield Result(self, constants.ERROR,
+                         key='net conf list',
+                         error=str(e),
+                         msg='Unable to parse {key} output: {error}')
+            return
+
+        try:
+            net_ldapi = config.get('global', 'passdb backend')
+        except Exception as e:
+            yield Result(self, constants.ERROR,
+                         key='net conf list',
+                         error=str(e),
+                         section='global',
+                         option='passdb backend',
+                         msg='Unable to read \'{option}\' in section '
+                         '{section} in {key} output: {error}')
+            return
+
+        if net_ldapi != ldapi_socket:
+            yield Result(self, constants.ERROR,
+                         key='net conf list',
+                         got=net_ldapi,
+                         expected=ldapi_socket,
+                         option='passdb backend',
+                         msg='{key} option {option} value {got} '
+                         'doesn\'t match expected value {expected}')
+        else:
+            yield Result(self, constants.SUCCESS,
+                         key='net conf list')
 
 
 @registry
