@@ -4,7 +4,6 @@
 
 import logging
 from ipalib import api, errors
-from ipapython.dn import DN
 try:
     from ipapython.ipaldap import realm_to_serverid
 except ImportError:
@@ -13,6 +12,7 @@ from ipaserver.install import cainstance
 from ipaserver.install import dsinstance
 from ipaserver.install import httpinstance
 from ipaserver.install import installutils
+from ipaserver.servroles import ADtrustBasedRole, ServiceBasedRole
 
 from ipahealthcheck.core.plugin import Plugin, Registry
 
@@ -39,6 +39,10 @@ class IPARegistry(Registry):
 
     def initialize(self, framework):
         installutils.check_server_configuration()
+
+        if api.isdone('finalize'):
+            return
+
         if not api.isdone('bootstrap'):
             api.bootstrap(in_server=True,
                           context='ipahealthcheck',
@@ -51,22 +55,23 @@ class IPARegistry(Registry):
                 api.Backend.ldap2.connect()
             except (errors.CCacheError, errors.NetworkError) as e:
                 logging.debug('Failed to connect to LDAP: %s', e)
-            else:
-                # Have to use LDAP because the host principal doesn't have
-                # rights to read server roles.
-                conn = api.Backend.ldap2
-                server_dn = DN(('cn', api.env.host),
-                               api.env.container_masters, api.env.basedn)
-                try:
-                    entry = conn.get_entry(
-                        server_dn,
-                        attrs_list=['enabled_role_servrole'])
-                except Exception as e:
-                    logging.debug('Failed to retrieve IPA master: %s', e)
-                else:
-                    roles = entry.get('enabled_role_servrole', [])
-                    self.trust_agent = 'AD trust agent' in roles
-                    self.trust_controller = 'AD trust controller' in roles
+            return
+
+        roles = (
+            ADtrustBasedRole(u"ad_trust_agent_server",
+                             u"AD trust agent"),
+            ServiceBasedRole(
+                u"ad_trust_controller_server",
+                u"AD trust controller",
+                component_services=['ADTRUST']
+            ),
+        )
+        role = roles[0].status(api)[0]
+        if role.get('status') == 'enabled':
+            self.trust_agent = True
+        role = roles[1].status(api)[0]
+        if role.get('status') == 'enabled':
+            self.trust_controller = True
 
 
 registry = IPARegistry()
