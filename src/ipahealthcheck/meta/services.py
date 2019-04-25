@@ -62,6 +62,43 @@ class httpd(ServiceCheck):
         return super(httpd, self).check()
 
 
+# services named with a hyphen cannot be addresses as knownservices.name
+# so use knownservices['name'] instead
+@registry
+class ipa_custodia(ServiceCheck):
+    def check(self):
+        self.service = services.knownservices['ipa-custodia']
+
+        return super(ipa_custodia, self).check()
+
+
+@registry
+class ipa_dnskeysyncd(ServiceCheck):
+    def check(self):
+        self.service = services.knownservices['ipa-dnskeysyncd']
+
+        if not bindinstance.named_conf_exists():
+            return ()
+
+        return super(ipa_dnskeysyncd, self).check()
+
+
+@registry
+class ipa_otpd(ServiceCheck):
+    def check(self):
+        self.service = services.knownservices['ipa-otpd']
+
+        return super(ipa_otpd, self).check()
+
+
+@registry
+class kadmin(ServiceCheck):
+    def check(self):
+        self.service = services.knownservices.kadmin
+
+        return super(kadmin, self).check()
+
+
 @registry
 class krb5kdc(ServiceCheck):
     def check(self):
@@ -91,3 +128,11 @@ class pki_tomcatd(ServiceCheck):
             return ()
 
         return super(pki_tomcatd, self).check()
+
+
+@registry
+class sssd(ServiceCheck):
+    def check(self):
+        self.service = services.knownservices.sssd
+
+        return super(sssd, self).check()
