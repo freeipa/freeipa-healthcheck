@@ -45,7 +45,10 @@ class JSON(Output):
     def __init__(self, options):
         super(JSON, self).__init__(options)
         self.filename = options.filename
-        self.indent = options.indent
+        if (sys.stdout.isatty() and options.indent is None):
+            self.indent = 2
+        else:
+            self.indent = options.indent
         self.failures_only = options.failures_only
 
     def render(self, data):
