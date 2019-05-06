@@ -42,8 +42,8 @@ class TestFileSystemNotEnoughFreeSpace(BaseTest):
                 assert 'free space under threshold' in result.kw.get('msg')
             else:
                 assert 'free space percentage within' in result.kw.get('msg')
-        assert len(self.results) == 10
-        assert count == 5
+        assert len(self.results) == 12
+        assert count == 6
 
 
 class TestFileSystemNotEnoughFreeSpacePercentage(BaseTest):
@@ -76,8 +76,8 @@ class TestFileSystemNotEnoughFreeSpacePercentage(BaseTest):
                 assert 'free space percentage under' in result.kw.get('msg')
             else:
                 assert 'free space within limits' in result.kw.get('msg')
-        assert len(self.results) == 10
-        assert count == 5
+        assert len(self.results) == 12
+        assert count == 6
 
 
 class TestFileSystemEnoughFreeSpace(BaseTest):
@@ -109,4 +109,4 @@ class TestFileSystemEnoughFreeSpace(BaseTest):
                 'free space percentage within' in result.kw.get('msg') or
                 'free space within limits' in result.kw.get('msg')
             )
-        assert len(self.results) == 10
+        assert len(self.results) == 12
