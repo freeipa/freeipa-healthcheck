@@ -17,6 +17,7 @@ class FileSystemSpaceCheck(SystemPlugin):
     # watch important directories for FreeIPA
     _pathchecks = {
         '/var/lib/dirsrv/': 1024,
+        '/var/lib/ipa/backup/': 512,
         '/var/log/': 1024,
         '/var/log/audit/': 512,
         '/var/tmp/': 512,
