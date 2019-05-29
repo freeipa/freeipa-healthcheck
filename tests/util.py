@@ -52,11 +52,15 @@ class CAInstance:
        This is needed to control whether the underlying master is
        CAless or CAful.
     """
-    def __init__(self, enabled=True):
+    def __init__(self, enabled=True, crlgen=True):
         self.enabled = enabled
+        self.crlgen = crlgen
 
     def is_configured(self):
         return self.enabled
+
+    def is_crlgen_enabled(self):
+        return self.crlgen
 
 
 class KRAInstance:
