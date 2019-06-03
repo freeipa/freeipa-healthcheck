@@ -35,7 +35,7 @@ class TestFileSystemNotEnoughFreeSpace(BaseTest):
 
         count = 0
         for result in self.results.results:
-            if result.severity == constants.ERROR:
+            if result.result == constants.ERROR:
                 count += 1
                 assert result.source == 'ipahealthcheck.system.filesystemspace'
                 assert result.check == 'FileSystemSpaceCheck'
@@ -69,7 +69,7 @@ class TestFileSystemNotEnoughFreeSpacePercentage(BaseTest):
 
         count = 0
         for result in self.results.results:
-            if result.severity == constants.ERROR:
+            if result.result == constants.ERROR:
                 count += 1
                 assert result.source == 'ipahealthcheck.system.filesystemspace'
                 assert result.check == 'FileSystemSpaceCheck'
@@ -102,7 +102,7 @@ class TestFileSystemEnoughFreeSpace(BaseTest):
         self.results = capture_results(f)
 
         for result in self.results.results:
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.system.filesystemspace'
             assert result.check == 'FileSystemSpaceCheck'
             assert (

@@ -57,7 +57,7 @@ class TestNSSDBTrust(BaseTest):
         assert len(self.results) == 4
 
         for result in self.results.results:
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.certs'
             assert result.check == 'IPACertNSSTrust'
             assert 'cert-pki-ca' in result.kw.get('key')
@@ -85,14 +85,14 @@ class TestNSSDBTrust(BaseTest):
         num = len(self.results.results) - 2
         for r in range(0, num):
             result = self.results.results[r]
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.certs'
             assert result.check == 'IPACertNSSTrust'
             assert 'cert-pki-ca' in result.kw.get('key')
 
         result = self.results.results[-1]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertNSSTrust'
         assert result.kw.get('key') == 'ocspSigningCert cert-pki-ca'
@@ -122,7 +122,7 @@ class TestNSSDBTrust(BaseTest):
 
         result = self.results.results[1]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertNSSTrust'
         assert result.kw.get('key') == 'subsystemCert cert-pki-ca'
@@ -132,7 +132,7 @@ class TestNSSDBTrust(BaseTest):
 
         result = self.results.results[3]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertNSSTrust'
         assert result.kw.get('key') == 'Server-Cert cert-pki-ca'

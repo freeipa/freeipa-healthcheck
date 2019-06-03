@@ -65,7 +65,7 @@ class TestRevocation(BaseTest):
         assert len(self.results) == 2
 
         for result in self.results.results:
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.certs'
             assert result.check == 'IPACertRevocation'
 
@@ -95,12 +95,12 @@ class TestRevocation(BaseTest):
         assert len(self.results) == 2
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertRevocation'
 
         result = self.results.results[1]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertRevocation'
         assert result.kw.get('revocation_reason') == 'superseded'

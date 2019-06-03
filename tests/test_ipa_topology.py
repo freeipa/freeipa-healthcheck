@@ -43,7 +43,7 @@ class TestTopology(BaseTest):
         assert len(self.results) == 2
 
         for result in self.results.results:
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.topology'
             assert result.check == 'IPATopologyDomainCheck'
 
@@ -92,7 +92,7 @@ class TestTopology(BaseTest):
         # The first two results are failures in the domain suffix, the
         # third is a success in the ca suffix.
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('key') == 'ipa.example.test'
         assert result.kw.get('replicas') == ['replica2.example.test']
         assert result.kw.get('suffix') == 'domain'
@@ -100,7 +100,7 @@ class TestTopology(BaseTest):
         assert 'can\'t contact servers' in result.kw.get('msg')
 
         result = self.results.results[1]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('key') == 'replica2.example.test'
         assert result.kw.get('replicas') == ['ipa.example.test']
         assert result.kw.get('suffix') == 'domain'
@@ -108,7 +108,7 @@ class TestTopology(BaseTest):
         assert 'can\'t contact servers' in result.kw.get('msg')
 
         result = self.results.results[2]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.kw.get('suffix') == 'ca'
 
     def test_topology_ca_bad(self):
@@ -156,11 +156,11 @@ class TestTopology(BaseTest):
         # The first result is ok (domain) and the last two are failures
         # (ca)
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.kw.get('suffix') == 'domain'
 
         result = self.results.results[1]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('key') == 'ipa.example.test'
         assert result.kw.get('replicas') == ['replica2.example.test']
         assert result.kw.get('suffix') == 'ca'
@@ -168,7 +168,7 @@ class TestTopology(BaseTest):
         assert 'can\'t contact servers' in result.kw.get('msg')
 
         result = self.results.results[2]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('key') == 'replica2.example.test'
         assert result.kw.get('replicas') == ['ipa.example.test']
         assert result.kw.get('suffix') == 'ca'
@@ -212,7 +212,7 @@ class TestTopology(BaseTest):
             assert result.check == 'IPATopologyDomainCheck'
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('key') == 'ipa.example.test'
         assert result.kw.get('replicas') == ['replica2.example.test']
         assert result.kw.get('suffix') == 'domain'
@@ -220,5 +220,5 @@ class TestTopology(BaseTest):
         assert 'recommended max' in result.kw.get('msg')
 
         result = self.results.results[1]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.kw.get('suffix') == 'ca'

@@ -59,7 +59,7 @@ class TestReplicationConflicts(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ds.replication'
         assert result.check == 'ReplicationConflictCheck'
 
@@ -85,7 +85,7 @@ class TestReplicationConflicts(BaseTest):
         self.results = capture_results(f)
         result = self.results.results[0]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ds.replication'
         assert result.check == 'ReplicationConflictCheck'
         assert result.kw.get('msg') == 'Replication conflict'

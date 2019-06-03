@@ -23,7 +23,7 @@ def test_Result():
 
     e = raises(TypeError, Result)
     assert str(e) == "__init__() missing 2 required positional arguments: " \
-                     "'plugin' and 'severity'"
+                     "'plugin' and 'result'"
 
     # Test passing source and check to Result. This is used for loading
     # a previous output.
@@ -66,5 +66,6 @@ def test_Result():
     for x in output:
         assert x['source'] == 'ipahealthcheck.core.plugin'
         assert x['check'] == 'Plugin'
-        assert x['severity'] in (constants.SUCCESS, constants.CRITICAL)
+        assert x['result'] in (constants.getLevelName(constants.SUCCESS),
+                               constants.getLevelName(constants.CRITICAL))
         assert len(x['kw']) == 0

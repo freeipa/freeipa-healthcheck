@@ -49,7 +49,7 @@ class TestNSSValidation(BaseTest):
         assert len(self.results) == 2
 
         for result in self.results.results:
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.certs'
             assert result.check == 'IPANSSChainValidation'
 
@@ -79,7 +79,7 @@ class TestNSSValidation(BaseTest):
         assert len(self.results) == 2
 
         for result in self.results.results:
-            assert result.severity == constants.ERROR
+            assert result.result == constants.ERROR
             assert result.source == 'ipahealthcheck.ipa.certs'
             assert result.check == 'IPANSSChainValidation'
 
@@ -108,7 +108,7 @@ class TestNSSValidation(BaseTest):
         assert len(self.results) == 1
 
         for result in self.results.results:
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.certs'
             assert result.check == 'IPANSSChainValidation'
             assert 'slapd-' in result.kw.get('key')

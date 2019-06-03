@@ -41,7 +41,7 @@ class TestExpiration(BaseTest):
         assert len(self.results) == 2
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertmongerExpirationCheck'
         assert result.kw.get('key') == '1234'
@@ -49,7 +49,7 @@ class TestExpiration(BaseTest):
                                        '19700101001704Z'
 
         result = self.results.results[1]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertmongerExpirationCheck'
         assert result.kw.get('key') == '5678'
@@ -77,13 +77,13 @@ class TestExpiration(BaseTest):
         assert len(self.results) == 2
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertmongerExpirationCheck'
         assert result.kw.get('key') == '5678'
 
         result = self.results.results[1]
-        assert result.severity == constants.WARNING
+        assert result.result == constants.WARNING
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertmongerExpirationCheck'
         assert result.kw.get('key') == '7777'

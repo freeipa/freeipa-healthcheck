@@ -134,7 +134,7 @@ class TestTrustAgent(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustAgentCheck'
 
@@ -153,7 +153,7 @@ class TestTrustAgent(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustAgentCheck'
         assert result.kw.get('key') == 'ipa_server_mode_false'
@@ -174,7 +174,7 @@ class TestTrustAgent(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustAgentCheck'
         assert result.kw.get('key') == 'ipa_server_mode_missing'
@@ -217,7 +217,7 @@ class TestTrustDomains(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain_list_error'
@@ -245,7 +245,7 @@ class TestTrustDomains(BaseTest):
         # There are more than one result I just care about this particular
         # value. The error is not fatal.
         result = self.results.results[0]
-        assert result.severity == constants.WARNING
+        assert result.result == constants.WARNING
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'trust-find'
@@ -292,7 +292,7 @@ class TestTrustDomains(BaseTest):
         assert len(self.results) == 3
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain-list'
@@ -300,14 +300,14 @@ class TestTrustDomains(BaseTest):
         assert result.kw.get('sssd_domains') == 'ad.example, child.example'
 
         result = self.results.results[1]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain-status'
         assert result.kw.get('domain') == 'ad.example'
 
         result = self.results.results[2]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain-status'
@@ -355,7 +355,7 @@ class TestTrustDomains(BaseTest):
         assert len(self.results) == 2
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain-list'
@@ -363,7 +363,7 @@ class TestTrustDomains(BaseTest):
         assert result.kw.get('sssd_domains') == 'child.example'
 
         result = self.results.results[1]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain-status'
@@ -451,25 +451,25 @@ class TestTrustCatalog(BaseTest):
         assert len(self.results) == 4
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
         assert result.kw.get('key') == 'AD Global Catalog'
 
         result = self.results.results[1]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
         assert result.kw.get('key') == 'AD Domain Controller'
 
         result = self.results.results[2]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
         assert result.kw.get('key') == 'AD Global Catalog'
 
         result = self.results.results[1]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
         assert result.kw.get('key') == 'AD Domain Controller'
@@ -516,13 +516,13 @@ class Testsidgen(BaseTest):
         assert len(self.results) == 2
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPAsidgenpluginCheck'
         assert result.kw.get('key') == 'IPA SIDGEN'
 
         result = self.results.results[1]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPAsidgenpluginCheck'
         assert result.kw.get('key') == 'ipa-sidgen-task'
@@ -548,13 +548,13 @@ class Testsidgen(BaseTest):
         assert len(self.results) == 2
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPAsidgenpluginCheck'
         assert result.kw.get('key') == 'IPA SIDGEN'
 
         result = self.results.results[1]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPAsidgenpluginCheck'
         assert result.kw.get('key') == 'ipa-sidgen-task'
@@ -606,7 +606,7 @@ class TestTrustAgentMember(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustAgentMemberCheck'
         assert result.kw.get('key') == m_api.env.host
@@ -634,7 +634,7 @@ class TestTrustAgentMember(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustAgentMemberCheck'
         assert result.kw.get('key') == m_api.env.host
@@ -687,7 +687,7 @@ class TestControllerPrincipal(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustControllerPrincipalCheck'
         assert result.kw.get('key') == 'cifs/%s@%s' % \
@@ -716,7 +716,7 @@ class TestControllerPrincipal(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.kw.get('key') == 'cifs/%s@%s' % \
                                        (m_api.env.host, m_api.env.realm)
@@ -764,7 +764,7 @@ class TestControllerService(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustControllerServiceCheck'
         assert result.kw.get('key') == 'ADTRUST'
@@ -791,7 +791,7 @@ class TestControllerService(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.kw.get('key') == 'ADTRUST'
 
@@ -839,7 +839,7 @@ class TestControllerGroupSID(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustControllerGroupSIDCheck'
         assert result.kw.get('key') == 'ipantsecurityidentifier'
@@ -868,7 +868,7 @@ class TestControllerGroupSID(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustControllerGroupSIDCheck'
         assert result.kw.get('key') == 'ipantsecurityidentifier'
@@ -915,7 +915,7 @@ class TestControllerConf(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustControllerConfCheck'
         assert result.kw.get('key') == 'net conf list'
@@ -938,7 +938,7 @@ class TestPackageCheck(BaseTest):
         self.results = capture_results(f)
         assert len(self.results) == 1
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustPackageCheck'
 
@@ -956,7 +956,7 @@ class TestPackageCheck(BaseTest):
         self.results = capture_results(f)
         assert len(self.results) == 1
         result = self.results.results[0]
-        assert result.severity == constants.WARNING
+        assert result.result == constants.WARNING
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustPackageCheck'
         sys.modules['ipaserver.install'] = save

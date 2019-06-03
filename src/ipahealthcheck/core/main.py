@@ -80,7 +80,7 @@ def run_service_plugins(plugins, config, source, check):
 
         logger.debug('Calling check %s', plugin)
         for result in plugin.check():
-            if result is not None and result.severity == constants.SUCCESS:
+            if result is not None and result.result == constants.SUCCESS:
                 available.append(plugin.service.service_name)
             if result is not None:
                 results.add(result)
@@ -148,7 +148,7 @@ def parse_options(output_registry):
                         default='json', help='Output method')
     parser.add_argument('--failures-only', dest='failures_only',
                         action='store_true', default=False,
-                        help='Exclude SUCCESS severity on output')
+                        help='Exclude SUCCESS result on output')
     for plugin in output_registry.plugins:
         onelinedoc = plugin.__doc__.split('\n\n', 1)[0].strip()
         group = parser.add_argument_group(plugin.__name__.lower(),
@@ -222,7 +222,7 @@ def main():
 
     return_value = 0
     for result in results.results:
-        if result.severity != constants.SUCCESS:
+        if result.result != constants.SUCCESS:
             return_value = 1
             break
 

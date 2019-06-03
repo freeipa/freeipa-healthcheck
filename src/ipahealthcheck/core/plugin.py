@@ -105,7 +105,7 @@ class Result:
     The result of a check.
 
     :param plugin: The plugin which generated the result.
-    :param severity: A severity constant representing the level of error.
+    :param result: A result constant representing the level of error.
     :param source: If no plugin is passed then the name of the source
                    can be provided directly.
     :param check: If no plugin is passed then the name of the check
@@ -123,9 +123,9 @@ class Result:
         msg: A message that can take other keywords as input
         exception: used when a check raises an exception
     """
-    def __init__(self, plugin, severity, source=None, check=None,
+    def __init__(self, plugin, result, source=None, check=None,
                  start=None, **kw):
-        self.severity = severity
+        self.result = result
         self.kw = kw
         self.when = generalized_time(datetime.utcnow())
         self.duration = None
@@ -142,11 +142,11 @@ class Result:
             dur = datetime.utcnow() - start
             self.duration = '%6.6f' % dur.total_seconds()
 
-        assert getLevelName(severity) is not None
+        assert getLevelName(result) is not None
 
     def __repr__(self):
         return "%s.%s(%s): %s" % (self.source, self.check, self.kw,
-                                  self.severity)
+                                  self.result)
 
 
 class Results:
@@ -181,7 +181,7 @@ class Results:
         for result in self.results:
             yield dict(source=result.source,
                        check=result.check,
-                       severity=result.severity,
+                       result=getLevelName(result.result),
                        uuid=result.uuid,
                        when=result.when,
                        duration=result.duration,
@@ -199,11 +199,11 @@ def json_to_results(data):
     results = Results()
 
     for line in data:
-        severity = line.pop('severity')
+        result = line.pop('result')
         source = line.pop('source')
         check = line.pop('check')
         kw = line.pop('kw')
-        result = Result(None, severity, source, check, **kw)
+        result = Result(None, result, source, check, **kw)
         results.add(result)
 
     return results
