@@ -502,3 +502,34 @@ class IPATrustControllerGroupSIDCheck(IPAPlugin):
             yield Result(self, constants.SUCCESS,
                          rid=identifier,
                          key='ipantsecurityidentifier')
+
+
+@registry
+class IPATrustPackageCheck(IPAPlugin):
+    """
+    If AD trust is enabled verify that the trust-ad pkg is installed
+
+    If AD trust is enabled and the master does not have the
+    freeipa-server-trust-ad package installed then the master will
+    able to resolve users/groups via extdom plugin and sssd but won't
+    be able to do framework-specific operations.
+    """
+    @duration
+    def check(self):
+        if self.registry.trust_controller:
+            logger.debug('Trust controller, skipping')
+            return
+        if not self.registry.trust_agent:
+            logger.debug('Not a trust agent, skipping')
+            return
+
+        # The trust-ad package provides this import
+        try:
+            from ipaserver.install import adtrustinstance  # noqa: F401
+            yield Result(self, constants.SUCCESS,
+                         key='adtrustpackage')
+        except ImportError:
+            yield Result(self, constants.WARNING,
+                         key='adtrustpackage',
+                         msg='trust-ad sub-package is not installed. '
+                         'Administration will be limited.')

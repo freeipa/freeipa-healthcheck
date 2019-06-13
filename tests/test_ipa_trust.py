@@ -2,6 +2,8 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+import sys
+
 from base import BaseTest
 from collections import namedtuple
 from unittest.mock import Mock, patch
@@ -18,7 +20,8 @@ from ipahealthcheck.ipa.trust import (IPATrustAgentCheck,
                                       IPATrustControllerPrincipalCheck,
                                       IPATrustControllerServiceCheck,
                                       IPATrustControllerGroupSIDCheck,
-                                      IPATrustControllerConfCheck)
+                                      IPATrustControllerConfCheck,
+                                      IPATrustPackageCheck)
 
 from ipalib import errors
 from ipapython.dn import DN
@@ -916,3 +919,44 @@ class TestControllerConf(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustControllerConfCheck'
         assert result.kw.get('key') == 'net conf list'
+
+
+class TestPackageCheck(BaseTest):
+    patches = {
+        'ipaserver.install.installutils.check_server_configuration':
+        Mock(return_value=None),
+    }
+
+    def test_agent_with_package(self):
+        # Note that this test assumes the import is installed
+        framework = object()
+        registry.initialize(framework)
+        registry.trust_controller = False
+        registry.trust_agent = True
+        f = IPATrustPackageCheck(registry)
+        f.config = config.Config()
+        self.results = capture_results(f)
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.severity == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustPackageCheck'
+
+    def test_agent_without_package(self):
+        # Note that this test assumes the import is installed
+        framework = object()
+        registry.initialize(framework)
+        registry.trust_controller = False
+        registry.trust_agent = True
+        # Hose up the module so the import fails
+        save = sys.modules['ipaserver.install']
+        sys.modules['ipaserver.install'] = 'foo'
+        f = IPATrustPackageCheck(registry)
+        f.config = config.Config()
+        self.results = capture_results(f)
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.severity == constants.WARNING
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustPackageCheck'
+        sys.modules['ipaserver.install'] = save
