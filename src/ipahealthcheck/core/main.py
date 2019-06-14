@@ -15,6 +15,8 @@ from ipahealthcheck.core.output import output_registry
 from ipahealthcheck.core import constants
 from ipahealthcheck.meta.services import ServiceCheck
 
+from ipaserver.install.installutils import is_ipa_configured
+
 
 logging.basicConfig(format='%(message)s')
 logger = logging.getLogger()
@@ -180,6 +182,12 @@ def main():
 
     config = read_config()
     if config is None:
+        sys.exit(1)
+
+    if not (
+        options.source or options.list_sources
+    ) and not is_ipa_configured():
+        logging.error("IPA is not configured on this system.")
         sys.exit(1)
 
     for name, registry in find_registries().items():
