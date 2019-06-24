@@ -1,3 +1,49 @@
+# What is healthcheck?
+
+It is an attempt to answer the question "Is my IPA installation working properly."
+
+Major pain points in an IPA installation were identified and tests written to verify that the system is configured or running with expected settings.
+
+The major areas currently covered are:
+
+* Certificate configuration and expiration dates
+* Replication errors
+* Replication topology
+* AD Trust configuration
+* Service status
+* File permissions of important configuration files
+* Filesystem space
+
+# How to use it?
+
+Distributions can include a systemd timer which will executed the test nightly and log the output to /var/log/ipa/healthcheck. This can be the input into a monitoring system to track changes over time or to alert if a test goes from working to error or warning.
+
+It can be run from the command-line as root as ipa-healthcheck. Running from the command-line by default will display the output to the console.
+
+There is output for _all_ tests so we can be sure that an error condition isn't providing a false positive. The command-line option --failures-only will skip printing the SUCCESS conditions.
+
+There are two main ways we expect that healthcheck will be executed:
+
+1. Execute daily in cron or using a systemd timer, collect the output, and load it into an existing system monitoring system to track changes over time.
+2. Run on an ad-hoc basis and look for errors
+
+# What if I get an error or warning?
+
+In general the output should contain enough information to provide a basic idea of why it is considered an error. If a specific value is expected then that will be provided along with the observed value. For example a number of files are checked for owner, group and permissions. If a value differs from the expected value then the expected and got values will be reported.
+
+Running from the command-line will aid in ensuring that the condition is correct to what is expected. The basic idea is that it would be iterative:
+
+1. ipa-healthcheck
+2. manually address any errors
+
+Repeat until until no errors are reported.
+
+# What about false positives?
+
+It is possible that some tests will need to be tweaked to accomodate real world situations. If you observe false positives then please open an issue at [https://github.com/freeipa/freeipa-healthcheck/issues](URL)
+
+There is no way to suppress an error without making a change either in the test or in the system to accomodate the test requirements.
+
 # Organization
 
 In order to gauge the health of a system one needs to check any number of things.
