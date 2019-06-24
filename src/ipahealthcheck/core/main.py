@@ -219,3 +219,11 @@ def main():
         output.render(results)
     except Exception as e:
         logger.error('Output raised %s: %s', e.__class__.__name__, e)
+
+    return_value = 0
+    for result in results.results:
+        if result.severity != constants.SUCCESS:
+            return_value = 1
+            break
+
+    sys.exit(return_value)
