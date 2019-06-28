@@ -26,7 +26,10 @@ class ReplicationConflictCheck(DSPlugin):
     """
     @duration
     def check(self):
-        conn = ipaldap.LDAPClient.from_realm(api.env.realm)
+        try:
+            conn = ipaldap.LDAPClient.from_realm(api.env.realm)
+        except AttributeError:
+            conn = ipaldap.LDAPClient(api.env.ldap_uri)
         conn.external_bind()
 
         filterstr = "(&(!(objectclass=nstombstone))(nsds5ReplConflict=*))"
