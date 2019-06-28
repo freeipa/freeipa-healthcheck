@@ -879,3 +879,35 @@ class IPACertmongerCA(IPAPlugin):
             else:
                 yield Result(self, constants.SUCCESS,
                              key=ca)
+
+
+@registry
+class IPAMainCAExpirationCheck(IPAPlugin):
+
+    @duration
+    def check(self):
+        try:
+            cert = x509.load_certificate_from_file(paths.IPA_CA_CRT)
+        except IOError as e:
+            logger.debug("Could not open %s!" % paths.IPA_CA_CRT)
+            yield Result(self, constants.ERROR,
+                         key=paths.IPA_CA_CRT,
+                         msg='Error opening IPA main CA at %s: %s' %
+                         (paths.IPA_CA_CRT, e))
+            return
+        except (TypeError, ValueError):
+            logger.debug("% is not a valid certificate!" % paths.IPA_CA_CRT)
+            yield Result(self, constants.ERROR,
+                         key=paths.IPA_CA_CRT,
+                         msg='IPA main CA %s is invalid.' % paths.IPA_CA_CRT)
+            return
+        now = datetime.datetime.now() + datetime.timedelta(weeks=2)
+        if cert.not_valid_after <= now:
+            logger.debug("% is expiring soon!" % paths.IPA_CA_CRT)
+            yield Result(self, constants.ERROR,
+                         key=paths.IPA_CA_CRT,
+                         msg='IPA main CA \'%s\' is expiring soon.' %
+                         paths.IPA_CA_CRT)
+        else:
+            yield Result(self, constants.SUCCESS,
+                         key=paths.IPA_CA_CRT)
