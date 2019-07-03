@@ -52,15 +52,15 @@ class TestTracking(BaseTest):
         assert result.severity == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertTracking'
-        assert result.kw.get('msg') == "Missing tracking for {" \
-            "'cert-file': '/var/lib/ipa/ra-agent.pem', " \
-            "'key-file': '/var/lib/ipa/ra-agent.key', " \
-            "'ca-name': 'dogtag-ipa-ca-renew-agent', " \
-            "'cert-storage': 'FILE', "\
-            "'cert-presave-command': " \
-            "'/usr/libexec/ipa/certmonger/renew_ra_cert_pre', " \
-            "'cert-postsave-command': " \
-            "'/usr/libexec/ipa/certmonger/renew_ra_cert'}"
+        assert result.kw.get('msg') == "Missing tracking for " \
+            "cert-file=/var/lib/ipa/ra-agent.pem, " \
+            "key-file=/var/lib/ipa/ra-agent.key, " \
+            "ca-name=dogtag-ipa-ca-renew-agent, " \
+            "cert-storage=FILE, "\
+            "cert-presave-command=" \
+            "/usr/libexec/ipa/certmonger/renew_ra_cert_pre, " \
+            "cert-postsave-command=" \
+            "/usr/libexec/ipa/certmonger/renew_ra_cert"
 
     def test_unknown_cert_tracking(self):
         # Add a custom, unknown request
