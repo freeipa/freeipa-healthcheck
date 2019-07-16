@@ -45,7 +45,7 @@ class TestDNARange(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.dna'
         assert result.check == 'IPADNARangeCheck'
         assert result.kw.get('range_start') == 1
@@ -66,7 +66,7 @@ class TestDNARange(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.dna'
         assert result.check == 'IPADNARangeCheck'
         assert result.kw.get('range_start') == 0
@@ -90,7 +90,7 @@ class TestDNARange(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.dna'
         assert result.check == 'IPADNARangeCheck'
         assert result.kw.get('range_start') == 1

@@ -70,7 +70,7 @@ class TestCACerts(BaseTest):
         assert len(self.results) == 6
 
         for result in self.results.results:
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.dogtag.ca'
             assert result.check == 'DogtagCertsConfigCheck'
 
@@ -111,13 +111,13 @@ class TestCACerts(BaseTest):
             if r == 2:  # skip the one that should be bad
                 continue
             result = self.results.results[r]
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.dogtag.ca'
             assert result.check == 'DogtagCertsConfigCheck'
 
         result = self.results.results[2]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.dogtag.ca'
         assert result.check == 'DogtagCertsConfigCheck'
         assert result.kw.get('key') == 'auditSigningCert cert-pki-ca'

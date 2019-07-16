@@ -35,7 +35,7 @@ class BaseTest(TestCase):
     def tearDown(self):
         """
         Ensure that no exceptions snuck into the results which might not
-        be noticed because an exception may have the same severity as
+        be noticed because an exception may have the same result as
         the expected result.
         """
         no_exceptions(self.results)

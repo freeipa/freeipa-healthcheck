@@ -49,7 +49,7 @@ class TestTracking(BaseTest):
         assert len(self.results) == 2
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertTracking'
         assert result.kw.get('msg') == "Missing tracking for " \
@@ -81,7 +81,7 @@ class TestTracking(BaseTest):
         assert len(self.results) == 3
 
         result = self.results.results[2]
-        assert result.severity == constants.WARNING
+        assert result.result == constants.WARNING
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertTracking'
         assert result.kw.get('msg') == 'Unknown certmonger id 7777'

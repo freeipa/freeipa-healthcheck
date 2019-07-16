@@ -51,14 +51,14 @@ def test_files_owner(mock_stat):
     results = capture_results(f)
 
     my_results = get_results(results, 'owner')
-    assert my_results.results[0].severity == constants.SUCCESS
-    assert my_results.results[1].severity == constants.WARNING
+    assert my_results.results[0].result == constants.SUCCESS
+    assert my_results.results[1].result == constants.WARNING
 
     mock_stat.return_value = make_stat(uid=nobody.pw_uid)
     results = capture_results(f)
     my_results = get_results(results, 'owner')
-    assert my_results.results[0].severity == constants.WARNING
-    assert my_results.results[1].severity == constants.SUCCESS
+    assert my_results.results[0].result == constants.WARNING
+    assert my_results.results[1].result == constants.SUCCESS
 
 
 @patch('os.stat')
@@ -71,14 +71,14 @@ def test_files_group(mock_stat):
     results = capture_results(f)
 
     my_results = get_results(results, 'group')
-    assert my_results.results[0].severity == constants.SUCCESS
-    assert my_results.results[1].severity == constants.WARNING
+    assert my_results.results[0].result == constants.SUCCESS
+    assert my_results.results[1].result == constants.WARNING
 
     mock_stat.return_value = make_stat(gid=nobody.pw_gid)
     results = capture_results(f)
     my_results = get_results(results, 'group')
-    assert my_results.results[0].severity == constants.WARNING
-    assert my_results.results[1].severity == constants.SUCCESS
+    assert my_results.results[0].result == constants.WARNING
+    assert my_results.results[1].result == constants.SUCCESS
 
 
 @patch('os.stat')
@@ -91,11 +91,11 @@ def test_files_mode(mock_stat):
     results = capture_results(f)
 
     my_results = get_results(results, 'mode')
-    assert my_results.results[0].severity == constants.SUCCESS
-    assert my_results.results[1].severity == constants.WARNING
+    assert my_results.results[0].result == constants.SUCCESS
+    assert my_results.results[1].result == constants.WARNING
 
     mock_stat.return_value = make_stat(mode=33204)
     results = capture_results(f)
     my_results = get_results(results, 'mode')
-    assert my_results.results[0].severity == constants.WARNING
-    assert my_results.results[1].severity == constants.SUCCESS
+    assert my_results.results[0].result == constants.WARNING
+    assert my_results.results[1].result == constants.SUCCESS

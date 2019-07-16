@@ -36,7 +36,7 @@ class TestCAConnectivity(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.dogtag.ca'
         assert result.check == 'DogtagCertsConnectivityCheck'
 
@@ -57,7 +57,7 @@ class TestCAConnectivity(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.dogtag.ca'
         assert result.check == 'DogtagCertsConnectivityCheck'
 
@@ -77,7 +77,7 @@ class TestCAConnectivity(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.dogtag.ca'
         assert result.check == 'DogtagCertsConnectivityCheck'
         assert 'Unable to communicate' in result.kw.get('msg')

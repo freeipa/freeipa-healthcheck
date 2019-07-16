@@ -15,7 +15,7 @@ These areas of the system to check can be logically grouped together. This group
 
 A check is as atomic as possible to limit the scope and complexity and provide a yes/no answer on whether that particular configuration is correct.
 
-Each check will return a result, either a severity of WARNING, ERROR or CRITICAL or SUCCESS. Returning SUCCESS tells you that the check was done and was deemed correct. This should help track when the last time something was examined.
+Each check will return a result, either a result of WARNING, ERROR or CRITICAL or SUCCESS. Returning SUCCESS tells you that the check was done and was deemed correct. This should help track when the last time something was examined.
 
 Upon failure the output will include the source and check that detected the failure along with a message and name/value pairs indicating the problem. It may very well be that the check can't make a final determination and generally defaults to WARNING if it can't be sure so that it can be examined.
 

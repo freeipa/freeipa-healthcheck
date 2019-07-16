@@ -59,8 +59,8 @@ class JSON(Output):
 
         output = []
         for line in data.output():
-            severity = line.get('severity')
-            if self.failures_only and int(severity) == SUCCESS:
+            result = line.get('result')
+            if self.failures_only and int(result) == SUCCESS:
                 continue
             output.append(line)
         f.write(json.dumps(output, indent=self.indent))
@@ -101,12 +101,12 @@ class Human(Output):
 
         for line in data.output():
             kw = line.get('kw')
-            severity = line.get('severity')
+            result = line.get('result')
             source = line.get('source')
             check = line.get('check')
-            if self.failures_only and int(severity) == SUCCESS:
+            if self.failures_only and int(result) == SUCCESS:
                 continue
-            print('%s: %s.%s' % (getLevelName(severity), source, check),
+            print('%s: %s.%s' % (getLevelName(result), source, check),
                   end='')
             if 'key' in kw:
                 print('.%s' % kw.get('key'), end='')

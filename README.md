@@ -96,14 +96,14 @@ A basic check module consists of:
 
 A check yields a Result. This contains the outcome of the check including:
 
-* severity as defined in ipahealthcheck/core/constants.py
+* result as defined in ipahealthcheck/core/constants.py
 * msg containing a message to be displayed to the user.
 * kw, a python dictionary of name value pairs that provide details on the error
 
 The kw dict is meant to provide context for the check. Err on the side of
 too much information.
 
-msg and kw are optional if severity is SUCCESS.
+msg and kw are optional if result is SUCCESS.
 
 If a check consist of only a single test then it is not required to yield
 a Result, one marking the check as successful will be added automatically.

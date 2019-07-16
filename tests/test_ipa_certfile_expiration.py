@@ -53,7 +53,7 @@ class TestIPACertificateFile(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertfileExpirationCheck'
         assert result.kw.get('key') == '1234'
@@ -77,7 +77,7 @@ class TestIPACertificateFile(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.WARNING
+        assert result.result == constants.WARNING
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertfileExpirationCheck'
         assert result.kw.get('key') == '1234'
@@ -102,7 +102,7 @@ class TestIPACertificateFile(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertfileExpirationCheck'
         assert result.kw.get('key') == '1234'

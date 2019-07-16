@@ -34,7 +34,7 @@ class TestCertmonger(BaseTest):
         assert len(self.results) == 3
 
         for result in self.results.results:
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.certs'
             assert result.check == 'IPACertmongerCA'
 
@@ -55,11 +55,11 @@ class TestCertmonger(BaseTest):
 
         for r in range(0, 1):
             result = self.results.results[r]
-            assert result.severity == constants.SUCCESS
+            assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.certs'
             assert result.check == 'IPACertmongerCA'
 
-        assert self.results.results[2].severity == constants.ERROR
+        assert self.results.results[2].result == constants.ERROR
         assert self.results.results[2].kw.get('key') == \
             'dogtag-ipa-ca-renew-agent-reuse'
         assert self.results.results[2].kw.get('msg') == \

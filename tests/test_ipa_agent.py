@@ -88,7 +88,7 @@ class TestNSSAgent(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPARAAgent'
 
@@ -111,7 +111,7 @@ class TestNSSAgent(BaseTest):
         self.results = capture_results(f)
         result = self.results.results[0]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('msg') == 'RA agent is missing description'
 
     @patch('ipalib.x509.load_certificate_from_file')
@@ -127,7 +127,7 @@ class TestNSSAgent(BaseTest):
         self.results = capture_results(f)
         result = self.results.results[0]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('msg') == 'Unable to load RA cert: test'
 
     def test_nss_agent_no_entry_found(self):
@@ -141,7 +141,7 @@ class TestNSSAgent(BaseTest):
         self.results = capture_results(f)
         result = self.results.results[0]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('msg') == 'RA agent not found in LDAP'
 
     def test_nss_agent_too_many(self):
@@ -168,7 +168,7 @@ class TestNSSAgent(BaseTest):
         self.results = capture_results(f)
         result = self.results.results[0]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('msg') == 'Too many RA agent entries found, 2'
 
     def test_nss_agent_nonmatching_cert(self):
@@ -193,7 +193,7 @@ class TestNSSAgent(BaseTest):
         self.results = capture_results(f)
         result = self.results.results[0]
 
-        assert result.severity == constants.ERROR
+        assert result.result == constants.ERROR
         assert result.kw.get('msg') == 'RA agent certificate not found in LDAP'
 
     def test_nss_agent_multiple_certs(self):
@@ -220,6 +220,6 @@ class TestNSSAgent(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPARAAgent'

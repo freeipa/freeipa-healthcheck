@@ -32,7 +32,7 @@ class TestCRLManagerRole(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.roles'
         assert result.check == 'IPACRLManagerCheck'
         assert result.kw.get('crlgen_enabled') is False
@@ -50,7 +50,7 @@ class TestCRLManagerRole(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.roles'
         assert result.check == 'IPACRLManagerCheck'
         assert result.kw.get('crlgen_enabled') is True
@@ -78,7 +78,7 @@ class TestRenewalMaster(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.roles'
         assert result.check == 'IPARenewalMasterCheck'
         assert result.kw.get('master') is False
@@ -100,7 +100,7 @@ class TestRenewalMaster(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.roles'
         assert result.check == 'IPARenewalMasterCheck'
         assert result.kw.get('master') is False
@@ -122,7 +122,7 @@ class TestRenewalMaster(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.severity == constants.SUCCESS
+        assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.roles'
         assert result.check == 'IPARenewalMasterCheck'
         assert result.kw.get('master') is True
