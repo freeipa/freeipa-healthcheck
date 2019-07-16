@@ -19,4 +19,4 @@ install:
 
 script:
     - tox -epep8,flake8
-    - docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ fedora:29 /bin/sh -c "dnf -y install freeipa-server tox; cd /root/src; tox -epy3"
+    - docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ fedora:29 /bin/sh -c "dnf -y install freeipa-server tox python3-pytest; cd /root/src; tox -epy3"

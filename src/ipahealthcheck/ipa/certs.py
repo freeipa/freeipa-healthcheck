@@ -435,8 +435,10 @@ class IPACertTracking(IPAPlugin):
 
             # The criteria was not met
             if request_id is None:
+                flatten = ', '.join("{!s}={!s}".format(key, val)
+                                    for (key, val) in request.items())
                 yield Result(self, constants.ERROR,
-                             msg='Missing tracking for %s' % request)
+                             msg='Missing tracking for %s' % flatten)
                 continue
 
         # Report any unknown certmonger requests as warnings
