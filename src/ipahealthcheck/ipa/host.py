@@ -23,6 +23,8 @@ logger = logging.getLogger()
 @registry
 class IPAHostKeytab(IPAPlugin):
     """Ensure the host keytab can get a TGT"""
+    requires = ('krb5kdc',)
+
     @duration
     def check(self):
         ccache_dir = tempfile.mkdtemp()

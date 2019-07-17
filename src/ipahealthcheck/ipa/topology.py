@@ -67,6 +67,8 @@ class IPATopologyDomainCheck(IPAPlugin):
             for r in self.report_errors(suffix, result):
                 yield r
 
+    requires = ('dirsrv',)
+
     @duration
     def check(self):
 

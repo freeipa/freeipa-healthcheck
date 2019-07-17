@@ -63,7 +63,7 @@ class Plugin:
     registry defines where the plugin was registered, normally via
     a pkg_resource.
 
-    requires is a set of strings that define pre-requisites for
+    requires is a tuple of strings that define pre-requisites for
     execution. Some output formats allow plugins that do not have
     these requirements met to skip them (JSON does NOT, all plugins
     are always executed and reported).
@@ -94,9 +94,10 @@ class Plugin:
                 return result
 
     """
+    requires = ()
+
     def __init__(self, registry):
         self.registry = registry
-        self.requires = set()
         self.config = dict()
 
 

@@ -60,6 +60,10 @@ class IPAFileCheck(IPAPlugin, FileCheck):
                                 api.env.basedn), [])
         except errors.NotFound:
             return False
+        except AttributeError:
+            logger.debug("LDAP is down, can't tell whether DNS is available."
+                         " Skipping those file checks.")
+            return False
         return True
 
     def check(self):

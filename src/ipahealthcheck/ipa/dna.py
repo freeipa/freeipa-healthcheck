@@ -25,6 +25,8 @@ class IPADNARangeCheck(IPAPlugin):
     if a master does not have a range. It IS an error if no masters have
     a range.
     """
+    requires = ('dirsrv',)
+
     @duration
     def check(self):
         agmt = replication.ReplicationManager(api.env.realm, api.env.host)
