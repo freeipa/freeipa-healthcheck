@@ -81,13 +81,13 @@ def run_service_plugins(plugins, config, source, check):
         if not isinstance(plugin, ServiceCheck):
             continue
 
-        if not source_or_check_matches(plugin, source, check):
-            continue
-
         logger.debug('Calling check %s', plugin)
         for result in plugin.check():
+            # always run the service checks so dependencies work
             if result is not None and result.result == constants.SUCCESS:
                 available.append(plugin.service.service_name)
+            if not source_or_check_matches(plugin, source, check):
+                continue
             if result is not None:
                 results.add(result)
 
