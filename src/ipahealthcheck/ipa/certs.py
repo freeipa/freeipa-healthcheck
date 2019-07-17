@@ -400,6 +400,8 @@ class IPACertTracking(IPAPlugin):
           potential issues.
     """
 
+    requires = ('dirsrv',)
+
     @duration
     def check(self):
         requests = get_expected_requests(self.ca, self.ds, self.serverid)
@@ -650,15 +652,12 @@ class IPARAAgent(IPAPlugin):
        Compare the description and usercertificate values.
     """
 
+    requires = ('dirsrv',)
+
     @duration
     def check(self):
         if not self.ca.is_configured():
             logger.debug('CA is not configured, skipping RA Agent check')
-            return
-
-        if not api.Backend.ldap2.isconnected():
-            yield Result(self, constants.CRITICAL,
-                         msg='Skipping because no LDAP connection')
             return
 
         try:
@@ -754,6 +753,8 @@ class IPACertRevocation(IPAPlugin):
         "privilege withdrawn",
         "AA compromise",
     ]
+
+    requires = ('dirsrv',)
 
     @duration
     def check(self):

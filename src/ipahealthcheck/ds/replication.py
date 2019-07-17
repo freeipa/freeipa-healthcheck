@@ -24,6 +24,8 @@ class ReplicationConflictCheck(DSPlugin):
     The presence of this indicates a replication error. Report any
     found as errors.
     """
+    requires = ('dirsrv',)
+
     @duration
     def check(self):
         try:

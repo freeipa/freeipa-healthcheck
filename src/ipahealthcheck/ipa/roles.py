@@ -47,6 +47,8 @@ class IPARenewalMasterCheck(IPAPlugin):
     useful in the context of the ohter masters. Some external
     service is expected to aggregate this.
     """
+    requires = ('dirsrv',)
+
     @duration
     def check(self):
         try:

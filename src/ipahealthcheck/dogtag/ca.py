@@ -94,6 +94,8 @@ class DogtagCertsConnectivityCheck(DogtagPlugin):
     """
     Test basic connectivity by using cert-show to fetch a cert
     """
+    requires = ('dirsrv',)
+
     @duration
     def check(self):
         if not self.ca.is_configured():
