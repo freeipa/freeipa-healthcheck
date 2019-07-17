@@ -111,11 +111,14 @@ def run_plugins(plugins, config, available, source, check):
 
         logger.debug('Calling check %s' % plugin)
         plugin.config = config
-        # TODO: make this not the default
         if not set(plugin.requires).issubset(available):
-            result = Result(plugin, constants.ERROR,
-                            msg='%s service(s) not running' %
-                            (', '.join(set(plugin.requires) - available)))
+            logger.debug('Skipping %s:%s because %s service(s) not running',
+                         plugin.__class__.__module__,
+                         plugin.__class__.__name__,
+                         ', '.join(set(plugin.requires) - available))
+            # Not providing a Result in this case because if a required
+            # service isn't available then this could generate a lot of
+            # false positives.
         else:
             for result in run_plugin(plugin, available):
                 results.add(result)
