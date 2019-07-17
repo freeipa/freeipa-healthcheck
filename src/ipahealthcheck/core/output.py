@@ -60,7 +60,7 @@ class JSON(Output):
         output = []
         for line in data.output():
             result = line.get('result')
-            if self.failures_only and int(result) == SUCCESS:
+            if self.failures_only and result == 'SUCCESS':
                 continue
             output.append(line)
         f.write(json.dumps(output, indent=self.indent))
