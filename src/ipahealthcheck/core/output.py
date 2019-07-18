@@ -64,6 +64,8 @@ class JSON(Output):
                 continue
             output.append(line)
         f.write(json.dumps(output, indent=self.indent))
+        if sys.stdout.isatty():
+            f.write('\n')
 
         # Ok, hacky, but using with and stdout will close stdout
         # which could be bad.
