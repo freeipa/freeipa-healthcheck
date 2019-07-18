@@ -1,0 +1,9 @@
+
+Daily execution with the systemd timer will produce a log
+file at /var/log/ipa/healthcheck/healthcheck.log
+Logrotate can then be used to keep a history of such logs.
+
+To enable log rotation and keep 30 days of history:
+
+# cp ipahealthcheck /etc/logrotate.d/
+
