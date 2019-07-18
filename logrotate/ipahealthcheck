@@ -1,0 +1,7 @@
+/var/log/ipa/healthcheck/healthcheck.log {
+    create
+    daily
+    dateext
+    missingok
+    rotate 30
+}
