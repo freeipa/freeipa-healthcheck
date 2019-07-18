@@ -1,8 +1,8 @@
 [Unit]
-Description=Execute IPA Healthcheck every day at midnight
+Description=Execute IPA Healthcheck every day at 4AM
 
 [Timer]
-OnCalendar=*-*-* 00:00:00
+OnCalendar=*-*-* 04:00:00
 Unit=ipa-healthcheck.service
 
 [Install]
