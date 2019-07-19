@@ -4,7 +4,10 @@
 
 import argparse
 import logging
+from os import environ
+from os.path import exists
 import pkg_resources
+from shutil import rmtree
 import sys
 
 from datetime import datetime
@@ -12,6 +15,7 @@ from datetime import datetime
 from ipahealthcheck.core.config import read_config
 from ipahealthcheck.core.plugin import Result, Results
 from ipahealthcheck.core.output import output_registry
+from ipahealthcheck.core.randomstring import generate_random_str
 from ipahealthcheck.core import constants
 
 logging.basicConfig(format='%(message)s')
@@ -173,6 +177,12 @@ def parse_options(output_registry):
 
 
 def main():
+    environ["KRB5_CLIENT_KTNAME"] = "/etc/krb5.keytab"
+    ccache = "/tmp/%s" % generate_random_str()
+    if ccache == "/tmp/" or exists(ccache):
+        print("Unexpected error during ccache creation.")
+        sys.exit(1)
+    environ["KRB5CCNAME"] = "DIR:%s" % ccache
     framework = object()
     plugins = []
     output = constants.DEFAULT_OUTPUT
@@ -238,4 +248,5 @@ def main():
             return_value = 1
             break
 
+    rmtree(ccache)
     sys.exit(return_value)
