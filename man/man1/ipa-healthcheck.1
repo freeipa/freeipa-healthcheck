@@ -19,6 +19,9 @@ Each check will return a result, either a result of WARNING, ERROR or CRITICAL o
 
 Upon failure the output will include the source and check that detected the failure along with a message and name/value pairs indicating the problem. It may very well be that the check can't make a final determination and generally defaults to WARNING if it can't be sure so that it can be examined.
 
+.SS "IMPLEMENTATION DETAILS"
+There is no need for users to authenticate and get a ticket in advance for ipa\-healthcheck to work. Existing tickets will not be used as ipa\-healthcheck will leverage the host keytab and use a temporary credential cache.
+
 .SH "OPTIONS"
 .SS "COMMANDS"
 .TP
