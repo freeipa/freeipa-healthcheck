@@ -5,7 +5,7 @@
 import json
 import sys
 from ipahealthcheck.core.constants import getLevelName, SUCCESS
-from ipahealthcheck.core.plugin import Registry, json_to_results
+from ipahealthcheck.core.plugin import Registry
 
 
 class OutputRegistry(Registry):
@@ -18,15 +18,11 @@ output_registry = OutputRegistry()
 class Output:
     """Base class for writing/displayhing the output of results
 
-       output_only defines whether the tests should be executed.
-       This allows for an existing set of results to be read and
-       displaying using a different output method.
-
        options is a tuple of argparse options that can add
        class-specific options for output.
     """
     def __init__(self, options):
-        self.output_only = False
+        pass
 
     def render(self, data):
         pass
@@ -80,27 +76,13 @@ class Human(Output):
     TODO: Use the logging module?
 
     """
-    options = (
-        ('--input-file', dict(dest='infile', help='File to translate')),
-    )
+    options = ()
 
     def __init__(self, options):
         super(Human, self).__init__(options)
-        self.filename = options.infile
-        if self.filename:
-            self.output_only = True
         self.failures_only = options.failures_only
 
     def render(self, data):
-
-        if self.filename:
-            with open(self.filename, 'r') as f:
-                raw_data = f.read()
-
-            # caller catches exception
-            json_data = json.loads(raw_data)
-            data = json_to_results(json_data)
-
         for line in data.output():
             kw = line.get('kw')
             result = line.get('result')
