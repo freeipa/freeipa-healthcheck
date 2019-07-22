@@ -6,15 +6,15 @@ DEFAULT_OUTPUT = 'json'
 
 # Error reporting result
 SUCCESS = 0
-CRITICAL = 1
-ERROR = 2
-WARNING = 4
+WARNING = 10
+ERROR = 20
+CRITICAL = 30
 
 _levelToName = {
     SUCCESS: 'SUCCESS',
-    CRITICAL: 'CRITICAL',
-    ERROR: 'ERROR',
     WARNING: 'WARNING',
+    ERROR: 'ERROR',
+    CRITICAL: 'CRITICAL',
 }
 
 
