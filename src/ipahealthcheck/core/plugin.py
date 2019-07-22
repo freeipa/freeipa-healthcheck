@@ -125,11 +125,11 @@ class Result:
         exception: used when a check raises an exception
     """
     def __init__(self, plugin, result, source=None, check=None,
-                 start=None, **kw):
+                 start=None, duration=None, when=None, **kw):
         self.result = result
         self.kw = kw
-        self.when = generalized_time(datetime.utcnow())
-        self.duration = None
+        self.when = when or generalized_time(datetime.utcnow())
+        self.duration = duration
         self.uuid = str(uuid.uuid4())
         if None not in (check, source):
             self.check = check
@@ -203,8 +203,11 @@ def json_to_results(data):
         result = line.pop('result')
         source = line.pop('source')
         check = line.pop('check')
+        duration = line.pop('duration')
+        when = line.pop('when')
         kw = line.pop('kw')
-        result = Result(None, result, source, check, **kw)
+        result = Result(None, result, source, check, duration=duration,
+                        when=when, **kw)
         results.add(result)
 
     return results

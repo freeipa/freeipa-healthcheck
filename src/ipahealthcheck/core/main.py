@@ -3,6 +3,7 @@
 #
 
 import argparse
+import json
 import logging
 import pkg_resources
 import sys
@@ -10,7 +11,7 @@ import sys
 from datetime import datetime
 
 from ipahealthcheck.core.config import read_config
-from ipahealthcheck.core.plugin import Result, Results
+from ipahealthcheck.core.plugin import Result, Results, json_to_results
 from ipahealthcheck.core.output import output_registry
 from ipahealthcheck.core import constants
 
@@ -155,6 +156,8 @@ def parse_options(output_registry):
                         help='Check to execute, e.g. BazCheck')
     parser.add_argument('--output-type', dest='output', choices=output_names,
                         default='json', help='Output method')
+    parser.add_argument('--input-file', dest='infile',
+                        help='File to read as input')
     parser.add_argument('--failures-only', dest='failures_only',
                         action='store_true', default=False,
                         help='Exclude SUCCESS result on output')
@@ -173,6 +176,16 @@ def parse_options(output_registry):
         sys.exit(1)
 
     return options
+
+
+def limit_results(results, source, check):
+    """Return ony those results which match source and/or check"""
+    new_results = Results()
+    for result in results.results:
+        if result.source == source:
+            if check is None or result.check == check:
+                new_results.add(result)
+    return new_results
 
 
 def main():
@@ -213,14 +226,25 @@ def main():
     if options.list_sources:
         return list_sources(plugins)
 
-    if not output.output_only:
+    if options.infile:
+        try:
+            with open(options.infile, 'r') as f:
+                raw_data = f.read()
+
+            json_data = json.loads(raw_data)
+            results = json_to_results(json_data)
+            available = ()
+        except Exception as e:
+            print("Unable to import '%s': %s" % (options.infile, e))
+            sys.exit(1)
+        if options.source:
+            results = limit_results(results, options.source, options.check)
+    else:
         results, available = run_service_plugins(plugins, config,
                                                  options.source,
                                                  options.check)
         results.extend(run_plugins(plugins, config, available,
                                    options.source, options.check))
-    else:
-        results = None
 
     if options.source and len(results.results) == 0:
         if options.check:
