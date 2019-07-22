@@ -38,17 +38,14 @@ class JSON(Output):
 
     options = (
         ('--output-file', dict(dest='filename', help='File to store output')),
-        ('--indent', dict(dest='indent', type=int, default=None,
+        ('--indent', dict(dest='indent', type=int, default=2,
          help='Indention level of JSON output')),
     )
 
     def __init__(self, options):
         super(JSON, self).__init__(options)
         self.filename = options.filename
-        if (sys.stdout.isatty() and options.indent is None):
-            self.indent = 2
-        else:
-            self.indent = options.indent
+        self.indent = options.indent
         self.failures_only = options.failures_only
 
     def render(self, data):
