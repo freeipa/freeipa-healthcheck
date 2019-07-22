@@ -4,6 +4,7 @@
 
 import argparse
 import logging
+from os import environ
 import pkg_resources
 import sys
 
@@ -173,6 +174,8 @@ def parse_options(output_registry):
 
 
 def main():
+    environ["KRB5_CLIENT_KTNAME"] = "/etc/krb5.keytab"
+    environ["KRB5CCNAME"] = "MEMORY:"
     framework = object()
     plugins = []
     output = constants.DEFAULT_OUTPUT
