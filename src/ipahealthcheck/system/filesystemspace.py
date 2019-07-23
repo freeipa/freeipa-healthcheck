@@ -5,7 +5,7 @@
 import shutil
 
 from ipahealthcheck.system.plugin import SystemPlugin, registry
-from ipahealthcheck.core.plugin import Result
+from ipahealthcheck.core.plugin import duration, Result
 from ipahealthcheck.core import constants
 
 
@@ -37,6 +37,7 @@ class FileSystemSpaceCheck(SystemPlugin):
         stat = shutil.disk_usage(pathname)
         return int(stat.free * 100 / stat.total)
 
+    @duration
     def check(self):
         for store in self._pathchecks:
             percent_free = self.get_fs_free_space_percentage(store)
