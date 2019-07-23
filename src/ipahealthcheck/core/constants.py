@@ -17,16 +17,26 @@ _levelToName = {
     CRITICAL: 'CRITICAL',
 }
 
+_nameToLevel = {
+    'SUCCESS': SUCCESS,
+    'WARNING': WARNING,
+    'ERROR': ERROR,
+    'CRITICAL': CRITICAL,
+}
+
 
 def getLevelName(level):
     """
-    Translate a level constant to a textual level name.
+    Translate between level constants and their textual mappings.
+
+    If the level is one of the predefined levels then returns the
+    corresponding string.
+
+    If a numeric value corresponding to one of the defined levels
+    is passed in instead the corresponding string representation is
+    returned.
     """
-    name = _levelToName.get(level)
-    if name is not None:
-        return name
-    else:
-        return level
+    return _levelToName.get(level) or _nameToLevel.get(level) or level
 
 
 CONFIG_FILE = '/etc/ipahealthcheck/ipahealthcheck.conf'
