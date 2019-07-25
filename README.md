@@ -232,6 +232,10 @@ An example to provide an option to indent the text to make it more readable.
 
 The meta source is intended to collect basic information about the run such as the host it is run on and the time it was run.
 
+# Useful to diagnose a failed installation?
+
+No. healthcheck compares a known state to the state of the installation. If the installation failed then you are guaranteed to get a ton of false positives and all it will tell you is that your installation failed.
+
 # Testing and development
 
 The package can be tested and developed in a python virtual environment.
