@@ -207,24 +207,25 @@ It is possible to execute a single check or all checks in a single source by pas
 
 # Output
 
-Output is controlled via Output plugins. These take the global Results object and iterate over it to produce output in the desired format.
+Output is controlled via Output plugins. These take the global Results object and iterate over it to produce output in the desired format. The result is returned as a string.
 
-A custom Output class must implement the render method which generates the output.
+A custom Output class must implement the generate method which generates the output.
 
 A bare-bones output class is:
 
         @output_registry
         class Basic(Output):
-            def render(self, data):
+            def generate(self, data):
                 output = [x for x in data.output()]
-                print(output)
+
+                return output
 
 An output object can declare its own options by adding a tuple named options to the class in the form of (arg_name, dict(argparse options).
 
-An example to provide a way to read and re-parse existing results:
+An example to provide an option to indent the text to make it more readable.
 
         options = (
-            (--input-file', dict(dest='infoile', help='File to translate')),
+            (--indent', dict(dest='indent', help='How deeply to indent')),
         )
 
 # Meta
