@@ -40,7 +40,10 @@ Execute this particular check within a source. A source must be supplied as well
 Set the output type. The default is JSON.
 .TP
 \fB\-\-failures\-only\fR
-Only report failures. Drop the successful results.
+Exclude SUCCESS results on output.
+.TP
+\fB\-\-severity=\fRSEVERITY\fR
+Only report errors in the requested severity of SUCCESS, WARNING, ERROR or CRITICAL. This can be provided multiple times to search on multiple levels.
 .TP
 \fB\-\-debug\fR
 Generate additional debugging output.

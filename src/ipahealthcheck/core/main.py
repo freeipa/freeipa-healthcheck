@@ -163,7 +163,10 @@ def parse_options(output_registry):
                         help='File to read as input')
     parser.add_argument('--failures-only', dest='failures_only',
                         action='store_true', default=False,
-                        help='Exclude SUCCESS result on output')
+                        help='Exclude SUCCESS results on output')
+    parser.add_argument('--severity', dest='severity', action="append",
+                        help='Include only the selected severity(s)',
+                        choices=[key for key in constants._nameToLevel])
     for plugin in output_registry.plugins:
         onelinedoc = plugin.__doc__.split('\n\n', 1)[0].strip()
         group = parser.add_argument_group(plugin.__name__.lower(),
