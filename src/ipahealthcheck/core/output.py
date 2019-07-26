@@ -3,7 +3,7 @@
 #
 
 import json
-from ipahealthcheck.core.constants import getLevelName
+from ipahealthcheck.core.constants import getLevelName, _nameToLevel, SUCCESS
 from ipahealthcheck.core.plugin import Registry
 
 
@@ -38,6 +38,7 @@ class Output:
     def __init__(self, options):
         self.filename = options.outfile
         self.failures_only = options.failures_only
+        self.severity = options.severity
 
     def render(self, results):
         """Process the results into output"""
@@ -51,14 +52,17 @@ class Output:
             fd.write(output)
 
     def strip_output(self, results):
-        """Strip out SUCCESS results if --failures-only was used
+        """Strip out SUCCESS results if --failures-only or
+           --severity was used
 
            Returns a list of result values.
         """
         output = []
         for line in results.output():
             result = line.get('result')
-            if self.failures_only and getLevelName(result) == 'SUCCESS':
+            if self.failures_only and _nameToLevel.get(result) == SUCCESS:
+                continue
+            if self.severity is not None and result not in self.severity:
                 continue
             output.append(line)
 
