@@ -284,6 +284,7 @@ class IPACertmongerExpirationCheck(IPAPlugin):
                     yield Result(self, constants.WARNING,
                                  key=id,
                                  expiration_date=generalized_time(nafter),
+                                 days=diff,
                                  msg='Request id %s expires in %s days'
                                  % (id, diff))
                 else:
@@ -325,7 +326,8 @@ class IPACertfileExpirationCheck(IPAPlugin):
                     yield Result(self, constants.ERROR,
                                  key=id,
                                  certfile=certfile,
-                                 msg='Unable to open cert file %s: %s'
+                                 error=str(e),
+                                 msg='Unable to open cert file \'%s\': %s'
                                  % (certfile, e))
                     continue
             elif store == 'NSSDB':
@@ -339,7 +341,8 @@ class IPACertfileExpirationCheck(IPAPlugin):
                     yield Result(self, constants.ERROR,
                                  key=id,
                                  dbdir=dbdir,
-                                 msg='Unable to open NSS database %s: %s'
+                                 error=str(e),
+                                 msg='Unable to open NSS database \'%s\': %s'
                                  % (dbdir, e))
                     continue
 
@@ -350,8 +353,9 @@ class IPACertfileExpirationCheck(IPAPlugin):
                                  key=id,
                                  dbdir=dbdir,
                                  nickname=nickname,
-                                 msg='Unable to retrieve cert %s from '
-                                 '%s: %s'
+                                 error=str(e),
+                                 msg='Unable to retrieve cert \'%s\' from '
+                                 '\'%s\': %s'
                                  % (nickname, dbdir, e))
                     continue
             else:
@@ -368,6 +372,7 @@ class IPACertfileExpirationCheck(IPAPlugin):
             if now > notafter:
                 yield Result(self, constants.ERROR,
                              key=id,
+                             expiration_date=generalized_time(notafter),
                              msg='Request id %s expired on %s' %
                              (id, generalized_time(notafter)))
                 continue
@@ -377,6 +382,8 @@ class IPACertfileExpirationCheck(IPAPlugin):
             if diff < self.config.cert_expiration_days:
                 yield Result(self, constants.WARNING,
                              key=id,
+                             expiration_date=generalized_time(notafter),
+                             days=diff,
                              msg='Request id %s expires in %s days'
                              % (id, diff))
             else:
@@ -440,6 +447,7 @@ class IPACertTracking(IPAPlugin):
                 flatten = ', '.join("{!s}={!s}".format(key, val)
                                     for (key, val) in request.items())
                 yield Result(self, constants.ERROR,
+                             key=flatten,
                              msg='Missing tracking for %s' % flatten)
                 continue
 
@@ -512,7 +520,7 @@ class IPACertNSSTrust(IPAPlugin):
 
 @registry
 class IPANSSChainValidation(IPAPlugin):
-    """Validate the certificate chain of the certs to ensure trust is ok"""
+    """Validate the certificate chain of the certs."""
 
     def validate_nss(self, dbdir, dbtype, pinfile, nickname):
         """Call out to certutil to verify a certificate.
@@ -579,6 +587,7 @@ class IPANSSChainValidation(IPAPlugin):
                     yield Result(
                         self, constants.ERROR, key=key,
                         dbdir=dbdir, nickname=nickname,
+                        reason=response.output_error,
                         msg='Validation of %s in %s failed: %s'
                             % (nickname, dbdir, response.output_error))
                 else:
@@ -587,6 +596,9 @@ class IPANSSChainValidation(IPAPlugin):
                         yield Result(
                             self, constants.ERROR, key=key,
                             dbdir=dbdir, nickname=nickname,
+                            reason="%s: %s" %
+                            (response.raw_output.decode('utf-8'),
+                             response.error_log),
                             msg='Validation of %s in %s failed: '
                                 '%s %s' % (
                                     nickname, dbdir,
@@ -604,7 +616,7 @@ class IPANSSChainValidation(IPAPlugin):
 
 @registry
 class IPAOpenSSLChainValidation(IPAPlugin):
-    """Validate the certificate chain of the certs to ensure trust is ok"""
+    """Validate the certificate chain of the certs."""
 
     def validate_openssl(self, file):
         """Call out to openssl to verify a certificate against global chain
@@ -638,6 +650,7 @@ class IPAOpenSSLChainValidation(IPAPlugin):
                 if ': OK' not in response.raw_output.decode('utf-8'):
                     yield Result(
                         self, constants.ERROR, key=cert,
+                        reason=response.raw_error_output.decode('utf-8'),
                         msg='Certificate validation for %s failed: %s' %
                             (cert, response.raw_error_output.decode('utf-8')))
                 else:

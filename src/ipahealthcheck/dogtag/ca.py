@@ -80,8 +80,8 @@ class DogtagCertsConfigCheck(DogtagPlugin):
                              key=nickname,
                              directive=blobs[nickname],
                              configfile=paths.CA_CS_CFG_PATH,
-                             msg='Certificate %s does not match the value '
-                             'of %s in  %s' %
+                             msg='Certificate \'%s\' does not match the value '
+                             'of %s in %s' %
                              (nickname, blobs[nickname], paths.CA_CS_CFG_PATH))
             else:
                 yield Result(self, constants.SUCCESS,
