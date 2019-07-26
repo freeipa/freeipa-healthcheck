@@ -12,7 +12,7 @@ The major areas currently covered are:
 * AD Trust configuration
 * Service status
 * File permissions of important configuration files
-* Filesystem space
+* File system space
 
 # How to use it?
 
@@ -27,7 +27,7 @@ A systemd timer is provided but is not enabled by default. To enable it:
     # systemctl enable ipa-healthcheck.timer
     # systemctl start ipa-healthcheck.timer
 
-Logrotate will handle log rotation and keep up to 30 days of history.
+logrotate will handle log rotation and keep up to 30 days of history.
 This can be configured via the `/etc/logrotate.d/ipahealthcheck` file.
 
 
@@ -76,9 +76,9 @@ Repeat until until no errors are reported.
 
 # What about false positives?
 
-It is possible that some tests will need to be tweaked to accomodate real world situations. If you observe false positives then please open an issue at [https://github.com/freeipa/freeipa-healthcheck/issues](URL)
+It is possible that some tests will need to be tweaked to accommodate real world situations. If you observe false positives then please open an issue at [https://github.com/freeipa/freeipa-healthcheck/issues](URL)
 
-There is no way to suppress an error without making a change either in the test or in the system to accomodate the test requirements.
+There is no way to suppress an error without making a change either in the test or in the system to accommodate the test requirements.
 
 # Organization
 
@@ -150,7 +150,7 @@ yield a SUCCESS Result() for each one.
 A Result is required for every test done so that one can know that the
 check was executed.
 
-The runtime duration of each check will be calculated. The mechanism
+The run time duration of each check will be calculated. The mechanism
 differs depending on complexity.
 
 A check should normally use the @duration decorator to track the
@@ -267,3 +267,655 @@ to do that manually:
 
     # mkdir /etc/ipahealthcheck
     # echo "[default]" > /etc/ipahealthcheck/ipahealthcheck.conf
+
+# Understanding the results
+
+Here is some basic guidance on what a non-SUCCESS message from a check means. How to fix any particular result is heavily dependent on the error(s) discovered and their context. A single failure may be detected by multiple checks.
+
+## ipahealthcheck.dogtag.ca
+
+### DogtagCertsConfigCheck
+Compares the value of the CA (and KRA if installed) certificates with the value found in CS.cfg. If they don't match then the CA will likely fail to start.
+
+    {
+      "source": "ipahealthcheck.dogtag.ca",
+      "check": "DogtagCertsConfigCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": "ocspSigningCert cert-pki-ca",
+        "directive": "ca.ocsp_signing.cert",
+        "configfile": "/var/lib/pki/pki-tomcat/conf/ca/CS.cfg",
+        "msg": "Certificate 'ocspSigningCert cert-pki-ca' does not match the value of ca.ocsp_signing.cert in /var/lib/pki/pki-tomcat/conf/ca/CS.cfg"
+        }
+    }
+
+### DogtagCertsConnectivityCheck
+Runs the equivalent of ipa cert-show 1 to verify basic connectivity.
+
+    {
+      "source": "ipahealthcheck.dogtag.ca",
+      "check": "DogtagCertsConnectivityCheck",
+      "result": "ERROR",
+      "kw": {
+        "msg": "Request for certificate failed, Certificate operation cannot be completed: Unable to communicate with CMS (503)"
+      }
+    }
+
+## ipahealthcheck.ds.replication
+
+### ReplicationConflictCheck
+Searches for entries in LDAP matching (&(!(objectclass=nstombstone))(nsds5ReplConflict=*))
+
+    {
+      "source": "ipahealthcheck.ds.replication",
+      "check": "ReplicationConflictCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": "nsuniqueid=66446001-1dd211b2+uid=bjenkins,cn=users,cn=accounts,dc=example,dc=test",
+        "conflict": "namingConflict",
+        "msg": "Replication conflict"
+      }
+    }
+
+## ipahealthcheck.ipa.certs
+
+### IPACertmongerExpirationCheck
+Loops through all expected certmonger requests and checks expiration based on what certmonger knows about the certificate. A warning is issued if the certificate expires in cert_expiration_days (the default is 28).
+
+Expired certificate:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertmongerExpirationCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": 1234,
+        "expiration_date", "20160101001704Z",
+        "msg": "Request id 1234 expired on 20160101001704Z"
+      }
+    }
+
+Expiring certificate:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertmongerExpirationCheck",
+      "result": "WARNING",
+      "kw": {
+        "key": 1234,
+        "expiration_date", "20160101001704Z",
+        "days": 9,
+        "msg": "Request id 1234 expires in 9 days"
+      }
+    }
+
+### IPACertfileExpirationCheck
+Similar to IPACertmongerExpirationCheck except the certificate is pulled from the PEM file or NSS database and re-verified. This is in case the certmonger tracking becomes out-of-sync with the certificate on disk.
+
+The certificate file cannot be opened:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertfileExpirationCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": 1234,
+        "certfile": "/path/to/cert.pem",
+        "error": [error],
+        "msg": "Unable to open cert file '/path/to/cert.pem': [error]"
+      }
+    }
+
+The NSS database cannot be opened:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertfileExpirationCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": 1234,
+        "dbdir": "/path/to/nssdb",
+        "error": [error],
+        "msg": "Unable to open NSS database '/path/to/nssdb': [error]"
+      }
+    }
+
+The tracked nickname cannot be found in the NSS database:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertfileExpirationCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": 1234,
+        "dbdir": "/path/to/nssdb",
+        "nickname": [nickname],
+        "error": [error],
+        "msg": "Unable to retrieve cert '[nickname]' from '/path/to/nssdb': [error]"
+      }
+    }
+
+Expired certificate:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertfileExpirationCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": 1234,
+        "expiration_date", "20160101001704Z",
+        "msg": "Request id 1234 expired on 20160101001704Z"
+      }
+    }
+
+Expiring certificate:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertfileExpirationCheck",
+      "result": "WARNING",
+      "kw": {
+        "key": 1234,
+        "expiration_date", "20160101001704Z",
+        "days": 9,
+        "msg": "Request id 1234 expires in 9 days"
+      }
+    }
+
+### IPACertTracking
+Compares the certmonger tracking on the system to the expected values. A query of the expected name/value pairs in certmonger is done to certmonger. On failure the contents of the query are missing. This result would be seen either if the certificate is tracked but there is some slight change in the expected value or if the tracking is missing entirely.
+
+Missing certificate tracking:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertTracking",
+      "result": "ERROR",
+      "kw": {
+        "key": "cert-file=/var/lib/ipa/ra-agent.pem, key-file=/var/lib/ipa/ra-agent.key, ca-name=dogtag-ipa-ca-renew-agent, cert-storage=FILE, cert-presave-command=/usr/libexec/ipa/certmonger/renew_ra_cert_pre,  cert-postsave-command=/usr/libexec/ipa/certmonger/renew_ra_cert"
+        "msg": "Missing tracking for cert-file=/var/lib/ipa/ra-agent.pem, key-file=/var/lib/ipa/ra-agent.key, ca-name=dogtag-ipa-ca-renew-agent, cert-storage=FILE, cert-presave-command=/usr/libexec/ipa/certmonger/renew_ra_cert_pre,  cert-postsave-command=/usr/libexec/ipa/certmonger/renew_ra_cert"
+      }
+    }
+
+An unknown certificate is being tracked by certmonger. This may be perfectly legitimate, it is provided for information only:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertTracking",
+      "result": "WARNING",
+      "kw": {
+        "key": 1234,
+        "msg": "Unknown certmonger id 1234'
+      }
+    }
+
+### IPACertNSSTrust
+The trust for certificates stored in NSS databases is compared against a known good state.
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertNSSTrust",
+      "result": "ERROR",
+      "kw": {
+        "key": "auditSigningCert cert-pki-ca",
+        "expected": "u,u,Pu",
+        "got": "u,u,u",
+        "nickname": "auditSigningCert cert-pki-ca",
+        "dbdir": "/etc/pki/pki-tomcat/alias",
+        "msg": "Incorrect NSS trust for auditSigningCert cert-pki-ca. Got u,u,u expected u,u,Pu"
+      }
+    }
+
+### IPANSSChainValidation
+Validate the certificate chain of the NSS certificates. This executes: certutil -V -u V -e -d [dbdir] -n [nickname].
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPANSSChainValidation",
+      "result": "ERROR",
+      "kw": {
+        "key": "/etc/dirsrv/slapd-EXAMPLE-TEST:Server-Cert",
+        "nickname": "Server-Cert",
+        "dbdir": [path to NSS database],
+        "reason": "certutil: certificate is invalid: Peer's Certificate issuer is not recognized.\n: ",
+        "msg": ""Validation of Server-Cert in /etc/dirsrv/slapd-EXAMPLE-TEST/ failed: certutil: certificate is invalid: Peer's Certificate issuer is not recognized.\n "
+      }
+    }
+
+### IPAOpenSSLChainValidation
+Validate the certificate chain of the OpenSSL certificates. This executes: openssl verify -verbose -show_chain -CAfile /etc/ipa/ca.crt /path/to/cert.pem
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPAOpenSSLChainValidation",
+      "result": "ERROR",
+      "kw": {
+        "key": "/var/lib/ipa/ra-agent.pem",
+        "reason": "O = EXAMPLE.TEST, CN = IPA RA\nerror 20 at 0 depth lookup: unable to get local issuer certificate\n",
+        "msg": "Certificate validation for /var/lib/ipa/ra-agent.pem failed: O = EXAMPLE.TEST, CN = IPA RA\nerror 20 at 0 depth lookup: unable to get local issuer certificate\n"
+      }
+    }
+
+### IPARAAgent
+Verify the description and userCertificate values in uid=ipara,ou=People,o=ipaca.
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPARAAgent",
+      "result": "ERROR",
+      "kw": {
+        "expected": "2;125;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST",
+        "got": "2;7;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST",
+        "msg": "RA agent description does not match 2;7;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST in LDAP and expected 2;125;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST"
+      }
+    }
+
+### IPACertRevocation
+Confirm that the IPA certificates are not revoked. This uses the certmonger tracking to determine the list of certificates to validate.
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertRevocation",
+      "result": "ERROR",
+      "kw": {
+        "key": 1234,
+        "revocation_reason": "superseded",
+        "msg": "Certificate is revoked, superseded"
+      }
+    }
+
+### IPACertmongerCA
+Check that the certmonger CA configuration is correct. Evaluates dogtag-ipa-ca-renew-agent and dogtag-ipa-ca-renew-agent-reuse.
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertmongerCA",
+      "result": "ERROR",
+      "kw": {
+        "key": "dogtag-ipa-ca-renew-agent",
+        "msg": "Certmonger CA 'dogtag-ipa-ca-renew-agent' missing"
+      }
+    }
+
+## ipahealthcheck.ipa.dna
+
+### IPADNARangeCheck
+This reports the configured DNA range, if any. It is expected that this is combined elsewhere for further analysis.
+
+    {
+      "source": "ipahealthcheck.ipa.dna",
+      "check": "IPADNARangeCheck",
+      "result": "SUCCESS",
+      "kw": {
+        "range_start": 1000,
+        "range_max": 199999,
+        "next_start": 0,
+        "next_max": 0,
+      }
+    }
+
+## ipahealthcheck.ipa.files
+
+These checks verify the owner and mode of files installed or configured by IPA. There are many permutations of file permissions and ownership that may be valid and continue to work. This reports on the expected values in a fresh IPA installation. Deviations are reported at the WARNING level.
+
+This covers the following checks:
+
+### IPAFileNSSDBCheck
+### IPAFileCheck
+### TomcatFileCheck
+
+Examples include:
+
+    {
+      "source": "ipahealthcheck.ipa.files",
+      "check": "IPAFileCheck",
+      "result": "WARNING",
+      "kw": {
+        "key": "_etc_ipa_ca.crt_mode",
+        "path": "/etc/ipa/ca.crt",
+        "type": "mode",
+        "expected": "0644",
+        "got": "0444",
+        "msg": "Permissions of /etc/ipa/ca.crt are 0444 and should be 0644"
+      }
+    }
+
+    {
+      "source": "ipahealthcheck.ipa.files",
+      "check": "IPAFileNSSDBCheck",
+      "result": "WARNING",
+      "kw": {
+        "key": "_etc_dirsrv_slapd-EXAMPLE-TEST_pkcs11.txt_mode",
+        "path": "/etc/dirsrv/slapd-EXAMPLE-TEST/pkcs11.txt",
+        "type": "mode",
+        "expected": "0640",
+        "got": "0666",
+        "msg": "Permissions of /etc/dirsrv/slapd-EXAMPLE-TEST/pkcs11.txt are 0666 and should be 0640"
+      }
+    },
+
+## ipahealthcheck.ipa.host
+
+### IPAHostKeytab
+
+Executes: kinit -kt /etc/krb5.keytab to verify that the host keytab is valid.
+
+## ipahealthcheck.ipa.roles
+
+A set of information checks to report on whether the current master is the CRL generator and/or the renewal master.
+
+### IPACRLManagerCheck
+
+    {
+      "source": "ipahealthcheck.ipa.roles",
+      "check": "IPACRLManagerCheck",
+      "result": "SUCCESS",
+      "kw": {
+        "key": "crl_manager",
+        "crlgen_enabled": true
+      }
+    },
+
+### IPARenewalMasterCheck
+
+    {
+      "source": "ipahealthcheck.ipa.roles",
+      "check": "IPARenewalMasterCheck",
+      "result": "SUCCESS",
+      "kw": {
+        "key": "renewal_master",
+        "master": true
+      }
+    }
+
+## ipahealthcheck.ipa.topology
+
+Topology checks to check both for compliance with recommendations and errors.
+
+### IPATopologyDomainCheck
+
+Provide the equivalent of: ipa topologysuffix-verify <domain>
+
+On failure this will return any errors discovered like connection errors or too many replication agreements.
+
+On success it will return the configured domains.
+
+    {
+      "source": "ipahealthcheck.ipa.topology",
+      "check": "IPATopologyDomainCheck",
+      "result": "SUCCESS",
+      "kw": {
+        "suffix": "domain"
+      }
+    },
+    {
+      "source": "ipahealthcheck.ipa.topology",
+      "check": "IPATopologyDomainCheck",
+      "result": "SUCCESS",
+      "kw": {
+        "suffix": "ca"
+      }
+    }
+
+## ipahealthcheck.ipa.trust
+
+Verify common AD Trust configuration issues. Checks will return SUCCESS if not configured as a trust agent or controller.
+
+### IPATrustAgentCheck
+
+Check the sssd configuration when the machine is configured as a trust agent.
+
+provider should be ipa and ipa_server_mode should be true.
+
+    {
+      "source": "ipahealthcheck.ipa.trust",
+      "check": "IPATrustAgentCheck",
+      "severity": ERROR,
+      "kw": {
+        "key": "ipa_server_mode_false",
+        "attr": "ipa_server_mode",
+        "sssd_config": "/etc/sssd/sssd.conf",
+        "domain": "ipa.example.com",
+        "msg": "{attr} is not True in {sssd_config} in the domain {domain}"
+      }
+    }
+
+### IPATrustDomainsCheck
+
+Ensure that the IPA domain is in the output of sssctl domain-list and the trust domains matches the sssd domains.
+
+If the domain lists don't match:
+
+    {
+      "source": "ipahealthcheck.ipa.trust",
+      "check": "IPATrustDomainsCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": "domain-list",
+        "sslctl": "/usr/sbin/sssctl",
+        "sssd_domains": "ad.vm",
+        "trust_domains": "",
+        "msg": "{sslctl} {key} reports mismatch: sssd domains {sssd_domains} trust domains {trust_domains}"
+      }
+    }
+
+### IPATrustCatalogCheck
+
+This resolves an AD user, Administrator@REALM. This populates the AD Global catalog and AD Domain Controller values in sssctl domain-status output.
+
+    {
+      "source": "ipahealthcheck.ipa.trust",
+      "check": "IPATrustCatalogCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": "AD Global Catalog",
+        "output": "Active servers:\nAD Domain Controller: root-dc.ad.vm\nIPA: ipa.example.com",
+        "sssctl": "/usr/sbin/sssctl",
+        "domain": "ad.vm",
+        "msg": "{key} not found in {sssctl} 'domain-status' output: {output}"
+      }
+    }
+
+### IPAsidgenpluginCheck
+
+Verifies that the sidgen plugin is enabled in the IPA 389-ds instance.
+
+    {
+      "source": "ipahealthcheck.ipa.trust",
+      "check": "IPAsidgenpluginCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": "IPA SIDGEN",
+        "error": "no such entry",
+        "msg": "Error retrieving 389-ds plugin {key}: {error}"
+      }
+    }
+### IPATrustAgentMemberCheck
+
+Verify that the current host is a member of cn=adtrust agents,cn=sysaccounts,cn=etc,SUFFIX.
+
+  {
+    "source": "ipahealthcheck.ipa.trust",
+    "check": "IPATrustAgentMemberCheck",
+    "result": "ERROR",
+    "kw": {
+      "key": "ipa.example.com",
+      "group": "adtrust agents",
+      "msg": "{key} is not a member of {group}"
+    }
+  }
+
+### IPATrustControllerPrincipalCheck
+
+Verify that the current host cifs principal is a member of cn=adtrust agents,cn=sysaccounts,cn=etc,SUFFIX.
+
+    {
+      "source": "ipahealthcheck.ipa.trust",
+      "check": "IPATrustControllerPrincipalCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": "cifs/ipa.example.com@EXAMPLE.COM",
+        "group": "adtrust agents",
+        "msg": "{key} is not a member of {group}"
+      }
+    }
+
+### IPATrustControllerServiceCheck
+
+Verify that the current host starts the ADTRUST service in ipactl.
+
+    {
+      "source": "ipahealthcheck.ipa.trust",
+      "check": "IPATrustControllerServiceCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": "ADTRUST",
+        "msg": "{key} service is not enabled"
+      }
+    }
+
+### IPATrustControllerConfCheck
+
+Verify that ldapi is enabled for the passdb backend in the output of net conf list:
+
+    {
+      "source": "ipahealthcheck.ipa.trust",
+      "check": "IPATrustControllerConfCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": "net conf list",
+        "got": "",
+        "expected": "ipasam:ldapi://%2fvar%2frun%2fslapd-EXAMPLE-COM.socket",
+        "option": "passdb backend",
+        "msg": "{key} option {option} value {got} doesn't match expected value {expected}"
+      }
+    }
+
+### IPATrustControllerGroupSIDCheck
+
+Verify that the admins group's SID ends with 512 (Domain Admins RID).
+
+    {
+      "source": "ipahealthcheck.ipa.trust",
+      "check": "IPATrustControllerGroupSIDCheck",
+      "result": "ERROR",
+      "kw": {
+        "key": "ipantsecurityidentifier",
+        "rid": "S-1-5-21-1078564529-1875285547-1976041503-513",
+        "msg": "{key} is not a Domain Admins RID"
+      }
+    }
+
+### IPATrustPackageCheck
+
+If not a trust controller and AD trust is enabled verify that the trust-ad pkg is installed.
+
+    {
+      "source": "ipahealthcheck.ipa.trust",
+      "check": "IPATrustPackageCheck",
+      "result": "WARNING",
+      "kw": {
+        "key": "adtrustpackage",
+        "msg": "trust-ad sub-package is not installed. Administration will be limited."
+      }
+    }
+
+## ipahealthcheck.meta.services
+
+Return the status of required IPA services
+
+The following services are monitored:
+
+  * certmonger
+  * dirsrv
+  * gssproxy
+  * httpd
+  * ipa_custodia
+  * ipa_dnskeysyncd
+  * ipa_otpd
+  * kadmin
+  * krb5kdc
+  * named
+  * pki_tomcatd
+  * sssd
+
+The value of check is the name of the IPA service. Note that dashes are replaced with underscores in the service names.
+
+An example of a stopped service:
+
+    {
+      "source": "ipahealthcheck.meta.services",
+      "check": "httpd",
+      "result": "ERROR",
+      "kw": {
+        "status": false,
+        "msg": "httpd: not running"
+      }
+    }
+
+## ipahealthcheck.meta.core
+
+Provide basic information about the IPA master itself.
+
+### MetaCheck
+
+Output includes the FQDN and the version of IPA.
+
+    {
+      "source": "ipahealthcheck.meta.core",
+      "check": "MetaCheck",
+      "result": "SUCCESS",
+      "kw": {
+        "fqdn": "ipa.example.test",
+        "ipa_version": "4.8.0",
+        "ipa_api_version": "2.233"
+      }
+    }
+
+## ipahealthcheck.system.filesystemspace
+
+Check on available disk space. Running low can cause issues with logging, execution and backups.
+
+### FileSystemSpaceCheck
+
+Both a percentage and raw minimum values are tested.
+
+It is possible there is some overlap depending on mount points.
+
+The minimum free is 20 percent and is currently hard coded.
+
+The following paths are checked:
+
+Path                    free MB
+/var/lib/dirsrv/        1024
+/var/lib/ipa/backup/    512
+/var/log/               1024
+/var/log/audit/         512
+/var/tmp/               512
+/tmp                    512
+
+For example a full /tmp would be reported as:
+
+    {
+      "source": "ipahealthcheck.system.filesystemspace",
+      "check": "FileSystemSpaceCheck",
+      "result": "ERROR",
+      "kw": {
+        "msg": "/tmp: free space percentage under threshold: 0% < 20%",
+        "store": "/tmp",
+        "percent_free": 0,
+        "threshold": 20
+      }
+    },
+    {
+      "source": "ipahealthcheck.system.filesystemspace",
+      "check": "FileSystemSpaceCheck",
+      "result": "ERROR",
+      "kw": {
+        "msg": "/tmp: free space under threshold: 0 MiB < 512 MiB",
+        "store": "/tmp",
+        "free_space": 0,
+        "threshold": 512
+      }
+    }
+
