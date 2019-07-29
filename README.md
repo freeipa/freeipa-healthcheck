@@ -16,16 +16,52 @@ The major areas currently covered are:
 
 # How to use it?
 
-Distributions can include a systemd timer which will executed the test nightly and log the output to /var/log/ipa/healthcheck. This can be the input into a monitoring system to track changes over time or to alert if a test goes from working to error or warning.
-
-It can be run from the command-line as root as ipa-healthcheck. Running from the command-line by default will display the output to the console.
-
+The simplest way to use Healthcheck is to run it from the command-line as root as ipa-healthcheck. Running from the command-line will display the output to the console unless --output-file=FILENAME is used.
 There is output for _all_ tests so we can be sure that an error condition isn't providing a false positive. The command-line option --failures-only will skip printing the SUCCESS conditions.
 
-There are two main ways we expect that healthcheck will be executed:
+To automate running Healthcheck every day a systemd timer can be used. 
+The default destination directory for healthcheck logs is `/var/log/ipa/healthcheck` and this can be the input into a monitoring system to track changes over time or to alert if a test goes from working to error or warning.
 
-1. Execute daily in cron or using a systemd timer, collect the output, and load it into an existing system monitoring system to track changes over time.
-2. Run on an ad-hoc basis and look for errors
+A systemd timer is provided but is not enabled by default. To enable it:
+
+    # systemctl enable ipa-healthcheck.timer
+    # systemctl start ipa-healthcheck.timer
+
+Logrotate will handle log rotation and keep up to 30 days of history.
+This can be configured via the `/etc/logrotate.d/ipahealthcheck` file.
+
+
+If using upstream or if your distribution's package does not include the timer, it can be installed manually as follows.
+
+First create the destination log directory:
+
+    # mkdir /var/log/ipa/healthcheck
+
+Then copy the systemd configuration into place:
+
+    # cp systemd/ipa-healthcheck.timer /usr/lib/systemd/system
+    # cp systemd/ipa-healthcheck.service /usr/lib/systemd/system
+
+Put a shell script in place to do the invocation:
+
+    # cp systemd/ipa-healthcheck.sh /usr/libexec/ipa
+
+Tell systemd about it and enable it:
+
+    # systemctl daemon-reload
+    # systemctl enable ipa-healthcheck.timer
+    # systemctl start ipa-healthcheck.timer
+
+Finally add a proper logrotate configuration:
+
+    # cp logrotate/ipahealthcheck /etc/logrotate.d/
+
+Note that logrotate requires crond to be started+enabled.
+
+To test:
+
+    # systemctl start ipa-healthcheck
+
 
 # What if I get an error or warning?
 
