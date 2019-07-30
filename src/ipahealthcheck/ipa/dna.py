@@ -41,9 +41,11 @@ class IPADNARangeCheck(IPAPlugin):
                          next_start=next_start or 0,
                          next_max=next_max or 0)
         else:
-            yield Result(self, constants.SUCCESS,
+            yield Result(self, constants.WARNING,
                          range_start=0,
                          range_max=0,
                          next_start=0,
                          next_max=0,
-                         msg='No range defined')
+                         msg='No DNA range defined. If no masters define a '
+                             'range then users and groups cannot be '
+                             'created.')

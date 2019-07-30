@@ -66,7 +66,7 @@ class TestDNARange(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.result == constants.SUCCESS
+        assert result.result == constants.WARNING
         assert result.source == 'ipahealthcheck.ipa.dna'
         assert result.check == 'IPADNARangeCheck'
         assert result.kw.get('range_start') == 0
