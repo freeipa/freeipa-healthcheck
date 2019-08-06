@@ -3,6 +3,7 @@
 #
 from unittest import mock, TestCase
 from util import no_exceptions
+from util import ADtrustBasedRole, ServiceBasedRole
 
 
 class BaseTest(TestCase):
@@ -24,6 +25,10 @@ class BaseTest(TestCase):
     default_patches = {
         'ipaserver.install.installutils.check_server_configuration':
         mock.Mock(return_value=None),
+        'ipaserver.servroles.ServiceBasedRole':
+        mock.Mock(return_value=ServiceBasedRole()),
+        'ipaserver.servroles.ADtrustBasedRole':
+        mock.Mock(return_value=ADtrustBasedRole()),
     }
     patches = {}
 

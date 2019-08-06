@@ -76,6 +76,33 @@ class KRAInstance:
         return self.installed
 
 
+class ServiceBasedRole:
+    """A bare-bones role override
+
+       This is just enough to satisfy the initialization code so
+       the AD Trust status can be determined. It will always default
+       to false and the registry should be overridden directly in the
+       test cases.
+    """
+    def __init__(self, attr_name=None, name=None, component_services=None):
+        pass
+
+    def status(self, api_instance, server=None, attrs_list=("*",)):
+        return [dict()]
+
+
+class ADtrustBasedRole(ServiceBasedRole):
+    """A bare-bones role override
+
+       This is just enough to satisfy the initialization code so
+       the AD Trust status can be determined. It will always default
+       to false and the registry should be overridden directly in the
+       test cases.
+    """
+    def __init__(self, attr_name=None, name=None):
+        pass
+
+
 # Mock api. This file needs to be imported before anything that would
 # import ipalib.api in order for it to be replaced properly.
 
