@@ -7,15 +7,9 @@ from base import BaseTest
 
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.meta.services import httpd
-from unittest.mock import Mock
 
 
 class TestServices(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     def test_simple_service(self):
         """
         Test a service. It was chosen at random.

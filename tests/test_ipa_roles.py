@@ -3,7 +3,7 @@
 #
 
 from base import BaseTest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from util import capture_results, CAInstance
 from util import m_api
 
@@ -14,11 +14,6 @@ from ipahealthcheck.ipa.roles import (IPACRLManagerCheck,
 
 
 class TestCRLManagerRole(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     @patch('ipaserver.install.cainstance.CAInstance')
     def test_not_crlmanager(self, mock_ca):
         mock_ca.return_value = CAInstance(crlgen=False)
@@ -57,11 +52,6 @@ class TestCRLManagerRole(BaseTest):
 
 
 class TestRenewalMaster(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     def test_renewal_master_not_set(self):
         framework = object()
         registry.initialize(framework)

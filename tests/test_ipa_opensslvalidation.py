@@ -14,8 +14,6 @@ from ipapython.ipautil import _RunResult
 
 class TestOpenSSLValidation(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ipaserver.install.cainstance.CAInstance':
         Mock(return_value=CAInstance()),
     }

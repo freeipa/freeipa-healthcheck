@@ -24,8 +24,6 @@ class IPACertificate:
 
 class TestIPACertificateFile(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ipahealthcheck.ipa.certs.get_expected_requests':
         Mock(return_value=get_expected_requests()),
         'ipalib.install.certmonger._cm_dbus_object':

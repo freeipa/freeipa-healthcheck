@@ -5,7 +5,6 @@
 from util import capture_results
 from util import m_api
 from base import BaseTest
-from unittest.mock import Mock
 
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
@@ -13,11 +12,6 @@ from ipahealthcheck.ipa.topology import IPATopologyDomainCheck
 
 
 class TestTopology(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     def test_topology_ok(self):
         m_api.Command.topologysuffix_verify.side_effect = [
             {

@@ -23,8 +23,6 @@ class IPACertificate:
 
 class TestRevocation(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ipaserver.install.certs.is_ipa_issued_cert':
         Mock(return_value=True),
         'ipalib.x509.load_certificate_from_file':

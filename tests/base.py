@@ -17,17 +17,30 @@ class BaseTest(TestCase):
 
     If a test needs a particular value then it will need to use
     @patch individually.
+
+    A default set of Mock patches is set because they apply to all or
+    nearly all test cases.
     """
+    default_patches = {
+        'ipaserver.install.installutils.check_server_configuration':
+        mock.Mock(return_value=None),
+    }
+    patches = {}
 
     def setup_class(self):
         # collect the list of patches to be applied for this class of
         # tests
+        self.default_patches.update(self.patches)
+
         self.applied_patches = [
-            mock.patch(patch, data) for patch, data in self.patches.items()
+            mock.patch(patch, data) for patch, data in
+            self.default_patches.items()
         ]
 
         for patch in self.applied_patches:
             patch.start()
+
+        self.results = None
 
     def teardown_class(self):
         mock.patch.stopall()
