@@ -12,7 +12,6 @@ from ipaserver.install import cainstance
 from ipaserver.install import dsinstance
 from ipaserver.install import httpinstance
 from ipaserver.install import installutils
-from ipaserver.servroles import ADtrustBasedRole, ServiceBasedRole
 
 from ipahealthcheck.core.plugin import Plugin, Registry
 
@@ -38,6 +37,9 @@ class IPARegistry(Registry):
         self.trust_controller = False
 
     def initialize(self, framework):
+        # deferred import for mock
+        from ipaserver.servroles import ADtrustBasedRole, ServiceBasedRole
+
         installutils.check_server_configuration()
 
         if not api.isdone('finalize'):
