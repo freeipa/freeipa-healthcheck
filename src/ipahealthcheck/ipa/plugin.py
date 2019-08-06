@@ -40,15 +40,13 @@ class IPARegistry(Registry):
     def initialize(self, framework):
         installutils.check_server_configuration()
 
-        if api.isdone('finalize'):
-            return
-
-        if not api.isdone('bootstrap'):
-            api.bootstrap(in_server=True,
-                          context='ipahealthcheck',
-                          log=None)
         if not api.isdone('finalize'):
-            api.finalize()
+            if not api.isdone('bootstrap'):
+                api.bootstrap(in_server=True,
+                              context='ipahealthcheck',
+                              log=None)
+            if not api.isdone('finalize'):
+                api.finalize()
 
         if not api.Backend.ldap2.isconnected():
             try:
