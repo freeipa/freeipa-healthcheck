@@ -2,7 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from util import capture_results, CAInstance
+from util import capture_results, CAInstance, KRAInstance
 from base import BaseTest
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
@@ -30,6 +30,8 @@ class TestNSSDBTrust(BaseTest):
     patches = {
         'ipaserver.install.cainstance.CAInstance':
         Mock(return_value=CAInstance()),
+        'ipaserver.install.krainstance.KRAInstance':
+        Mock(return_value=KRAInstance(False)),
         'ipapython.certdb.unparse_trust_flags':
         Mock(side_effect=my_unparse_trust_flags),
     }
