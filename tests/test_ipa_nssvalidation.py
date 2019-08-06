@@ -19,8 +19,6 @@ class DsInstance:
 
 class TestNSSValidation(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ipahealthcheck.ipa.certs.get_dogtag_cert_password':
         Mock(return_value='foo'),
         'ipaserver.install.dsinstance.DsInstance':

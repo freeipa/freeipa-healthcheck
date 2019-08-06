@@ -28,8 +28,6 @@ def my_unparse_trust_flags(trust_flags):
 
 class TestNSSDBTrust(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ipaserver.install.cainstance.CAInstance':
         Mock(return_value=CAInstance()),
         'ipapython.certdb.unparse_trust_flags':

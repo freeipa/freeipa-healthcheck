@@ -102,11 +102,6 @@ class SSSDConfig():
 
 
 class TestTrustAgent(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     def test_no_trust_agent(self):
         framework = object()
         registry.initialize(framework)
@@ -182,11 +177,6 @@ class TestTrustAgent(BaseTest):
 
 
 class TestTrustDomains(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     def test_no_trust_agent(self):
         framework = object()
         registry.initialize(framework)
@@ -371,11 +361,6 @@ class TestTrustDomains(BaseTest):
 
 
 class TestTrustCatalog(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     def test_no_trust_agent(self):
         framework = object()
         registry.initialize(framework)
@@ -477,8 +462,6 @@ class TestTrustCatalog(BaseTest):
 
 class Testsidgen(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ldap.initialize':
         Mock(return_value=mock_ldap_conn()),
     }
@@ -562,8 +545,6 @@ class Testsidgen(BaseTest):
 
 class TestTrustAgentMember(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ldap.initialize':
         Mock(return_value=mock_ldap_conn()),
     }
@@ -642,8 +623,6 @@ class TestTrustAgentMember(BaseTest):
 
 class TestControllerPrincipal(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ldap.initialize':
         Mock(return_value=mock_ldap_conn()),
     }
@@ -724,8 +703,6 @@ class TestControllerPrincipal(BaseTest):
 
 class TestControllerService(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ldap.initialize':
         Mock(return_value=mock_ldap_conn()),
     }
@@ -798,8 +775,6 @@ class TestControllerService(BaseTest):
 
 class TestControllerGroupSID(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ldap.initialize':
         Mock(return_value=mock_ldap_conn()),
     }
@@ -877,8 +852,6 @@ class TestControllerGroupSID(BaseTest):
 
 class TestControllerConf(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ldap.initialize':
         Mock(return_value=mock_ldap_conn()),
     }
@@ -922,11 +895,6 @@ class TestControllerConf(BaseTest):
 
 
 class TestPackageCheck(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     def test_agent_with_package(self):
         # Note that this test assumes the import is installed
         framework = object()

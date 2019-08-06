@@ -4,7 +4,7 @@
 
 import pytest
 from base import BaseTest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from util import capture_results, m_api
 
 from ipahealthcheck.core import config, constants
@@ -37,11 +37,6 @@ class mock_ldap:
 
 
 class TestReplicationConflicts(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     @pytest.mark.skipif(NUM_VERSION < 40790,
                         reason="no way of currently testing this")
     @patch('ipapython.ipaldap.LDAPClient.from_realm')

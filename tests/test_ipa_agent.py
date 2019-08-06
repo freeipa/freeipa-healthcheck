@@ -56,8 +56,6 @@ class mock_ldap_conn:
 class TestNSSAgent(BaseTest):
     cert = IPACertificate()
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ldap.initialize':
         Mock(return_value=mock_ldap_conn()),
         'ipaserver.install.cainstance.CAInstance':

@@ -3,7 +3,7 @@
 #
 
 from base import BaseTest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from util import capture_results
 
 from ipahealthcheck.core import config, constants
@@ -27,11 +27,6 @@ class mock_ReplicationManager:
 
 
 class TestDNARange(BaseTest):
-    patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
-    }
-
     @patch('ipaserver.install.replication.ReplicationManager')
     def test_dnarange_set(self, mock_manager):
         mock_manager.return_value = mock_ReplicationManager(start=1, max=100)

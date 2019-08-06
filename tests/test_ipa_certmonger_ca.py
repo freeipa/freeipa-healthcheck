@@ -12,8 +12,6 @@ from unittest.mock import Mock, patch
 
 class TestCertmonger(BaseTest):
     patches = {
-        'ipaserver.install.installutils.check_server_configuration':
-        Mock(return_value=None),
         'ipaserver.install.cainstance.CAInstance':
         Mock(return_value=CAInstance()),
     }
