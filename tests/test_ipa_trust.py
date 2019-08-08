@@ -261,12 +261,14 @@ class TestTrustDomains(BaseTest):
                 {
                     'cn': ['ad.example'],
                     'ipantflatname': ['ADROOT'],
-                    "trusttype": ["Active Directory domain"],
+                    'ipanttrusteddomainsid': ['S-1-5-21-abc'],
+                    'trusttype': ['Active Directory domain'],
                 },
                 {
                     'cn': ['child.example'],
                     'ipantflatname': ['ADROOT'],
-                    "trusttype": ["Active Directory domain"],
+                    'ipanttrusteddomainsid': ['S-1-5-21-def'],
+                    'trusttype': ['Active Directory domain'],
                 },
             ]
         }]
@@ -324,12 +326,14 @@ class TestTrustDomains(BaseTest):
                 {
                     'cn': ['ad.example'],
                     'ipantflatname': ['ADROOT'],
-                    "trusttype": ["Active Directory domain"],
+                    'ipanttrusteddomainsid': ['S-1-5-21-abc'],
+                    'trusttype': ['Active Directory domain'],
                 },
                 {
                     'cn': ['child.example'],
                     'ipantflatname': ['ADROOT'],
-                    "trusttype": ["Active Directory domain"],
+                    'ipanttrusteddomainsid': ['S-1-5-21-def'],
+                    'trusttype': ['Active Directory domain'],
                 },
             ]
         }]
@@ -373,41 +377,27 @@ class TestTrustCatalog(BaseTest):
         # Zero because the call was skipped altogether
         assert len(self.results) == 0
 
+    @patch('pysss_nss_idmap.getnamebysid')
     @patch('ipapython.ipautil.run')
-    def test_trust_catalog_ok(self, mock_run):
+    def test_trust_catalog_ok(self, mock_run, mock_getnamebysid):
         # id Administrator@ad.example
-        idresult = namedtuple('run', ['returncode', 'error_log'])
-        idresult.returncode = 0
-        idresult.error_log = ''
-        idresult.output = '797600500(administrator@ad.example),' \
-            '1797600520(group policy creator owners@ad.example),' \
-            '1797600519(enterprise admins@ad.example),' \
-            '1797600512(domain admins@ad.example),' \
-            '1797600518(schema admins@ad.example)' \
-            ',1797600513(domain users@ad.example)\n'
         dsresult = namedtuple('run', ['returncode', 'error_log'])
         dsresult.returncode = 0
         dsresult.error_log = ''
         dsresult.output = 'Active servers:\nAD Global Catalog: ' \
             'root-dc.ad.vm\nAD Domain Controller: root-dc.ad.vm\n' \
             'IPA: master.ipa.vm\n\n'
-        # id Administrator@client.example
-        id2result = namedtuple('run', ['returncode', 'error_log'])
-        id2result.returncode = 0
-        id2result.error_log = ''
-        id2result.output = '797600500(administrator@client.example),' \
-            '1797600520(group policy creator owners@client.example),' \
-            '1797600519(enterprise admins@client.example),' \
-            '1797600512(domain admins@client.example),' \
-            '1797600518(schema admins@client.example)' \
-            ',1797600513(domain users@client.example)\n'
         ds2result = namedtuple('run', ['returncode', 'error_log'])
         ds2result.returncode = 0
         ds2result.error_log = ''
         ds2result.output = 'Active servers:\nAD Global Catalog: ' \
             'root-dc.ad.vm\nAD Domain Controller: root-dc.ad.vm\n' \
 
-        mock_run.side_effect = [idresult, dsresult, id2result, ds2result]
+        mock_run.side_effect = [dsresult, ds2result]
+        mock_getnamebysid.side_effect = [
+           {'S-1-5-21-abc-500': {'name': 'admin@ad.example', 'type': 3}},
+           {'S-1-5-21-def-500': {'name': 'admin@child.example', 'type': 3}}
+        ]
 
         # get_trust_domains()
         m_api.Command.trust_find.side_effect = [{
@@ -415,12 +405,14 @@ class TestTrustCatalog(BaseTest):
                 {
                     'cn': ['ad.example'],
                     'ipantflatname': ['ADROOT'],
-                    "trusttype": ["Active Directory domain"],
+                    'ipanttrusteddomainsid': ['S-1-5-21-abc'],
+                    'trusttype': ['Active Directory domain'],
                 },
                 {
                     'cn': ['child.example'],
                     'ipantflatname': ['ADROOT'],
-                    "trusttype": ["Active Directory domain"],
+                    'ipanttrusteddomainsid': ['S-1-5-21-def'],
+                    'trusttype': ['Active Directory domain'],
                 },
             ]
         }]
@@ -433,31 +425,49 @@ class TestTrustCatalog(BaseTest):
         f.config = config.Config()
         self.results = capture_results(f)
 
-        assert len(self.results) == 4
+        assert len(self.results) == 6
 
         result = self.results.results[0]
         assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
-        assert result.kw.get('key') == 'AD Global Catalog'
+        assert result.kw.get('key') == 'Domain Security Identifier'
+        assert result.kw.get('sid') == 'S-1-5-21-abc'
 
         result = self.results.results[1]
         assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
-        assert result.kw.get('key') == 'AD Domain Controller'
+        assert result.kw.get('key') == 'AD Global Catalog'
+        assert result.kw.get('domain') == 'ad.example'
 
         result = self.results.results[2]
         assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
-        assert result.kw.get('key') == 'AD Global Catalog'
+        assert result.kw.get('key') == 'AD Domain Controller'
+        assert result.kw.get('domain') == 'ad.example'
 
-        result = self.results.results[1]
+        result = self.results.results[3]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'Domain Security Identifier'
+        assert result.kw.get('sid') == 'S-1-5-21-def'
+
+        result = self.results.results[4]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'AD Global Catalog'
+        assert result.kw.get('domain') == 'child.example'
+
+        result = self.results.results[5]
         assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
         assert result.kw.get('key') == 'AD Domain Controller'
+        assert result.kw.get('domain') == 'child.example'
 
 
 class Testsidgen(BaseTest):

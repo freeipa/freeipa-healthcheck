@@ -57,6 +57,14 @@ class IPARegistry(Registry):
                 logging.debug('Failed to connect to LDAP: %s', e)
             return
 
+        # This package is pulled in when the trust package is installed
+        # and is required to lookup trust users. If this is not installed
+        # then it can be inferred that trust is not enabled.
+        try:
+            import pysss_nss_idmap  # noqa: F401
+        except ImportError:
+            return
+
         roles = (
             ADtrustBasedRole(u"ad_trust_agent_server",
                              u"AD trust agent"),

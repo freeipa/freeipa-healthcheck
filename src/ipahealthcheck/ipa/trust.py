@@ -17,6 +17,12 @@ from ipapython import ipautil
 from ipapython.dn import DN
 
 try:
+    import pysss_nss_idmap
+except ImportError:
+    # agent and controller will be set to False in init, all tests will
+    # be skipped
+    pass
+try:
     from ipaserver.masters import ENABLED_SERVICE
 except ImportError:
     from ipaserver.install.service import ENABLED_SERVICE
@@ -33,13 +39,19 @@ def get_trust_domains():
     Get the list of AD trust domains from IPA
 
     The caller is expected to catch any exceptions.
+
+    Each entry is a dictionary representating an AD domain.
     """
     result = api.Command.trust_find()
     results = result['result']
     trust_domains = []
     for result in results:
         if result.get('trusttype')[0] == 'Active Directory domain':
-            trust_domains.append(result.get('cn')[0])
+            domain = dict()
+            domain['domain'] = result.get('cn')[0]
+            domain['domainsid'] = result.get('ipanttrusteddomainsid')[0]
+            domain['netbios'] = result.get('ipantflatname')[0]
+            trust_domains.append(domain)
     return trust_domains
 
 
@@ -123,14 +135,17 @@ class IPATrustDomainsCheck(IPAPlugin):
         if 'implicit_files' in sssd_domains:
             sssd_domains.remove('implicit_files')
 
+        trust_domains = []
         try:
-            trust_domains = get_trust_domains()
+            domains = get_trust_domains()
         except Exception as e:
             yield Result(self, constants.WARNING,
                          key='trust-find',
                          error=str(e),
                          msg='Execution of {key} failed: {error}')
-            trust_domains = []
+        else:
+            for entry in domains:
+                trust_domains.append(entry.get('domain'))
 
         if api.env.domain in sssd_domains:
             sssd_domains.remove(api.env.domain)
@@ -204,17 +219,28 @@ class IPATrustCatalogCheck(IPAPlugin):
                          msg='Execution of {key} failed: {error}')
             trust_domains = []
 
-        for domain in trust_domains:
+        for trust_domain in trust_domains:
+            sid = trust_domain.get('domainsid')
             try:
-                ipautil.run(['/bin/id', "Administrator@%s" % domain],
-                            capture_output=True)
+                id = pysss_nss_idmap.getnamebysid(sid + '-500')
             except Exception as e:
-                yield Result(self, constants.WARNING,
-                             key='/bin/id',
+                yield Result(self, constants.ERROR,
+                             key=sid,
                              error=str(e),
-                             msg='Execution of {key} failed: {error}')
+                             msg='Look up of{key} failed: {error}')
                 continue
 
+            if not id:
+                yield Result(self, constants.WARNING,
+                             key=sid,
+                             error='returned nothing',
+                             msg='Look up of {key} {error}')
+            else:
+                yield Result(self, constants.SUCCESS,
+                             key='Domain Security Identifier',
+                             sid=sid)
+
+            domain = trust_domain.get('domain')
             args = [paths.SSSCTL, "domain-status", domain, "--active-server"]
             try:
                 result = ipautil.run(args, capture_output=True)
