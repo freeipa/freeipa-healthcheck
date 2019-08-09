@@ -127,9 +127,9 @@ class IPATrustDomainsCheck(IPAPlugin):
         if result.returncode != 0:
             yield Result(self, constants.ERROR,
                          key='domain_list_error',
-                         sslctl=paths.SSSCTL,
+                         sssctl=paths.SSSCTL,
                          error=result.error_log,
-                         msg='Execution of {sslctl} failed: {error}')
+                         msg='Execution of {sssctl} failed: {error}')
             return
         sssd_domains = result.output.strip().split('\n')
         if 'implicit_files' in sssd_domains:
@@ -152,8 +152,8 @@ class IPATrustDomainsCheck(IPAPlugin):
         else:
             yield Result(self, constants.ERROR,
                          key=api.env.domain,
-                         sslctl=paths.SSSCTL,
-                         msg='{key} not in {sslctl} domain-list')
+                         sssctl=paths.SSSCTL,
+                         msg='{key} not in {sssctl} domain-list')
 
         trust_domains_out = ', '.join(trust_domains)
         sssd_domains_out = ', '.join(sssd_domains)
@@ -161,10 +161,10 @@ class IPATrustDomainsCheck(IPAPlugin):
         if set(trust_domains).symmetric_difference(set(sssd_domains)):
             yield Result(self, constants.ERROR,
                          key='domain-list',
-                         sslctl=paths.SSSCTL,
+                         sssctl=paths.SSSCTL,
                          sssd_domains=sssd_domains_out,
                          trust_domains=trust_domains_out,
-                         msg='{sslctl} {key} reports mismatch: '
+                         msg='{sssctl} {key} reports mismatch: '
                          'sssd domains {sssd_domains} '
                          'trust domains {trust_domains}')
         else:
