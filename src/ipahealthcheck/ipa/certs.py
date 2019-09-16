@@ -2,7 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import logging
 import os
 import tempfile
@@ -895,3 +895,54 @@ class IPACertmongerCA(IPAPlugin):
             else:
                 yield Result(self, constants.SUCCESS,
                              key=ca)
+
+
+@registry
+class IPACAChainExpirationCheck(IPAPlugin):
+    """Verify that the certs in the CA chain in /etc/ipa/ca.crt are valid
+    """
+
+    @duration
+    def check(self):
+        try:
+            ca_certs = x509.load_certificate_list_from_file(paths.IPA_CA_CRT)
+        except IOError as e:
+            logger.debug("Could not open %s: %s", paths.IPA_CA_CRT, e)
+            yield Result(self, constants.ERROR,
+                         key=paths.IPA_CA_CRT,
+                         msg='Error opening IPA CA chain at %s: %s' %
+                         (paths.IPA_CA_CRT, e))
+            return
+        except ValueError:
+            logger.debug("% contains an invalid certificate" %
+                         paths.IPA_CA_CRT)
+            yield Result(self, constants.ERROR,
+                         key=paths.IPA_CA_CRT,
+                         msg='IPA CA chain %s contains an invalid '
+                             'certificate' % paths.IPA_CA_CRT)
+            return
+
+        now = datetime.now(timezone.utc)
+        soon = now + timedelta(days=self.config.cert_expiration_days)
+        for cert in ca_certs:
+            subject = DN(cert.subject)
+            subject = str(subject).replace('\\;', '\\3b')
+            dt = cert.not_valid_after.replace(tzinfo=timezone.utc)
+            if dt < now:
+                logger.debug("%s is expired" % subject)
+                yield Result(self, constants.CRITICAL,
+                             path=paths.IPA_CA_CRT,
+                             key=subject,
+                             msg='CA \'{key}\' is expired.')
+            elif dt <= soon:
+                logger.debug("%s is expiring soon" % subject)
+                yield Result(self, constants.WARNING,
+                             path=paths.IPA_CA_CRT,
+                             key=subject,
+                             days=(dt - now).days,
+                             msg='CA \'{key}\' is expiring in {days} days.')
+            else:
+                yield Result(self, constants.SUCCESS,
+                             path=paths.IPA_CA_CRT,
+                             key=subject,
+                             days=(dt - now).days)
