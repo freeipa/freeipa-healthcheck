@@ -422,6 +422,38 @@ Expiring certificate:
       }
     }
 
+### IPACAChainExpirationCheck
+
+Load the CA chain from /etc/ipa/ca.crt and test each one for expiration. This test is designed to ensure that the entire CA chain for all certificates is validated. For example, if the web or LDAP certificates have been replaced then the CA chain for those certs will reside in /etc/ipa/ca.crt. This includes an IPA CA signed by an external authority.
+
+Expiring certificate:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACAChainExpirationCheck",
+      "result": "WARNING",
+      "kw": {
+        "path": "/etc/ipa/ca.crt",
+        "key": "CN=Certificate Authority,O=EXAMPLE.TEST",
+        "days": 2,
+        "msg": "CA '{key}' is expiring in {days} days."
+      }
+    }
+
+Expired certificate:
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACAChainExpirationCheck",
+      "result": "CRITICAL",
+      "kw": {
+        "path": "/etc/ipa/ca.crt",
+        "key": "CN=Certificate Authority,O=EXAMPLE.TEST",
+        "msg": "CA '{key}' is expired."
+      }
+    }
+
+
 ### IPACertTracking
 Compares the certmonger tracking on the system to the expected values. A query of the expected name/value pairs in certmonger is done to certmonger. On failure the contents of the query are missing. This result would be seen either if the certificate is tracked but there is some slight change in the expected value or if the tracking is missing entirely.
 
