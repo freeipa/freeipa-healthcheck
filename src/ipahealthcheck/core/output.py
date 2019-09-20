@@ -4,7 +4,7 @@
 
 import json
 import sys
-from ipahealthcheck.core.constants import getLevelName, _nameToLevel, SUCCESS
+from ipahealthcheck.core.constants import _nameToLevel, SUCCESS
 from ipahealthcheck.core.plugin import Registry
 
 
@@ -118,7 +118,7 @@ class Human(Output):
             result = line.get('result')
             source = line.get('source')
             check = line.get('check')
-            outline = '%s: %s.%s' % (getLevelName(result), source, check)
+            outline = '%s: %s.%s' % (result, source, check)
             if 'key' in kw:
                 outline += '.%s' % kw.get('key')
             if 'msg' in kw:
