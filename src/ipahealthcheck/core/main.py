@@ -157,7 +157,7 @@ def parse_options(output_registry):
                         help='Check to execute, e.g. BazCheck')
     parser.add_argument('--output-type', dest='output', choices=output_names,
                         default='json', help='Output method')
-    parser.add_argument('--output-file', dest='outfile', default='/dev/tty',
+    parser.add_argument('--output-file', dest='outfile', default=None,
                         help='File to store output')
     parser.add_argument('--input-file', dest='infile',
                         help='File to read as input')

@@ -3,6 +3,7 @@
 #
 
 import json
+import sys
 from ipahealthcheck.core.constants import getLevelName, _nameToLevel, SUCCESS
 from ipahealthcheck.core.plugin import Registry
 
@@ -29,8 +30,7 @@ class Output:
        2. Generate a string to be written (generate)
        3. Write to the requested file or stdout (write_file)
 
-       stdout == /dev/tty in this case. By using /dev/tty instead
-       of sys.stdout we avoid worrying about closing the fd.
+       stdout == sys.stdout by default.
 
        An Output class only needs to implement the generate() method
        which will render the results into a string for writing.
@@ -47,9 +47,12 @@ class Output:
         self.write_file(output)
 
     def write_file(self, output):
-        """Write the output to a file or /dev/tty"""
-        with open(self.filename, 'w') as fd:
-            fd.write(output)
+        """Write the output to a file or sys.stdout"""
+        if self.filename:
+            with open(self.filename, 'w') as fd:
+                fd.write(output)
+        else:
+            sys.stdout.write(output)
 
     def strip_output(self, results):
         """Strip out SUCCESS results if --failures-only or
@@ -94,7 +97,7 @@ class JSON(Output):
 
     def generate(self, data):
         output = json.dumps(data, indent=self.indent)
-        if self.filename == '/dev/tty':
+        if self.filename is None:
             output += '\n'
 
         return output
