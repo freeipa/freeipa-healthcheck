@@ -13,6 +13,7 @@ class DogtagPlugin(Plugin):
         super(DogtagPlugin, self).__init__(reg)
         self.ca = cainstance.CAInstance(api.env.realm,
                                         host_name=api.env.host)
+        self.conn = api.Backend.ldap2
 
 
 class DogtagRegistry(Registry):
