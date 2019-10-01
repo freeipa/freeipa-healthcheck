@@ -12,6 +12,7 @@ class DSPlugin(Plugin):
     def __init__(self, registry):
         super(DSPlugin, self).__init__(registry)
         self.ds = self.ds = dsinstance.DsInstance()
+        self.conn = api.Backend.ldap2
 
 
 class DSRegistry(Registry):

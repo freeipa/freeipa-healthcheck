@@ -51,6 +51,7 @@ setup(
         # plugin modules for ipahealthcheck.ds registry
         'ipahealthcheck.ds': [
             'dsreplication = ipahealthcheck.ds.replication',
+            'dsruv = ipahealthcheck.ds.ruv',
         ],
         # plugin modules for ipahealthcheck.system registry
         'ipahealthcheck.system': [
