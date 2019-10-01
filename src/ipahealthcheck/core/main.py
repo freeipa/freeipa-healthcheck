@@ -255,6 +255,16 @@ def main():
                                    options.source, options.check))
 
     if options.source and len(results.results) == 0:
+        for plugin in plugins:
+            if not source_or_check_matches(plugin, options.source,
+                                           options.check):
+                continue
+
+            if not set(plugin.requires).issubset(available):
+                print("Source '%s' is missing one or more requirements '%s'" %
+                      (options.source, ', '.join(plugin.requires)))
+                sys.exit(1)
+
         if options.check:
             print("Check '%s' not found in Source '%s'" %
                   (options.check, options.source))
