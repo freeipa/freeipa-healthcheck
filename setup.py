@@ -37,6 +37,7 @@ setup(
         'ipahealthcheck.ipa': [
             'ipacerts = ipahealthcheck.ipa.certs',
             'ipadna = ipahealthcheck.ipa.dna',
+            'ipadns = ipahealthcheck.ipa.dns',
             'ipafiles = ipahealthcheck.ipa.files',
             'ipahost = ipahealthcheck.ipa.host',
             'iparoles = ipahealthcheck.ipa.roles',
