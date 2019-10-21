@@ -32,5 +32,5 @@ def test_Registry():
     # TODO: enforce plugin uniqueness
 
     # Test registration
-    names = [p.__class__.__name__ for p in r.get_plugins()]
+    names = [plugin.__class__.__name__ for plugin in r.get_plugins()]
     assert(names == ['plugin1', 'plugin2'])

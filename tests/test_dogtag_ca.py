@@ -56,7 +56,7 @@ class TestCACerts(BaseTest):
             'transportCert cert-pki-kra': 'u,u,u',
         }
         mock_certdb.return_value = mock_CertDB(trust)
-        mock_directive.side_effect = [name for name, trust in trust.items()]
+        mock_directive.side_effect = [name for name, nsstrust in trust.items()]
 
         framework = object()
         registry.initialize(framework)
@@ -90,7 +90,7 @@ class TestCACerts(BaseTest):
         }
 
         # The 3rd cert won't match the results
-        nicknames = [name for name, trust in trust.items()]
+        nicknames = [name for name, nsstrust in trust.items()]
         location = nicknames.index('auditSigningCert cert-pki-ca')
         nicknames[location] = 'NOT auditSigningCert cert-pki-ca'
 

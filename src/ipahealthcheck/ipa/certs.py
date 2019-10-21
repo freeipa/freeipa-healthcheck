@@ -205,13 +205,11 @@ def get_expected_requests(ca, ds, serverid):
             }
         )
     else:
-        logger.debug('DS cert is not issued by IPA, \'%s\', skip tracking '
-                     'check', DN(cert.issuer))
+        logger.debug('DS cert is not issued by IPA, skip tracking check')
 
     # Check if pkinit is enabled
     if os.path.exists(paths.KDC_CERT):
         pkinit_request_ca = krbinstance.get_pkinit_request_ca()
-        cert = x509.load_certificate_from_file(paths.KDC_CERT)
         requests.append(
             {
                 'cert-file': paths.KDC_CERT,
