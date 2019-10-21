@@ -17,7 +17,7 @@ from unittest.mock import patch
 
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
-from ipahealthcheck.ipa.dns import IPADNSSystemRecordsCheck
+from ipahealthcheck.ipa.idns import IPADNSSystemRecordsCheck
 
 from ipapython.dnsutil import DNSName
 from ipaserver.dns_data_management import (
@@ -202,7 +202,7 @@ class TestDNSSystemRecords(BaseTest):
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
-            assert result.source == 'ipahealthcheck.ipa.dns'
+            assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
 
     @patch('ipapython.dnsutil.query_srv')
@@ -245,7 +245,7 @@ class TestDNSSystemRecords(BaseTest):
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
-            assert result.source == 'ipahealthcheck.ipa.dns'
+            assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
 
     @patch('ipapython.dnsutil.query_srv')
@@ -296,7 +296,7 @@ class TestDNSSystemRecords(BaseTest):
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
-            assert result.source == 'ipahealthcheck.ipa.dns'
+            assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
 
     @patch('ipapython.dnsutil.query_srv')
@@ -345,7 +345,7 @@ class TestDNSSystemRecords(BaseTest):
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
-            assert result.source == 'ipahealthcheck.ipa.dns'
+            assert result.source == 'ipahealthcheck.ipa.idns'
 
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
@@ -591,5 +591,5 @@ class TestDNSSystemRecords(BaseTest):
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
-            assert result.source == 'ipahealthcheck.ipa.dns'
+            assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
