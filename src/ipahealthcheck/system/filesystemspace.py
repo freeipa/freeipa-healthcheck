@@ -2,11 +2,27 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+import os
 import shutil
 
 from ipahealthcheck.system.plugin import SystemPlugin, registry
 from ipahealthcheck.core.plugin import duration, Result
 from ipahealthcheck.core import constants
+
+
+def in_container():
+    """Determine if we're running in a container."""
+    with open('/proc/1/sched', 'r') as sched:
+        data = sched.readline()
+
+    checks = [
+        data.split()[0] not in ('systemd', 'init',),
+        os.path.exists('/.dockerenv'),
+        os.path.exists('/.dockerinit'),
+        os.getenv('container', None) is not None
+    ]
+
+    return any(checks)
 
 
 @registry
@@ -19,10 +35,12 @@ class FileSystemSpaceCheck(SystemPlugin):
         '/var/lib/dirsrv/': 1024,
         '/var/lib/ipa/backup/': 512,
         '/var/log/': 1024,
-        '/var/log/audit/': 512,
         '/var/tmp/': 512,
         '/tmp': 512
     }
+
+    if not in_container():
+        _pathchecks['/var/log/audit/'] = 512
 
     # File systems reaching 90% capacity risk fragmentation.
     # Defragmentation is never desirable and not available
@@ -40,7 +58,15 @@ class FileSystemSpaceCheck(SystemPlugin):
     @duration
     def check(self):
         for store in self._pathchecks:
-            percent_free = self.get_fs_free_space_percentage(store)
+            try:
+                percent_free = self.get_fs_free_space_percentage(store)
+            except FileNotFoundError:
+                yield Result(
+                    self, constants.WARNING,
+                    msg='File system {store} is not mounted',
+                    store=store
+                )
+                continue
             if percent_free < self.min_free_percent:
                 yield Result(
                     self, constants.ERROR,
