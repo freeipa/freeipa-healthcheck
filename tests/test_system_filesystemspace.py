@@ -10,6 +10,7 @@ from collections import namedtuple
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.system.plugin import registry
 from ipahealthcheck.system.filesystemspace import FileSystemSpaceCheck
+from ipahealthcheck.system.filesystemspace import in_container
 
 
 class TestFileSystemNotEnoughFreeSpace(BaseTest):
@@ -33,6 +34,8 @@ class TestFileSystemNotEnoughFreeSpace(BaseTest):
         f.config = config.Config()
         self.results = capture_results(f)
 
+        expected_results = 10 if in_container() else 12
+
         count = 0
         for result in self.results.results:
             if result.result == constants.ERROR:
@@ -42,8 +45,8 @@ class TestFileSystemNotEnoughFreeSpace(BaseTest):
                 assert 'free space under threshold' in result.kw.get('msg')
             else:
                 assert 'free space percentage within' in result.kw.get('msg')
-        assert len(self.results) == 12
-        assert count == 6
+        assert len(self.results) == expected_results
+        assert count == expected_results / 2
 
 
 class TestFileSystemNotEnoughFreeSpacePercentage(BaseTest):
@@ -67,6 +70,8 @@ class TestFileSystemNotEnoughFreeSpacePercentage(BaseTest):
         f.config = config.Config()
         self.results = capture_results(f)
 
+        expected_results = 10 if in_container() else 12
+
         count = 0
         for result in self.results.results:
             if result.result == constants.ERROR:
@@ -76,8 +81,8 @@ class TestFileSystemNotEnoughFreeSpacePercentage(BaseTest):
                 assert 'free space percentage under' in result.kw.get('msg')
             else:
                 assert 'free space within limits' in result.kw.get('msg')
-        assert len(self.results) == 12
-        assert count == 6
+        assert len(self.results) == expected_results
+        assert count == expected_results / 2
 
 
 class TestFileSystemEnoughFreeSpace(BaseTest):
@@ -101,6 +106,8 @@ class TestFileSystemEnoughFreeSpace(BaseTest):
         f.config = config.Config()
         self.results = capture_results(f)
 
+        expected_results = 10 if in_container() else 12
+
         for result in self.results.results:
             assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.system.filesystemspace'
@@ -109,4 +116,4 @@ class TestFileSystemEnoughFreeSpace(BaseTest):
                 'free space percentage within' in result.kw.get('msg') or
                 'free space within limits' in result.kw.get('msg')
             )
-        assert len(self.results) == 12
+        assert len(self.results) == expected_results
