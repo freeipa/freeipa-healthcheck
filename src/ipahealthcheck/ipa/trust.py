@@ -196,6 +196,62 @@ class IPATrustDomainsCheck(IPAPlugin):
 
 
 @registry
+class IPADomainCheck(IPAPlugin):
+    """
+    Check that the IPA domain provider is configured to use ipa
+    """
+    @duration
+    def check(self):
+        try:
+            sssdconfig = SSSDConfig.SSSDConfig()
+            sssdconfig.import_config()
+        except Exception as e:
+            logger.debug('Failed to parse sssd.conf: %s', e)
+            yield Result(self, constants.CRITICAL, error=str(e),
+                         key='domain-check',
+                         msg='Unable to parse sssd.conf: {error}')
+            return
+
+        try:
+            domain = sssdconfig.get_domain(api.env.domain)
+        except SSSDConfig.NoDomainError:
+            yield Result(self, constants.ERROR,
+                         key='domain-check',
+                         domain=api.env.domain,
+                         msg='IPA domain {domain} not found in sssd.conf')
+            return
+
+        error = False
+        for option in ('id_provider', 'auth_provider', 'chpass_provider',
+                       'access_provider'):
+            try:
+                provider = domain.get_option(option)
+            except SSSDConfig.NoOptionError:
+                yield Result(self, constants.ERROR,
+                             key='domain-check',
+                             domain=api.env.domain,
+                             option=option,
+                             msg='Option {option} in domain {domain} not '
+                                 'found in sssd.conf')
+                error = True
+                continue
+
+            if provider != "ipa":
+                yield Result(self, constants.ERROR,
+                             key='domain-check',
+                             option=option,
+                             provider=provider,
+                             domain=api.env.domain,
+                             msg='Option {option} in domain {domain} is '
+                                 '{provider} not ipa')
+                error = True
+
+        if not error:
+            yield Result(self, constants.SUCCESS,
+                         key='domain-check')
+
+
+@registry
 class IPATrustCatalogCheck(IPAPlugin):
     """
     Resolve an AD user
