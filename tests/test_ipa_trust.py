@@ -14,6 +14,7 @@ from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.trust import (IPATrustAgentCheck,
                                       IPATrustDomainsCheck,
+                                      IPADomainCheck,
                                       IPATrustCatalogCheck,
                                       IPAsidgenpluginCheck,
                                       IPATrustAgentMemberCheck,
@@ -71,12 +72,14 @@ class mock_ldap_conn:
 
 
 class SSSDDomain:
-    def __init__(self, return_ipa_server_mode):
+    def __init__(self, return_ipa_server_mode=True, provider='ipa'):
         self.return_ipa_server_mode = return_ipa_server_mode
+        self.provider = provider
 
     def get_option(self, option):
-        if option == 'id_provider':
-            return 'ipa'
+        if option in ('id_provider', 'auth_provider', 'chpass_provider',
+                      'access_provider'):
+            return self.provider
         elif option == 'ipa_server_mode':
             if self.return_ipa_server_mode is None:
                 raise NoOptionError()
@@ -84,12 +87,14 @@ class SSSDDomain:
 
 
 class SSSDConfig():
-    def __init__(self, return_domains, return_ipa_server_mode):
+    def __init__(self, return_domains=True, return_ipa_server_mode=True,
+                 provider='ipa'):
         """
         Knobs to control what data the configuration returns.
         """
         self.return_domains = return_domains
         self.return_ipa_server_mode = return_ipa_server_mode
+        self.provider = provider
 
     def import_config(self):
         pass
@@ -98,7 +103,7 @@ class SSSDConfig():
         return ('ipa.example',)
 
     def get_domain(self, name):
-        return SSSDDomain(self.return_ipa_server_mode)
+        return SSSDDomain(self.return_ipa_server_mode, self.provider)
 
 
 class TestTrustAgent(BaseTest):
@@ -362,6 +367,47 @@ class TestTrustDomains(BaseTest):
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain-status'
         assert result.kw.get('domain') == 'child.example'
+
+
+class TestIPADomain(BaseTest):
+    @patch('SSSDConfig.SSSDConfig')
+    def test_ipa_domain_ok(self, mock_sssd):
+        mock_sssd.return_value = SSSDConfig(provider='ipa')
+        framework = object()
+        registry.initialize(framework)
+        # being a trust agent isn't mandatory, test without
+        registry.trust_agent = False
+        f = IPADomainCheck(registry)
+
+        f.config = config.Config()
+        self.results = capture_results(f)
+
+        print(self.results.results)
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPADomainCheck'
+
+    @patch('SSSDConfig.SSSDConfig')
+    def test_ipa_domain_ad(self, mock_sssd):
+        mock_sssd.return_value = SSSDConfig(provider='ad')
+        framework = object()
+        registry.initialize(framework)
+        registry.trust_agent = True
+        f = IPADomainCheck(registry)
+
+        f.config = config.Config()
+        self.results = capture_results(f)
+
+        assert len(self.results) == 4
+
+        for result in self.results.results:
+            assert result.result == constants.ERROR
+            assert result.source == 'ipahealthcheck.ipa.trust'
+            assert result.check == 'IPADomainCheck'
+            assert result.kw.get('provider') == 'ad'
 
 
 class TestTrustCatalog(BaseTest):
