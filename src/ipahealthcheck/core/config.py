@@ -5,7 +5,7 @@
 import logging
 from configparser import ConfigParser, ParsingError
 
-from ipahealthcheck.core.constants import CONFIG_FILE, CONFIG_SECTION
+from ipahealthcheck.core.constants import CONFIG_SECTION
 from ipahealthcheck.core.constants import DEFAULT_CONFIG
 
 logger = logging.getLogger()
@@ -70,7 +70,7 @@ class Config:
             self.__d[key] = d[key]
 
 
-def read_config(config_file=CONFIG_FILE):
+def read_config(config_file):
     """
     Simple configuration file reader
 
