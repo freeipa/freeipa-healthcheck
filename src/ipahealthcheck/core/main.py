@@ -28,11 +28,14 @@ else:
     from ipahealthcheck.meta.services import ServiceCheck
 
 
-def find_registries():
-    return {
-        ep.name: ep.resolve()
-        for ep in pkg_resources.iter_entry_points('ipahealthcheck.registry')
-    }
+def find_registries(entry_points):
+    registries = {}
+    for entry_point in entry_points:
+        registries.update({
+            ep.name: ep.resolve()
+            for ep in pkg_resources.iter_entry_points(entry_point)
+        })
+    return registries
 
 
 def find_plugins(name, registry):
@@ -194,9 +197,7 @@ def limit_results(results, source, check):
     return new_results
 
 
-def main():
-    environ["KRB5_CLIENT_KTNAME"] = "/etc/krb5.keytab"
-    environ["KRB5CCNAME"] = "MEMORY:"
+def run_healthcheck(entry_points, configfile):
     framework = object()
     plugins = []
     output = constants.DEFAULT_OUTPUT
@@ -208,17 +209,11 @@ def main():
     if options.debug:
         logger.setLevel(logging.DEBUG)
 
-    config = read_config()
+    config = read_config(configfile)
     if config is None:
         sys.exit(1)
 
-    if not (
-        options.source or options.list_sources
-    ) and not is_ipa_configured():
-        logging.error("IPA is not configured on this system.")
-        sys.exit(1)
-
-    for name, registry in find_registries().items():
+    for name, registry in find_registries(entry_points).items():
         try:
             registry.initialize(framework)
         except Exception as e:
@@ -283,4 +278,12 @@ def main():
             return_value = 1
             break
 
-    sys.exit(return_value)
+    return return_value
+
+
+def main():
+    environ["KRB5_CLIENT_KTNAME"] = "/etc/krb5.keytab"
+    environ["KRB5CCNAME"] = "MEMORY:"
+
+    sys.exit(run_healthcheck(['ipahealthcheck.registry'],
+                             constants.CONFIG_FILE))
