@@ -6,7 +6,8 @@ import logging
 
 from ipahealthcheck.core import constants
 from ipahealthcheck.core.plugin import Result, duration
-from ipahealthcheck.meta.plugin import Plugin, registry
+from ipahealthcheck.core.service import ServiceCheck
+from ipahealthcheck.meta.plugin import registry
 try:
     from ipapython.ipaldap import realm_to_serverid
 except ImportError:
@@ -20,7 +21,7 @@ from ipaserver.install import cainstance
 logger = logging.getLogger()
 
 
-class ServiceCheck(Plugin):
+class IPAServiceCheck(ServiceCheck):
     @duration
     def check(self, instance=''):
         try:
@@ -47,7 +48,7 @@ class ServiceCheck(Plugin):
 
 
 @registry
-class certmonger(ServiceCheck):
+class certmonger(IPAServiceCheck):
     def check(self):
         self.service_name = 'certmonger'
 
@@ -55,7 +56,7 @@ class certmonger(ServiceCheck):
 
 
 @registry
-class dirsrv(ServiceCheck):
+class dirsrv(IPAServiceCheck):
     def check(self):
         self.service_name = 'dirsrv'
 
@@ -63,7 +64,7 @@ class dirsrv(ServiceCheck):
 
 
 @registry
-class gssproxy(ServiceCheck):
+class gssproxy(IPAServiceCheck):
     def check(self):
         self.service_name = 'gssproxy'
 
@@ -71,7 +72,7 @@ class gssproxy(ServiceCheck):
 
 
 @registry
-class httpd(ServiceCheck):
+class httpd(IPAServiceCheck):
     def check(self):
         self.service_name = 'httpd'
 
@@ -79,7 +80,7 @@ class httpd(ServiceCheck):
 
 
 @registry
-class ipa_custodia(ServiceCheck):
+class ipa_custodia(IPAServiceCheck):
     def check(self):
         self.service_name = 'ipa-custodia'
 
@@ -87,7 +88,7 @@ class ipa_custodia(ServiceCheck):
 
 
 @registry
-class ipa_dnskeysyncd(ServiceCheck):
+class ipa_dnskeysyncd(IPAServiceCheck):
     def check(self):
         self.service_name = 'ipa-dnskeysyncd'
 
@@ -98,7 +99,7 @@ class ipa_dnskeysyncd(ServiceCheck):
 
 
 @registry
-class ipa_otpd(ServiceCheck):
+class ipa_otpd(IPAServiceCheck):
     def check(self):
         self.service_name = 'ipa-otpd'
 
@@ -106,7 +107,7 @@ class ipa_otpd(ServiceCheck):
 
 
 @registry
-class kadmin(ServiceCheck):
+class kadmin(IPAServiceCheck):
     def check(self):
         self.service_name = 'kadmin'
 
@@ -114,7 +115,7 @@ class kadmin(ServiceCheck):
 
 
 @registry
-class krb5kdc(ServiceCheck):
+class krb5kdc(IPAServiceCheck):
     def check(self):
         self.service_name = 'krb5kdc'
 
@@ -122,7 +123,7 @@ class krb5kdc(ServiceCheck):
 
 
 @registry
-class named(ServiceCheck):
+class named(IPAServiceCheck):
     def check(self):
         self.service_name = 'named'
 
@@ -133,7 +134,7 @@ class named(ServiceCheck):
 
 
 @registry
-class pki_tomcatd(ServiceCheck):
+class pki_tomcatd(IPAServiceCheck):
     def check(self):
         self.service_name = 'pki_tomcatd'
 
@@ -145,7 +146,7 @@ class pki_tomcatd(ServiceCheck):
 
 
 @registry
-class sssd(ServiceCheck):
+class sssd(IPAServiceCheck):
     def check(self):
         self.service_name = 'sssd'
 

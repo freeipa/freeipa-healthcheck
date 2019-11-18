@@ -15,17 +15,10 @@ from ipahealthcheck.core.config import read_config
 from ipahealthcheck.core.plugin import Result, Results, json_to_results
 from ipahealthcheck.core.output import output_registry
 from ipahealthcheck.core import constants
+from ipahealthcheck.core.service import ServiceCheck
 
 logging.basicConfig(format='%(message)s')
 logger = logging.getLogger()
-
-try:
-    from ipaserver.install.installutils import is_ipa_configured
-except ImportError:
-    logging.error("IPA server packages are not installed on this system.")
-    sys.exit(1)
-else:
-    from ipahealthcheck.meta.services import ServiceCheck
 
 
 def find_registries(entry_points):
