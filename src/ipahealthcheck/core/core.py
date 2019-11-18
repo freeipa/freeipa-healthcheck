@@ -188,85 +188,98 @@ def limit_results(results, source, check):
     return new_results
 
 
-def run_healthcheck(entry_points, configfile):
-    framework = object()
-    plugins = []
-    output = constants.DEFAULT_OUTPUT
+class RunChecks:
+    def __init__(self, entry_points, configfile):
+        self.entry_points = entry_points
+        self.configfile = configfile
 
-    logger.setLevel(logging.INFO)
+    def pre_check(self):
+        pass
 
-    options = parse_options(output_registry)
+    def run_healthcheck(self):
+        framework = object()
+        plugins = []
+        output = constants.DEFAULT_OUTPUT
 
-    if options.debug:
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
 
-    config = read_config(configfile)
-    if config is None:
-        return 1
+        options = parse_options(output_registry)
 
-    for name, registry in find_registries(entry_points).items():
-        try:
-            registry.initialize(framework)
-        except Exception as e:
-            print("Unable to initialize %s: %s" % (name, e))
+        if options.debug:
+            logger.setLevel(logging.DEBUG)
+
+        config = read_config(self.configfile)
+        if config is None:
             return 1
-        for plugin in find_plugins(name, registry):
-            plugins.append(plugin)
 
-    for out in output_registry.plugins:
-        if out.__name__.lower() == options.output:
-            output = out(options)
+        rval = self.pre_check()
+        if rval is not None:
+            return rval
 
-    if options.list_sources:
-        return list_sources(plugins)
-
-    if options.infile:
-        try:
-            with open(options.infile, 'r') as f:
-                raw_data = f.read()
-
-            json_data = json.loads(raw_data)
-            results = json_to_results(json_data)
-            available = ()
-        except Exception as e:
-            print("Unable to import '%s': %s" % (options.infile, e))
-            return 1
-        if options.source:
-            results = limit_results(results, options.source, options.check)
-    else:
-        results, available = run_service_plugins(plugins, config,
-                                                 options.source,
-                                                 options.check)
-        results.extend(run_plugins(plugins, config, available,
-                                   options.source, options.check))
-
-    if options.source and len(results.results) == 0:
-        for plugin in plugins:
-            if not source_or_check_matches(plugin, options.source,
-                                           options.check):
-                continue
-
-            if not set(plugin.requires).issubset(available):
-                print("Source '%s' is missing one or more requirements '%s'" %
-                      (options.source, ', '.join(plugin.requires)))
+        for name, registry in find_registries(self.entry_points).items():
+            try:
+                registry.initialize(framework)
+            except Exception as e:
+                print("Unable to initialize %s: %s" % (name, e))
                 return 1
+            for plugin in find_plugins(name, registry):
+                plugins.append(plugin)
 
-        if options.check:
-            print("Check '%s' not found in Source '%s'" %
-                  (options.check, options.source))
+        for out in output_registry.plugins:
+            if out.__name__.lower() == options.output:
+                output = out(options)
+
+        if options.list_sources:
+            return list_sources(plugins)
+
+        if options.infile:
+            try:
+                with open(options.infile, 'r') as f:
+                    raw_data = f.read()
+
+                json_data = json.loads(raw_data)
+                results = json_to_results(json_data)
+                available = ()
+            except Exception as e:
+                print("Unable to import '%s': %s" % (options.infile, e))
+                return 1
+            if options.source:
+                results = limit_results(results, options.source, options.check)
         else:
-            print("Source '%s' not found" % options.source)
-        return 1
+            results, available = run_service_plugins(plugins, config,
+                                                     options.source,
+                                                     options.check)
+            results.extend(run_plugins(plugins, config, available,
+                                       options.source, options.check))
 
-    try:
-        output.render(results)
-    except Exception as e:
-        logger.error('Output raised %s: %s', e.__class__.__name__, e)
+        if options.source and len(results.results) == 0:
+            for plugin in plugins:
+                if not source_or_check_matches(plugin, options.source,
+                                               options.check):
+                    continue
 
-    return_value = 0
-    for result in results.results:
-        if result.result != constants.SUCCESS:
-            return_value = 1
-            break
+                if not set(plugin.requires).issubset(available):
+                    print("Source '%s' is missing one or more requirements "
+                          "'%s'" %
+                          (options.source, ', '.join(plugin.requires)))
+                    return 1
 
-    return return_value
+            if options.check:
+                print("Check '%s' not found in Source '%s'" %
+                      (options.check, options.source))
+            else:
+                print("Source '%s' not found" % options.source)
+            return 1
+
+        try:
+            output.render(results)
+        except Exception as e:
+            logger.error('Output raised %s: %s', e.__class__.__name__, e)
+
+        return_value = 0
+        for result in results.results:
+            if result.result != constants.SUCCESS:
+                return_value = 1
+                break
+
+        return return_value
