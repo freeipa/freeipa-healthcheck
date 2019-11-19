@@ -28,14 +28,14 @@ Values should not be quoted, the quotes will not be stripped.
     verbose=True
 .DE
 
-Options must appear in the section named [global]. There are no other sections defined or used currently.
+Options must appear in the section named [default]. There are no other sections defined or used currently.
 
 Options may be defined that are not used. Be careful of misspellings, they will not be rejected.
 .SH "OPTIONS"
 The following options are relevant for the server:
 .TP
-.B cert_expiration_days\fR 28
-The number of days left before a certificate expires to start displaying a warning.
+.B cert_expiration_days\fR
+The number of days left before a certificate expires to start displaying a warning. The default is 28.
 .SH "FILES"
 .TP
 .I /etc/ipahealthcheck/ipahealthcheck.conf
