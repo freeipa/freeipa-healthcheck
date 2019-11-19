@@ -3,6 +3,7 @@
 #
 
 from datetime import datetime, timezone, timedelta
+import itertools
 import logging
 import os
 import tempfile
@@ -16,6 +17,7 @@ from ipalib import api
 from ipalib import errors
 from ipalib import x509
 from ipalib.install import certmonger
+from ipalib.constants import RENEWAL_CA_NAME
 from ipaplatform.paths import paths
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
@@ -60,7 +62,7 @@ def get_expected_requests(ca, ds, serverid):
             {
                 'cert-file': paths.RA_AGENT_PEM,
                 'key-file': paths.RA_AGENT_KEY,
-                'ca-name': 'dogtag-ipa-ca-renew-agent',
+                'ca-name': RENEWAL_CA_NAME,
                 'cert-presave-command': template % 'renew_ra_cert_pre',
                 'cert-postsave-command': template % 'renew_ra_cert',
             },
@@ -68,103 +70,23 @@ def get_expected_requests(ca, ds, serverid):
     else:
         requests = []
 
-    ca_requests = [
-        {
-            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
-            'cert-nickname': 'auditSigningCert cert-pki-ca',
-            'ca-name': 'dogtag-ipa-ca-renew-agent',
-            'cert-presave-command': template % 'stop_pkicad',
-            'cert-postsave-command': (
-                template %
-                'renew_ca_cert "auditSigningCert cert-pki-ca"'),
-        },
-        {
-            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
-            'cert-nickname': 'ocspSigningCert cert-pki-ca',
-            'ca-name': 'dogtag-ipa-ca-renew-agent',
-            'cert-presave-command': template % 'stop_pkicad',
-            'cert-postsave-command': (
-                template %
-                'renew_ca_cert "ocspSigningCert cert-pki-ca"'),
-        },
-        {
-            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
-            'cert-nickname': 'subsystemCert cert-pki-ca',
-            'ca-name': 'dogtag-ipa-ca-renew-agent',
-            'cert-presave-command': template % 'stop_pkicad',
-            'cert-postsave-command': (
-                template %
-                'renew_ca_cert "subsystemCert cert-pki-ca"'),
-        },
-        {
-            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
-            'cert-nickname': 'caSigningCert cert-pki-ca',
-            'ca-name': 'dogtag-ipa-ca-renew-agent',
-            'cert-presave-command': template % 'stop_pkicad',
-            'cert-postsave-command': (
-                template % 'renew_ca_cert "caSigningCert cert-pki-ca"'),
-            'template-profile': None,
-        },
-        {
-            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
-            'cert-nickname': 'Server-Cert cert-pki-ca',
-            'ca-name': 'dogtag-ipa-ca-renew-agent',
-            'cert-presave-command': template % 'stop_pkicad',
-            'cert-postsave-command': (
-                template %
-                'renew_ca_cert "Server-Cert cert-pki-ca"'),
-        },
-    ]
-
-    kra_requests = [
-        {
-            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
-            'cert-nickname': 'auditSigningCert cert-pki-kra',
-            'ca-name': 'dogtag-ipa-ca-renew-agent',
-            'cert-presave-command': template % 'stop_pkicad',
-            'cert-postsave-command': (
-                template %
-                'renew_ca_cert "auditSigningCert cert-pki-kra"'),
-        },
-        {
-            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
-            'cert-nickname': 'transportCert cert-pki-kra',
-            'ca-name': 'dogtag-ipa-ca-renew-agent',
-            'cert-presave-command': template % 'stop_pkicad',
-            'cert-postsave-command': (
-                template %
-                'renew_ca_cert "transportCert cert-pki-kra"'),
-        },
-        {
-            'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
-            'cert-nickname': 'storageCert cert-pki-kra',
-            'ca-name': 'dogtag-ipa-ca-renew-agent',
-            'cert-presave-command': template % 'stop_pkicad',
-            'cert-postsave-command': (
-                template %
-                'renew_ca_cert "storageCert cert-pki-kra"'),
-        },
-    ]
-
     if ca.is_configured():
-        db = certs.CertDB(api.env.realm, paths.PKI_TOMCAT_ALIAS_DIR)
-        for nickname, _trust_flags in db.list_certs():
-            if nickname.startswith('caSigningCert cert-pki-ca '):
-                requests.append(
-                    {
-                        'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
-                        'cert-nickname': nickname,
-                        'ca-name': 'dogtag-ipa-ca-renew-agent',
-                        'cert-presave-command': template % 'stop_pkicad',
-                        'cert-postsave-command':
-                            (template % ('renew_ca_cert "%s"' % nickname)),
-                        'template-profile': 'caCACert',
-                    }
-                )
-        requests += ca_requests
+        dogtag_reqs = ca.tracking_reqs.items()
         kra = krainstance.KRAInstance(api.env.realm)
         if kra.is_installed():
-            requests += kra_requests
+            dogtag_reqs = itertools.chain(dogtag_reqs,
+                                          kra.tracking_reqs.items())
+        for nick, profile in dogtag_reqs:
+            req = {
+                'cert-database': paths.PKI_TOMCAT_ALIAS_DIR,
+                'cert-nickname': nick,
+                'ca-name': RENEWAL_CA_NAME,
+                'cert-presave-command': template % 'stop_pkicad',
+                'cert-postsave-command':
+                    (template % 'renew_ca_cert "{}"'.format(nick)),
+                'template-profile': profile,
+            }
+            requests.append(req)
     else:
         logger.debug('CA is not configured, skipping CA tracking')
 
