@@ -10,13 +10,22 @@ python:
 
 cache: pip
 
-before_install:
-    - docker pull fedora:29
+env:
+    matrix:
+        - TASK_TO_RUN="lint"
+        - TASK_TO_RUN="fedora:29"
+        - TASK_TO_RUN="fedora:30"
+        - TASK_TO_RUN="fedora:31"
 
 install:
     - pip3 install --upgrade pip
     - pip3 install pycodestyle tox
 
 script:
-    - tox -epep8,flake8
-    - docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ fedora:29 /bin/sh -c "dnf -y install freeipa-server freeipa-server-trust-ad tox python3-pytest; cd /root/src; tox -epy3"
+    - >
+      if [[ "$TASK_TO_RUN" == "lint" ]]; then
+          tox -epep8,flake8
+      else
+          docker pull $TASK_TO_RUN;
+          docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ $TASK_TO_RUN /bin/sh -c "dnf -y install freeipa-server freeipa-server-trust-ad tox python3-pytest; cd /root/src; tox -epy3"
+      fi
