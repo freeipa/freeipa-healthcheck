@@ -27,11 +27,18 @@ class FileCheck:
             fmode = str(oct(stat.st_mode)[-4:])
             key = '%s_mode' % path.replace('/', '_')
             if mode != fmode:
-                yield Result(self, constants.WARNING, key=key,
-                             path=path, type='mode', expected=mode,
-                             got=fmode,
-                             msg='Permissions of %s are %s and '
-                             'should be %s' % (path, fmode, mode))
+                if mode < fmode:
+                    yield Result(self, constants.WARNING, key=key,
+                                 path=path, type='mode', expected=mode,
+                                 got=fmode,
+                                 msg='Permissions of %s are too permissive: '
+                                 '%s and should be %s' % (path, fmode, mode))
+                if mode > fmode:
+                    yield Result(self, constants.ERROR, key=key,
+                                 path=path, type='mode', expected=mode,
+                                 got=fmode,
+                                 msg='Permissions of %s are too restrictive: '
+                                 '%s and should be %s' % (path, fmode, mode))
             else:
                 yield Result(self, constants.SUCCESS, key=key,
                              type='mode', path=path)

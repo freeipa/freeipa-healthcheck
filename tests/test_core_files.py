@@ -92,10 +92,16 @@ def test_files_mode(mock_stat):
 
     my_results = get_results(results, 'mode')
     assert my_results.results[0].result == constants.SUCCESS
-    assert my_results.results[1].result == constants.WARNING
+    assert my_results.results[1].result == constants.ERROR
 
-    mock_stat.return_value = make_stat(mode=33204)
+    mock_stat.return_value = make_stat(mode=33152)
+    results = capture_results(f)
+    my_results = get_results(results, 'mode')
+    assert my_results.results[0].result == constants.ERROR
+    assert my_results.results[1].result == constants.ERROR
+
+    mock_stat.return_value = make_stat(mode=33206)
     results = capture_results(f)
     my_results = get_results(results, 'mode')
     assert my_results.results[0].result == constants.WARNING
-    assert my_results.results[1].result == constants.SUCCESS
+    assert my_results.results[1].result == constants.WARNING
