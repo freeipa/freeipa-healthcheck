@@ -13,10 +13,14 @@ from ipahealthcheck.core import constants
 def in_container():
     """Determine if we're running in a container."""
     with open('/proc/1/sched', 'r') as sched:
-        data = sched.readline()
+        data_sched = sched.readline()
+
+    with open('/proc/self/cgroup', 'r') as cgroup:
+        data_cgroup = cgroup.readline()
 
     checks = [
-        data.split()[0] not in ('systemd', 'init',),
+        data_sched.split()[0] not in ('systemd', 'init',),
+        data_cgroup.split()[0] not in ('libpod'),
         os.path.exists('/.dockerenv'),
         os.path.exists('/.dockerinit'),
         os.getenv('container', None) is not None
