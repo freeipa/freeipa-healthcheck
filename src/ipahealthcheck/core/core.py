@@ -64,7 +64,7 @@ def source_or_check_matches(plugin, source, check):
     return True
 
 
-def run_service_plugins(plugins, config, source, check):
+def run_service_plugins(plugins, source, check):
     """Execute plugins with the base class of ServiceCheck
 
        This is a specialized check to use systemd to determine
@@ -90,7 +90,7 @@ def run_service_plugins(plugins, config, source, check):
     return results, set(available)
 
 
-def run_plugins(plugins, config, available, source, check):
+def run_plugins(plugins, available, source, check):
     """Execute plugins without the base class of ServiceCheck
 
        These are the remaining, non-service checking checks
@@ -106,7 +106,6 @@ def run_plugins(plugins, config, available, source, check):
             continue
 
         logger.debug('Calling check %s' % plugin)
-        plugin.config = config
         if not set(plugin.requires).issubset(available):
             logger.debug('Skipping %s:%s because %s service(s) not running',
                          plugin.__class__.__module__,
@@ -218,7 +217,7 @@ class RunChecks:
 
         for name, registry in find_registries(self.entry_points).items():
             try:
-                registry.initialize(framework)
+                registry.initialize(framework, config)
             except Exception as e:
                 print("Unable to initialize %s: %s" % (name, e))
                 return 1
@@ -246,10 +245,10 @@ class RunChecks:
             if options.source:
                 results = limit_results(results, options.source, options.check)
         else:
-            results, available = run_service_plugins(plugins, config,
+            results, available = run_service_plugins(plugins,
                                                      options.source,
                                                      options.check)
-            results.extend(run_plugins(plugins, config, available,
+            results.extend(run_plugins(plugins, available,
                                        options.source, options.check))
 
         if options.source and len(results.results) == 0:

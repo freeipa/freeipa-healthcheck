@@ -5,7 +5,7 @@
 from util import capture_results, CAInstance
 from util import m_api
 from base import BaseTest
-from ipahealthcheck.core import constants
+from ipahealthcheck.core import constants, config
 from ipahealthcheck.dogtag.plugin import registry
 from ipahealthcheck.dogtag.ca import DogtagCertsConnectivityCheck
 from unittest.mock import Mock
@@ -26,7 +26,7 @@ class TestCAConnectivity(BaseTest):
         }
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = DogtagCertsConnectivityCheck(registry)
 
         self.results = capture_results(f)
@@ -47,7 +47,7 @@ class TestCAConnectivity(BaseTest):
         )
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = DogtagCertsConnectivityCheck(registry)
 
         self.results = capture_results(f)
@@ -67,7 +67,7 @@ class TestCAConnectivity(BaseTest):
         )
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = DogtagCertsConnectivityCheck(registry)
 
         self.results = capture_results(f)

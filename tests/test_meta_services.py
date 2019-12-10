@@ -7,6 +7,7 @@ from base import BaseTest
 
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.meta.services import httpd
+from ipahealthcheck.core import config
 
 
 class TestServices(BaseTest):
@@ -19,7 +20,7 @@ class TestServices(BaseTest):
         running.
         """
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = httpd(registry)
 
         self.results = capture_results(f)

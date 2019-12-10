@@ -31,10 +31,9 @@ class TestDNARange(BaseTest):
     def test_dnarange_set(self, mock_manager):
         mock_manager.return_value = mock_ReplicationManager(start=1, max=100)
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNARangeCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -52,10 +51,9 @@ class TestDNARange(BaseTest):
     def test_dnarange_noset(self, mock_manager):
         mock_manager.return_value = mock_ReplicationManager()
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNARangeCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -76,10 +74,9 @@ class TestDNARange(BaseTest):
                                                             next=101,
                                                             next_max=200)
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNARangeCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1

@@ -5,7 +5,7 @@
 from util import capture_results
 from base import BaseTest
 
-from ipahealthcheck.core import constants
+from ipahealthcheck.core import constants, config
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertTracking
 from unittest.mock import Mock
@@ -27,7 +27,7 @@ class TestTracking(BaseTest):
         set_requests()
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertTracking(registry)
 
         self.results = capture_results(f)
@@ -39,7 +39,7 @@ class TestTracking(BaseTest):
         set_requests(remove=0)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertTracking(registry)
 
         self.results = capture_results(f)
@@ -71,7 +71,7 @@ class TestTracking(BaseTest):
         set_requests(add=unknown)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertTracking(registry)
 
         self.results = capture_results(f)

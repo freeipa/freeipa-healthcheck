@@ -44,10 +44,9 @@ class TestReplicationConflicts(BaseTest):
         mock_conn.return_value = mock_ldap(None)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = ReplicationConflictCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # A valid call relies on a success to be set by core
@@ -73,10 +72,9 @@ class TestReplicationConflicts(BaseTest):
         mock_conn.return_value = mock_ldap([ldapentry])
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = ReplicationConflictCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
         result = self.results.results[0]
 

@@ -28,10 +28,9 @@ class TestFileSystemNotEnoughFreeSpace(BaseTest):
     def test_filesystem_near_enospc(self):
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = FileSystemSpaceCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         expected_results = 10 if in_container() else 12
@@ -64,10 +63,9 @@ class TestFileSystemNotEnoughFreeSpacePercentage(BaseTest):
     def test_filesystem_risking_fragmentation(self):
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = FileSystemSpaceCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         expected_results = 10 if in_container() else 12
@@ -100,10 +98,9 @@ class TestFileSystemEnoughFreeSpace(BaseTest):
     def test_filesystem_with_enough_space(self):
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = FileSystemSpaceCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         expected_results = 10 if in_container() else 12

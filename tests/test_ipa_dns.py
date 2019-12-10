@@ -192,10 +192,9 @@ class TestDNSSystemRecords(BaseTest):
             ]
         }]
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNSSystemRecordsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 9
@@ -235,10 +234,9 @@ class TestDNSSystemRecords(BaseTest):
         }]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNSSystemRecordsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 17
@@ -286,10 +284,9 @@ class TestDNSSystemRecords(BaseTest):
         }]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNSSystemRecordsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 25
@@ -335,10 +332,9 @@ class TestDNSSystemRecords(BaseTest):
         }]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNSSystemRecordsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 23
@@ -389,10 +385,9 @@ class TestDNSSystemRecords(BaseTest):
         }]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNSSystemRecordsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 25
@@ -447,10 +442,9 @@ class TestDNSSystemRecords(BaseTest):
         }]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNSSystemRecordsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 25
@@ -509,10 +503,9 @@ class TestDNSSystemRecords(BaseTest):
         }]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNSSystemRecordsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 32
@@ -545,10 +538,9 @@ class TestDNSSystemRecords(BaseTest):
             ]
         }]
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNSSystemRecordsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 9
@@ -581,10 +573,9 @@ class TestDNSSystemRecords(BaseTest):
             ]
         }]
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPADNSSystemRecordsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 15

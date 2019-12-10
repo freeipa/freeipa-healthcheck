@@ -16,7 +16,8 @@ class DogtagPlugin(Plugin):
 
 
 class DogtagRegistry(Registry):
-    def initialize(self, framework):
+    def initialize(self, framework, config):
+        super(DogtagRegistry, self).initialize(framework, config)
         installutils.check_server_configuration()
         if not api.isdone('bootstrap'):
             api.bootstrap(in_server=True,

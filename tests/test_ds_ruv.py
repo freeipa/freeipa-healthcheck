@@ -63,11 +63,10 @@ class TestRUV(BaseTest):
 
     def test_no_ruvs(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = RUVCheck(registry)
 
         f.conn = mock_ldap(None)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 0
@@ -88,11 +87,10 @@ class TestRUV(BaseTest):
         )
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = RUVCheck(registry)
 
         f.conn = mock_ldap(entries)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -123,11 +121,10 @@ class TestRUV(BaseTest):
         entries.append(None)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = RUVCheck(registry)
 
         f.conn = mock_ldap(entries)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1

@@ -76,11 +76,10 @@ class TestNSSAgent(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config())
         f = IPARAAgent(registry)
 
         f.conn = mock_ldap([ldapentry])
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -101,11 +100,10 @@ class TestNSSAgent(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config())
         f = IPARAAgent(registry)
 
         f.conn = mock_ldap([ldapentry])
-        f.config = config.Config()
         self.results = capture_results(f)
         result = self.results.results[0]
 
@@ -118,10 +116,9 @@ class TestNSSAgent(BaseTest):
         mock_load_cert.side_effect = IOError('test')
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config())
         f = IPARAAgent(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
         result = self.results.results[0]
 
@@ -131,11 +128,10 @@ class TestNSSAgent(BaseTest):
     def test_nss_agent_no_entry_found(self):
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config())
         f = IPARAAgent(registry)
 
         f.conn = mock_ldap(None)  # None == NotFound
-        f.config = config.Config()
         self.results = capture_results(f)
         result = self.results.results[0]
 
@@ -158,11 +154,10 @@ class TestNSSAgent(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config())
         f = IPARAAgent(registry)
 
         f.conn = mock_ldap([ldapentry, ldapentry2])
-        f.config = config.Config()
         self.results = capture_results(f)
         result = self.results.results[0]
 
@@ -183,11 +178,10 @@ class TestNSSAgent(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config())
         f = IPARAAgent(registry)
 
         f.conn = mock_ldap([ldapentry])
-        f.config = config.Config()
         self.results = capture_results(f)
         result = self.results.results[0]
 
@@ -208,11 +202,10 @@ class TestNSSAgent(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPARAAgent(registry)
 
         f.conn = mock_ldap([ldapentry])
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1

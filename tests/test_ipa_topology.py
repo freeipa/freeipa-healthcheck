@@ -28,10 +28,9 @@ class TestTopology(BaseTest):
         m_api.Command.ca_is_enabled.return_value = {'result': True}
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPATopologyDomainCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -71,10 +70,9 @@ class TestTopology(BaseTest):
         m_api.Command.ca_is_enabled.return_value = {'result': True}
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPATopologyDomainCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 3
@@ -135,10 +133,9 @@ class TestTopology(BaseTest):
         m_api.Command.ca_is_enabled.return_value = {'result': True}
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPATopologyDomainCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 3
@@ -193,10 +190,9 @@ class TestTopology(BaseTest):
         m_api.Command.ca_is_enabled.return_value = {'result': True}
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPATopologyDomainCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2

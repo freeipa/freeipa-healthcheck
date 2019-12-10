@@ -41,9 +41,11 @@ class Registry:
     def __init__(self):
         self.plugins = []
         self.framework = None
+        self.config = dict()
 
-    def initialize(self, framework):
+    def initialize(self, framework, config):
         self.framework = framework
+        self.config = config
 
     def __call__(self, cls):
         if not callable(cls):
@@ -98,7 +100,7 @@ class Plugin:
 
     def __init__(self, registry):
         self.registry = registry
-        self.config = dict()
+        self.config = registry.config
 
 
 class Result:

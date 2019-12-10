@@ -18,10 +18,9 @@ class TestCRLManagerRole(BaseTest):
     def test_not_crlmanager(self, mock_ca):
         mock_ca.return_value = CAInstance(crlgen=False)
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACRLManagerCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -36,10 +35,9 @@ class TestCRLManagerRole(BaseTest):
     def test_crlmanager(self, mock_ca):
         mock_ca.return_value = CAInstance()
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACRLManagerCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -54,7 +52,7 @@ class TestCRLManagerRole(BaseTest):
 class TestRenewalMaster(BaseTest):
     def test_renewal_master_not_set(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPARenewalMasterCheck(registry)
 
         m_api.Command.config_show.side_effect = [{
@@ -62,7 +60,6 @@ class TestRenewalMaster(BaseTest):
             }
         }]
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -75,7 +72,7 @@ class TestRenewalMaster(BaseTest):
 
     def test_not_renewal_master(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPARenewalMasterCheck(registry)
 
         m_api.Command.config_show.side_effect = [{
@@ -84,7 +81,6 @@ class TestRenewalMaster(BaseTest):
             }
         }]
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -97,7 +93,7 @@ class TestRenewalMaster(BaseTest):
 
     def test_is_renewal_master(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPARenewalMasterCheck(registry)
 
         m_api.Command.config_show.side_effect = [{
@@ -106,7 +102,6 @@ class TestRenewalMaster(BaseTest):
             }
         }]
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
