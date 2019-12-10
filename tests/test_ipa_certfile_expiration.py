@@ -41,10 +41,9 @@ class TestIPACertificateFile(BaseTest):
         mock_load_cert.return_value = cert
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertfileExpirationCheck(registry)
 
-        f.config = config.Config()
         f.config.cert_expiration_days = 28
         self.results = capture_results(f)
 
@@ -65,10 +64,9 @@ class TestIPACertificateFile(BaseTest):
         mock_load_cert.return_value = cert
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertfileExpirationCheck(registry)
 
-        f.config = config.Config()
         f.config.cert_expiration_days = 30
         self.results = capture_results(f)
 
@@ -90,10 +88,9 @@ class TestIPACertificateFile(BaseTest):
         mock_load_cert.return_value = cert
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertfileExpirationCheck(registry)
 
-        f.config = config.Config()
         f.config.cert_expiration_days = 30
         self.results = capture_results(f)
 

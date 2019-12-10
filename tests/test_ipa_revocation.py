@@ -54,10 +54,9 @@ class TestRevocation(BaseTest):
         set_requests()
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertRevocation(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -84,10 +83,9 @@ class TestRevocation(BaseTest):
         set_requests()
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertRevocation(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2

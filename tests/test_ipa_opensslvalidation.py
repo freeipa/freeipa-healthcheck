@@ -30,10 +30,9 @@ class TestOpenSSLValidation(BaseTest):
         mock_run.side_effect = run
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPAOpenSSLChainValidation(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -59,10 +58,9 @@ class TestOpenSSLValidation(BaseTest):
         mock_run.side_effect = run
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPAOpenSSLChainValidation(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2

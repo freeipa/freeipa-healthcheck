@@ -48,10 +48,9 @@ class TestNSSDBTrust(BaseTest):
         mock_certdb.return_value = mock_CertDB(trust)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertNSSTrust(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 4
@@ -74,10 +73,9 @@ class TestNSSDBTrust(BaseTest):
         mock_certdb.return_value = mock_CertDB(trust)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertNSSTrust(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # The check reports success for those that it found and are correct and
@@ -114,10 +112,9 @@ class TestNSSDBTrust(BaseTest):
         mock_certdb.return_value = mock_CertDB(trust)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertNSSTrust(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         result = self.results.results[1]
@@ -149,10 +146,9 @@ class TestNSSDBTrust(BaseTest):
         mock_cainstance.return_value = CAInstance(False)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertNSSTrust(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 0

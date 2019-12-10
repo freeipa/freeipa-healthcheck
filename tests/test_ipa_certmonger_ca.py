@@ -4,7 +4,7 @@
 
 from util import capture_results, CAInstance
 from base import BaseTest
-from ipahealthcheck.core import constants
+from ipahealthcheck.core import constants, config
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertmongerCA
 from unittest.mock import Mock, patch
@@ -24,7 +24,7 @@ class TestCertmonger(BaseTest):
             'dogtag-ipa-ca-renew-agent-reuse'
         ]
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertmongerCA(registry)
 
         self.results = capture_results(f)
@@ -44,7 +44,7 @@ class TestCertmonger(BaseTest):
         ]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertmongerCA(registry)
 
         self.results = capture_results(f)

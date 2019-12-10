@@ -59,10 +59,9 @@ class TestCACerts(BaseTest):
         mock_directive.side_effect = [name for name, nsstrust in trust.items()]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config())
         f = DogtagCertsConfigCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 6
@@ -98,10 +97,9 @@ class TestCACerts(BaseTest):
         mock_directive.side_effect = nicknames
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = DogtagCertsConfigCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         num = len(self.results.results)
@@ -129,10 +127,9 @@ class TestCACerts(BaseTest):
         mock_cainstance.return_value = CAInstance(False)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config)
         f = DogtagCertsConfigCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 0

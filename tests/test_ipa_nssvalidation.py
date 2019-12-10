@@ -38,10 +38,9 @@ class TestNSSValidation(BaseTest):
         mock_cainstance.return_value = CAInstance()
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPANSSChainValidation(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -68,10 +67,9 @@ class TestNSSValidation(BaseTest):
         mock_cainstance.return_value = CAInstance()
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPANSSChainValidation(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -97,10 +95,9 @@ class TestNSSValidation(BaseTest):
         mock_cainstance.return_value = CAInstance(False)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPANSSChainValidation(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1

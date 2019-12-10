@@ -109,11 +109,10 @@ class SSSDConfig():
 class TestTrustAgent(BaseTest):
     def test_no_trust_agent(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = False
         f = IPATrustAgentCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # Zero because the call was skipped altogether
@@ -124,11 +123,10 @@ class TestTrustAgent(BaseTest):
         mock_sssd.return_value = SSSDConfig(return_domains=True,
                                             return_ipa_server_mode=True)
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustAgentCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -143,11 +141,10 @@ class TestTrustAgent(BaseTest):
         mock_sssd.return_value = SSSDConfig(return_domains=True,
                                             return_ipa_server_mode=False)
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustAgentCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -164,11 +161,10 @@ class TestTrustAgent(BaseTest):
         mock_sssd.return_value = SSSDConfig(return_domains=True,
                                             return_ipa_server_mode=None)
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustAgentCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -184,11 +180,10 @@ class TestTrustAgent(BaseTest):
 class TestTrustDomains(BaseTest):
     def test_no_trust_agent(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = False
         f = IPATrustDomainsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # Zero because the call was skipped altogether
@@ -202,11 +197,10 @@ class TestTrustDomains(BaseTest):
         mock_run.return_value = run_result
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustDomainsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -230,11 +224,10 @@ class TestTrustDomains(BaseTest):
         mock_trust.side_effect = errors.NotFound(reason='bad')
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustDomainsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # There are more than one result I just care about this particular
@@ -279,11 +272,10 @@ class TestTrustDomains(BaseTest):
         }]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustDomainsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 3
@@ -344,11 +336,10 @@ class TestTrustDomains(BaseTest):
         }]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustDomainsCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -374,12 +365,11 @@ class TestIPADomain(BaseTest):
     def test_ipa_domain_ok(self, mock_sssd):
         mock_sssd.return_value = SSSDConfig(provider='ipa')
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         # being a trust agent isn't mandatory, test without
         registry.trust_agent = False
         f = IPADomainCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         print(self.results.results)
@@ -394,11 +384,10 @@ class TestIPADomain(BaseTest):
     def test_ipa_domain_ad(self, mock_sssd):
         mock_sssd.return_value = SSSDConfig(provider='ad')
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPADomainCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 4
@@ -413,11 +402,10 @@ class TestIPADomain(BaseTest):
 class TestTrustCatalog(BaseTest):
     def test_no_trust_agent(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = False
         f = IPATrustCatalogCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # Zero because the call was skipped altogether
@@ -464,11 +452,10 @@ class TestTrustCatalog(BaseTest):
         }]
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustCatalogCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 6
@@ -524,11 +511,10 @@ class Testsidgen(BaseTest):
 
     def test_no_trust_agent(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = False
         f = IPAsidgenpluginCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # Zero because the call was skipped altogether
@@ -544,12 +530,11 @@ class Testsidgen(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPAsidgenpluginCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -576,12 +561,11 @@ class Testsidgen(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPAsidgenpluginCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -607,11 +591,10 @@ class TestTrustAgentMember(BaseTest):
 
     def test_no_trust_agent(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = False
         f = IPATrustAgentMemberCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # Zero because the call was skipped altogether
@@ -632,12 +615,11 @@ class TestTrustAgentMember(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustAgentMemberCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -660,12 +642,11 @@ class TestTrustAgentMember(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_agent = True
         f = IPATrustAgentMemberCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -685,11 +666,10 @@ class TestControllerPrincipal(BaseTest):
 
     def test_not_trust_controller(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = False
         f = IPATrustControllerPrincipalCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # Zero because the call was skipped altogether
@@ -711,12 +691,11 @@ class TestControllerPrincipal(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = True
         f = IPATrustControllerPrincipalCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -740,12 +719,11 @@ class TestControllerPrincipal(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = True
         f = IPATrustControllerPrincipalCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -765,11 +743,10 @@ class TestControllerService(BaseTest):
 
     def test_not_trust_controller(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = False
         f = IPATrustControllerServiceCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # Zero because the call was skipped altogether
@@ -786,12 +763,11 @@ class TestControllerService(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = True
         f = IPATrustControllerServiceCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -813,12 +789,11 @@ class TestControllerService(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = True
         f = IPATrustControllerServiceCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -837,11 +812,10 @@ class TestControllerGroupSID(BaseTest):
 
     def test_not_trust_controller(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = False
         f = IPATrustControllerGroupSIDCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # Zero because the call was skipped altogether
@@ -859,12 +833,11 @@ class TestControllerGroupSID(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = True
         f = IPATrustControllerGroupSIDCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -888,12 +861,11 @@ class TestControllerGroupSID(BaseTest):
             ldapentry[attr] = values
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = True
         f = IPATrustControllerGroupSIDCheck(registry)
 
         f.conn = mock_ldap(ldapentry)
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -914,11 +886,10 @@ class TestControllerConf(BaseTest):
 
     def test_not_trust_controller(self):
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = False
         f = IPATrustControllerConfCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         # Zero because the call was skipped altogether
@@ -934,11 +905,10 @@ class TestControllerConf(BaseTest):
         mock_run.return_value = run_result
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = True
         f = IPATrustControllerConfCheck(registry)
 
-        f.config = config.Config()
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -954,11 +924,10 @@ class TestPackageCheck(BaseTest):
     def test_agent_with_package(self):
         # Note that this test assumes the import is installed
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = False
         registry.trust_agent = True
         f = IPATrustPackageCheck(registry)
-        f.config = config.Config()
         self.results = capture_results(f)
         assert len(self.results) == 1
         result = self.results.results[0]
@@ -969,14 +938,13 @@ class TestPackageCheck(BaseTest):
     def test_agent_without_package(self):
         # Note that this test assumes the import is installed
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         registry.trust_controller = False
         registry.trust_agent = True
         # Hose up the module so the import fails
         save = sys.modules['ipaserver.install']
         sys.modules['ipaserver.install'] = 'foo'
         f = IPATrustPackageCheck(registry)
-        f.config = config.Config()
         self.results = capture_results(f)
         assert len(self.results) == 1
         result = self.results.results[0]

@@ -30,10 +30,9 @@ class TestExpiration(BaseTest):
         set_requests()
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertmongerExpirationCheck(registry)
 
-        f.config = config.Config()
         f.config.cert_expiration_days = 7
         self.results = capture_results(f)
 
@@ -66,10 +65,9 @@ class TestExpiration(BaseTest):
         set_requests(remove=0, add=replaceme)
 
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACertmongerExpirationCheck(registry)
 
-        f.config = config.Config()
         f.config.cert_expiration_days = 30
         self.results = capture_results(f)
 
@@ -122,10 +120,9 @@ class TestChainExpiration(BaseTest):
             )
         ]
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACAChainExpirationCheck(registry)
 
-        f.config = config.Config()
         f.config.cert_expiration_days = 7
         self.results = capture_results(f)
 
@@ -160,10 +157,9 @@ class TestChainExpiration(BaseTest):
             )
         ]
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACAChainExpirationCheck(registry)
 
-        f.config = config.Config()
         f.config.cert_expiration_days = 7
         self.results = capture_results(f)
 
@@ -200,10 +196,9 @@ class TestChainExpiration(BaseTest):
             )
         ]
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACAChainExpirationCheck(registry)
 
-        f.config = config.Config()
         f.config.cert_expiration_days = 7
         self.results = capture_results(f)
 
@@ -238,10 +233,9 @@ class TestChainExpiration(BaseTest):
             )
         ]
         framework = object()
-        registry.initialize(framework)
+        registry.initialize(framework, config.Config)
         f = IPACAChainExpirationCheck(registry)
 
-        f.config = config.Config()
         f.config.cert_expiration_days = 7
         self.results = capture_results(f)
 
