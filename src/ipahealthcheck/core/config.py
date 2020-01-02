@@ -3,6 +3,7 @@
 #
 
 import logging
+import os
 from configparser import ConfigParser, ParsingError
 
 from ipahealthcheck.core.constants import CONFIG_SECTION
@@ -79,6 +80,12 @@ def read_config(config_file):
     Returns a dict on success, None on failure
     """
     config = Config()
+    config.merge(DEFAULT_CONFIG)
+    if not os.path.exists(config_file):
+        logging.warning("config file {} does not exist, using defaults".
+                        format(config_file))
+        return config
+
     parser = ConfigParser()
     try:
         parser.read(config_file)
@@ -91,8 +98,6 @@ def read_config(config_file):
         return None
 
     items = parser.items(CONFIG_SECTION)
-
-    config.merge(DEFAULT_CONFIG)
 
     for (key, value) in items:
         config[key] = value
