@@ -13,7 +13,6 @@ cache: pip
 env:
     matrix:
         - TASK_TO_RUN="lint"
-        - TASK_TO_RUN="fedora:29"
         - TASK_TO_RUN="fedora:30"
         - TASK_TO_RUN="fedora:31"
 
