@@ -13,6 +13,7 @@ from ipahealthcheck.ipa.certs import IPARAAgent
 from ipalib import errors
 from ipapython.dn import DN
 from ipapython.ipaldap import LDAPClient, LDAPEntry
+from ipaplatform.paths import paths
 
 from ldap import OPT_X_SASL_SSF_MIN
 
@@ -108,7 +109,7 @@ class TestNSSAgent(BaseTest):
         result = self.results.results[0]
 
         assert result.result == constants.ERROR
-        assert result.kw.get('msg') == 'RA agent is missing description'
+        assert 'description' in result.kw.get('msg')
 
     @patch('ipalib.x509.load_certificate_from_file')
     def test_nss_agent_load_failure(self, mock_load_cert):
@@ -123,7 +124,7 @@ class TestNSSAgent(BaseTest):
         result = self.results.results[0]
 
         assert result.result == constants.ERROR
-        assert result.kw.get('msg') == 'Unable to load RA cert: test'
+        assert result.kw.get('error') == 'test'
 
     def test_nss_agent_no_entry_found(self):
 
@@ -162,7 +163,7 @@ class TestNSSAgent(BaseTest):
         result = self.results.results[0]
 
         assert result.result == constants.ERROR
-        assert result.kw.get('msg') == 'Too many RA agent entries found, 2'
+        assert result.kw.get('found') == 2
 
     def test_nss_agent_nonmatching_cert(self):
 
@@ -186,7 +187,8 @@ class TestNSSAgent(BaseTest):
         result = self.results.results[0]
 
         assert result.result == constants.ERROR
-        assert result.kw.get('msg') == 'RA agent certificate not found in LDAP'
+        assert result.kw.get('certfile') == paths.RA_AGENT_PEM
+        assert result.kw.get('dn') == 'uid=ipara,ou=people,o=ipaca'
 
     def test_nss_agent_multiple_certs(self):
 

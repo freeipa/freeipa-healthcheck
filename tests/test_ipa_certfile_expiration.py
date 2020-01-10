@@ -77,7 +77,7 @@ class TestIPACertificateFile(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertfileExpirationCheck'
         assert result.kw.get('key') == '1234'
-        assert 'expires in 6 days' in result.kw.get('msg')
+        assert result.kw.get('days') == 6
 
     @patch('ipalib.x509.load_certificate_from_file')
     def test_certfile_expiration_expired(self, mock_load_cert):
@@ -101,4 +101,4 @@ class TestIPACertificateFile(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertfileExpirationCheck'
         assert result.kw.get('key') == '1234'
-        assert 'Request id 1234 expired on' in result.kw.get('msg')
+        assert 'expiration_date' in result.kw

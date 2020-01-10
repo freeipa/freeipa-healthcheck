@@ -7,6 +7,7 @@ from base import BaseTest
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertNSSTrust
+from ipaplatform.paths import paths
 from unittest.mock import Mock, patch
 
 
@@ -94,9 +95,9 @@ class TestNSSDBTrust(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertNSSTrust'
         assert result.kw.get('key') == 'ocspSigningCert cert-pki-ca'
-        assert result.kw.get('msg') == 'Certificate ocspSigningCert ' \
-                                       'cert-pki-ca missing while verifying '\
-                                       'trust'
+        assert result.kw.get('nickname') == 'ocspSigningCert cert-pki-ca'
+        assert result.kw.get('dbdir') == paths.PKI_TOMCAT_ALIAS_DIR
+
         assert len(self.results) == 4
 
     @patch('ipaserver.install.certs.CertDB')
@@ -123,9 +124,8 @@ class TestNSSDBTrust(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertNSSTrust'
         assert result.kw.get('key') == 'subsystemCert cert-pki-ca'
-        assert result.kw.get('msg') == 'Incorrect NSS trust for ' \
-                                       'subsystemCert cert-pki-ca. Got ' \
-                                       'X,u,u expected u,u,u'
+        assert result.kw.get('got') == 'X,u,u'
+        assert result.kw.get('expected') == 'u,u,u'
 
         result = self.results.results[3]
 
@@ -133,9 +133,8 @@ class TestNSSDBTrust(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertNSSTrust'
         assert result.kw.get('key') == 'Server-Cert cert-pki-ca'
-        assert result.kw.get('msg') == 'Incorrect NSS trust for ' \
-                                       'Server-Cert cert-pki-ca. Got X,u,u ' \
-                                       'expected u,u,u'
+        assert result.kw.get('got') == 'X,u,u'
+        assert result.kw.get('expected') == 'u,u,u'
 
         assert len(self.results) == 4
 

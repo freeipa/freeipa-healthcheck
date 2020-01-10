@@ -60,5 +60,3 @@ class TestCertmonger(BaseTest):
         assert self.results.results[2].result == constants.ERROR
         assert self.results.results[2].kw.get('key') == \
             'dogtag-ipa-ca-renew-agent-reuse'
-        assert self.results.results[2].kw.get('msg') == \
-            "Certmonger CA 'dogtag-ipa-ca-renew-agent-reuse' missing"
