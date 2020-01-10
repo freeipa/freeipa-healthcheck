@@ -188,6 +188,14 @@ class IPACertmongerExpirationCheck(IPAPlugin):
                                      'nickname')
             notafter = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
                                            'not-valid-after')
+            if notafter == 0:
+                yield Result(self, constants.WARNING,
+                             key=id,
+                             msg='certmonger request id {key} does not have '
+                                 'a not-valid-after date, assuming it '
+                                 'has not been issued yet.')
+                continue
+
             nafter = datetime.fromtimestamp(notafter, timezone.utc)
             now = datetime.now(timezone.utc)
 
