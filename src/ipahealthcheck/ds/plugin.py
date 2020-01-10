@@ -1,8 +1,7 @@
 #
-# Copyright (C) 2019 FreeIPA Contributors see COPYING for license
+# Copyright (C) 2020 FreeIPA Contributors see COPYING for license
 #
 
-import logging
 from ipalib import api
 from ipahealthcheck.core import constants
 from ipahealthcheck.core.plugin import Plugin, Result, Registry
@@ -13,8 +12,6 @@ except ImportError:
     from ipaserver.install.installutils import realm_to_serverid
 from lib389.cli_base import disconnect_instance, connect_instance
 from lib389.properties import SER_LDAP_URL, SER_ROOT_DN
-
-logger = logging.getLogger()
 
 
 class DSArgs(dict):
@@ -95,7 +92,6 @@ class DSPlugin(Plugin):
         hc_results = []
         if results is not None:
             for result in results:
-                logger.info("test")
                 hc_results.append(Result(self,
                                          self.convertSev(result['severity']),
                                          key=result['dsle'],
