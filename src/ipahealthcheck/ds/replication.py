@@ -2,14 +2,11 @@
 # Copyright (C) 2020 FreeIPA Contributors see COPYING for license
 #
 
-import logging
 from ipahealthcheck.ds.plugin import DSPlugin, registry
 from ipahealthcheck.core.plugin import Result
 from ipahealthcheck.core.plugin import duration
 from ipahealthcheck.core import constants
 from lib389.replica import Replica, Changelog5
-
-logger = logging.getLogger()
 
 
 @registry
