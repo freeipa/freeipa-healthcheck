@@ -50,6 +50,14 @@ setup(
         ],
         # plugin modules for ipahealthcheck.ds registry
         'ipahealthcheck.ds': [
+            'dsbackends = ipahealthcheck.ds.backends',
+            'dsconfig = ipahealthcheck.ds.config',
+            'dsdiskspace = ipahealthcheck.ds.disk_space',
+            'dsdse = ipahealthcheck.ds.dse',
+            'dsencryption = ipahealthcheck.ds.encryption',
+            'dsfschecks = ipahealthcheck.ds.fs_checks',
+            'dsnssssl = ipahealthcheck.ds.nss_ssl',
+            'dsplugins = ipahealthcheck.ds.ds_plugins',
             'dsreplication = ipahealthcheck.ds.replication',
             'dsruv = ipahealthcheck.ds.ruv',
         ],
