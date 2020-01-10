@@ -43,8 +43,7 @@ class TestExpiration(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertmongerExpirationCheck'
         assert result.kw.get('key') == '1234'
-        assert result.kw.get('msg') == 'Request id 1234 expired on ' \
-                                       '19700101001704Z'
+        assert result.kw.get('expiration_date') == '19700101001704Z'
 
         result = self.results.results[1]
         assert result.result == constants.SUCCESS
@@ -84,7 +83,7 @@ class TestExpiration(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertmongerExpirationCheck'
         assert result.kw.get('key') == '7777'
-        assert 'expires in 19 days' in result.kw.get('msg')
+        assert result.kw.get('days') == 19
 
 
 class FakeIPACertificate:

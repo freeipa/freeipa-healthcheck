@@ -50,7 +50,7 @@ class TestTracking(BaseTest):
         assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertTracking'
-        assert result.kw.get('msg') == "Missing tracking for " \
+        assert result.kw.get('key') == \
             "cert-file=/var/lib/ipa/ra-agent.pem, " \
             "key-file=/var/lib/ipa/ra-agent.key, " \
             "ca-name=dogtag-ipa-ca-renew-agent, " \
@@ -82,4 +82,4 @@ class TestTracking(BaseTest):
         assert result.result == constants.WARNING
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPACertTracking'
-        assert result.kw.get('msg') == 'Unknown certmonger id 7777'
+        assert result.kw.get('key') == '7777'
