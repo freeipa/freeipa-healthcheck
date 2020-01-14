@@ -4,7 +4,7 @@
 
 from ipalib import api
 from ipahealthcheck.core import constants
-from ipahealthcheck.core.plugin import Plugin, Result, Registry
+from ipahealthcheck.core.plugin import Plugin, Result, Registry, duration
 from ipaserver.install import dsinstance, installutils
 try:
     from ipapython.ipaldap import realm_to_serverid
@@ -27,6 +27,10 @@ class DSArgs(dict):
 
 
 class DSPlugin(Plugin):
+    requires = ('dirsrv',)
+    check_class = None
+    many = False
+
     def __init__(self, registry):
         super(DSPlugin, self).__init__(registry)
         self.ds = self.ds = dsinstance.DsInstance()
@@ -99,6 +103,15 @@ class DSPlugin(Plugin):
                                          msg=result['detail']))
         disconnect_instance(inst)
         return hc_results
+
+    @duration
+    def check(self):
+        results = self.doCheck(self.check_class, self.many)
+        if len(results) > 0:
+            for result in results:
+                yield result
+        else:
+            yield Result(self, constants.SUCCESS)
 
 
 class DSRegistry(Registry):
