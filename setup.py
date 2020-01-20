@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 setup(
     name='ipahealthcheck',
     version='0.5',
-    namespace_packages=['ipahealthcheck'],
+    namespace_packages=['ipahealthcheck', 'ipaclustercheck'],
     package_dir={'': 'src'},
     # packages=find_packages(where='src'),
     packages=[
@@ -13,12 +13,15 @@ setup(
         'ipahealthcheck.ds',
         'ipahealthcheck.ipa',
         'ipahealthcheck.meta',
-        'ipahealthcheck.system'
+        'ipahealthcheck.system',
+        'ipaclustercheck.core',
+        'ipaclustercheck.ipa',
     ],
     entry_points={
         # creates bin/ipahealthcheck
         'console_scripts': [
             'ipa-healthcheck = ipahealthcheck.core.main:main',
+            'ipa-clustercheck = ipaclustercheck.core.main:main',
         ],
         # subsystem registries
         'ipahealthcheck.registry': [
@@ -56,6 +59,12 @@ setup(
         # plugin modules for ipahealthcheck.system registry
         'ipahealthcheck.system': [
             'filesystemspace = ipahealthcheck.system.filesystemspace',
+        ],
+        'ipaclustercheck.registry': [
+            'ipaclustercheck.ipa = ipaclustercheck.ipa.plugin:registry',
+        ],
+        'ipaclustercheck.ipa': [
+            'crl = ipaclustercheck.ipa.crlmanager',
         ],
     },
     classifiers=[
