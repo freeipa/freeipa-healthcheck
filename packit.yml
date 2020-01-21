@@ -1,0 +1,9 @@
+# specfile in the root of our repository
+specfile_path: freeipa-healthcheck.spec
+synced_files:
+  - freeipa-healthcheck.spec
+  - packit.yaml
+upstream_package_name: freeipa-healthcheck
+downstream_package_name: freeipa-healthcheck
+upstream_project_url: https://github.com/freeipa/freeipa-healthcheck
+create_pr: true
