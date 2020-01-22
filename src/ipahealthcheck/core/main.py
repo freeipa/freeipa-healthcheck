@@ -5,8 +5,10 @@
 from os import environ
 import sys
 
+import ipaclustercheck.core.output
 from ipahealthcheck.core import constants
 from ipahealthcheck.core.core import RunChecks
+
 
 from ipaserver.install.installutils import is_ipa_configured
 
@@ -16,6 +18,16 @@ class IPAChecks(RunChecks):
         if not is_ipa_configured():
             print("IPA is not configured")
             return 1
+
+    def add_options(self, parser, output_registry):
+        parser.add_argument('--input-file', dest='infile',
+                            help='File to read as input')
+        parser.add_argument('--failures-only', dest='failures_only',
+                            action='store_true', default=False,
+                            help='Exclude SUCCESS results on output')
+        parser.add_argument('--severity', dest='severity', action="append",
+                            help='Include only the selected severity(s)',
+                            choices=[key for key in constants._nameToLevel])
 
 
 def main():
