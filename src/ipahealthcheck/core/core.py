@@ -133,10 +133,9 @@ def list_sources(plugins):
     return 0
 
 
-def parse_options(output_registry):
+def add_default_options(parser, output_registry, default_output):
     output_names = [plugin.__name__.lower() for
                     plugin in output_registry.plugins]
-    parser = argparse.ArgumentParser()
     parser.add_argument('--debug', dest='debug', action='store_true',
                         default=False, help='Include debug output')
     parser.add_argument('--list-sources', dest='list_sources',
@@ -144,22 +143,17 @@ def parse_options(output_registry):
                         help='List all available sources')
     parser.add_argument('--source', dest='source',
                         default=None,
-                        help='Source of checks, e.g. ipahealthcheck.foo.bar')
+                        help='Source of checks, e.g. foo.bar.baz')
     parser.add_argument('--check', dest='check',
                         default=None,
                         help='Check to execute, e.g. BazCheck')
     parser.add_argument('--output-type', dest='output', choices=output_names,
-                        default='json', help='Output method')
+                        default=default_output, help='Output method')
     parser.add_argument('--output-file', dest='outfile', default=None,
                         help='File to store output')
-    parser.add_argument('--input-file', dest='infile',
-                        help='File to read as input')
-    parser.add_argument('--failures-only', dest='failures_only',
-                        action='store_true', default=False,
-                        help='Exclude SUCCESS results on output')
-    parser.add_argument('--severity', dest='severity', action="append",
-                        help='Include only the selected severity(s)',
-                        choices=[key for key in constants._nameToLevel])
+
+
+def add_output_options(parser, output_registry):
     for plugin in output_registry.plugins:
         onelinedoc = plugin.__doc__.split('\n\n', 1)[0].strip()
         group = parser.add_argument_group(plugin.__name__.lower(),
@@ -167,6 +161,8 @@ def parse_options(output_registry):
         for option in plugin.options:
             group.add_argument(option[0], **option[1])
 
+
+def parse_options(parser):
     options = parser.parse_args()
 
     # Validation
@@ -188,11 +184,26 @@ def limit_results(results, source, check):
 
 
 class RunChecks:
-    def __init__(self, entry_points, configfile):
+    def __init__(self, entry_points, configfile,
+                 output_registry=output_registry,
+                 default_output='json'):
+        """Initialize class variables
+
+          entry_points: A list of entry points to find plugins
+          configfile: full path to the config file
+          output_registry: registry containing the set of output
+                           plugins to register.
+          default_output: default output class
+        """
         self.entry_points = entry_points
         self.configfile = configfile
+        self.output_registry = output_registry
+        self.default_output = default_output
 
     def pre_check(self):
+        pass
+
+    def add_options(self, parser, output_registry):
         pass
 
     def run_healthcheck(self):
@@ -202,7 +213,11 @@ class RunChecks:
 
         logger.setLevel(logging.INFO)
 
-        options = parse_options(output_registry)
+        parser = argparse.ArgumentParser()
+        add_default_options(parser, self.output_registry, self.default_output)
+        add_output_options(parser, self.output_registry)
+        self.add_options(parser, self.output_registry)
+        options = parse_options(parser)
 
         if options.debug:
             logger.setLevel(logging.DEBUG)
@@ -224,14 +239,15 @@ class RunChecks:
             for plugin in find_plugins(name, registry):
                 plugins.append(plugin)
 
-        for out in output_registry.plugins:
+        for out in self.output_registry.plugins:
             if out.__name__.lower() == options.output:
                 output = out(options)
+                break
 
         if options.list_sources:
             return list_sources(plugins)
 
-        if options.infile:
+        if 'infile' in options and options.infile:
             try:
                 with open(options.infile, 'r') as f:
                     raw_data = f.read()
