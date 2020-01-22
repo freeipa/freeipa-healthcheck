@@ -43,9 +43,10 @@ class Registry:
         self.framework = None
         self.config = dict()
 
-    def initialize(self, framework, config):
+    def initialize(self, framework, config, options=None):
         self.framework = framework
         self.config = config
+        self.options = options
 
     def __call__(self, cls):
         if not callable(cls):

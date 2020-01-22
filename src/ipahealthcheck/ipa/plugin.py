@@ -36,7 +36,7 @@ class IPARegistry(Registry):
         self.trust_agent = False
         self.trust_controller = False
 
-    def initialize(self, framework, config):
+    def initialize(self, framework, config, options=None):
         super(IPARegistry, self).initialize(framework, config)
         # deferred import for mock
         from ipaserver.servroles import ADtrustBasedRole, ServiceBasedRole
