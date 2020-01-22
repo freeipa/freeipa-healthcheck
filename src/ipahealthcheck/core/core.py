@@ -199,11 +199,18 @@ class RunChecks:
         self.configfile = configfile
         self.output_registry = output_registry
         self.default_output = default_output
+        self.parser = argparse.ArgumentParser()
+        self.options = None
 
     def pre_check(self):
         pass
 
-    def add_options(self, parser, output_registry):
+    def add_options(self):
+        """Add custom options for this check program"""
+        pass
+
+    def validate_options(self):
+        """Validate options other than source and check"""
         pass
 
     def run_healthcheck(self):
@@ -213,11 +220,15 @@ class RunChecks:
 
         logger.setLevel(logging.INFO)
 
-        parser = argparse.ArgumentParser()
-        add_default_options(parser, self.output_registry, self.default_output)
-        add_output_options(parser, self.output_registry)
-        self.add_options(parser, self.output_registry)
-        options = parse_options(parser)
+        add_default_options(self.parser, self.output_registry,
+                            self.default_output)
+        add_output_options(self.parser, self.output_registry)
+        self.add_options()
+        options = parse_options(self.parser)
+        self.options = options
+        rval = self.validate_options()
+        if rval:
+            return rval
 
         if options.debug:
             logger.setLevel(logging.DEBUG)
@@ -232,7 +243,7 @@ class RunChecks:
 
         for name, registry in find_registries(self.entry_points).items():
             try:
-                registry.initialize(framework, config)
+                registry.initialize(framework, config, options)
             except Exception as e:
                 print("Unable to initialize %s: %s" % (name, e))
                 return 1

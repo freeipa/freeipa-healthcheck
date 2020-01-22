@@ -22,10 +22,15 @@ class ClusterCRLManagerCheck(ClusterPlugin):
              if enabled:
                  crlmanagers.append(fqdn)
         if len(crlmanagers) == 0:
-            yield Result(self, constants.ERROR, error='No CRL Manager defined')
+            yield Result(self, constants.ERROR,
+                         name='crlmanager',
+                         error='No CRL Manager defined')
         elif len(crlmanagers) == 1:
-            yield Result(self, constants.SUCCESS, crlmanager=crlmanagers[0])
+            yield Result(self, constants.SUCCESS,
+                         name='crlmanager',
+                         value=crlmanagers[0])
         else:
             yield Result(self, constants.ERROR,
-                         crlmanager=','.join(crlmanagers),
+                         name='crlmanager',
+                         value=','.join(crlmanagers),
                          error='Multiple CRL Managers defined')

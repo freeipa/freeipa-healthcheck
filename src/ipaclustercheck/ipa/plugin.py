@@ -35,14 +35,14 @@ class ClusterPlugin(Plugin):
 
 
 class ClusterRegistry(Registry):
-    def initialize(self, framework, config):
-        super(ClusterRegistry, self).initialize(framework, config)
+    def initialize(self, framework, config, options):
+        super(ClusterRegistry, self).initialize(framework, config, options)
 
         self.json = {}
 
-        self.load_files()
+        self.load_files(options.dir)
 
-    def load_files(self, dir='/tmp/hc'):
+    def load_files(self, dir):
         if self.json:
             return
 

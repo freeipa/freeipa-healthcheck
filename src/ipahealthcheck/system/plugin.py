@@ -12,7 +12,7 @@ class SystemPlugin(Plugin):
 
 
 class SystemRegistry(Registry):
-    def initialize(self, framework, config):
+    def initialize(self, framework, config, options=None):
         pass
 
 

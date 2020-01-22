@@ -16,7 +16,7 @@ class DSPlugin(Plugin):
 
 
 class DSRegistry(Registry):
-    def initialize(self, framework, config):
+    def initialize(self, framework, config, options=None):
         super(DSRegistry, self).initialize(framework, config)
         installutils.check_server_configuration()
         if not api.isdone('bootstrap'):
