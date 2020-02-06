@@ -73,6 +73,7 @@ setup(
         ],
         'ipaclustercheck.ipa': [
             'crl = ipaclustercheck.ipa.crlmanager',
+            'ruv = ipaclustercheck.ipa.ruv',
         ],
     },
     classifiers=[
