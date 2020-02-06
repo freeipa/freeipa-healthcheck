@@ -2,7 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from ipaclustercheck.ipa.plugin import ClusterPlugin, registry, find_check
+from ipaclustercheck.ipa.plugin import ClusterPlugin, registry, find_checks
 from ipahealthcheck.core.plugin import Result, duration
 from ipahealthcheck.core import constants
 
@@ -16,9 +16,9 @@ class ClusterCRLManagerCheck(ClusterPlugin):
         crlmanagers = []
 
         for fqdn in data.keys():
-             output = find_check(data[fqdn], 'ipahealthcheck.ipa.roles',
+             output = find_checks(data[fqdn], 'ipahealthcheck.ipa.roles',
                                  'IPACRLManagerCheck')
-             enabled = output.get('kw').get('crlgen_enabled')
+             enabled = output[0].get('kw').get('crlgen_enabled')
              if enabled:
                  crlmanagers.append(fqdn)
         if len(crlmanagers) == 0:

@@ -9,24 +9,26 @@ from os import listdir
 from os.path import isfile, join
 
 from ipahealthcheck.core.plugin import Plugin, Registry
+from ipalib import api
 
 
 logger = logging.getLogger()
 
-def find_check(data, source, check):
+def find_checks(data, source, check):
     """Look through the dict for a matching source and check.
 
        data: dict of source and check output
        source: name of source to find
        check: name of check to find
 
-       Returns contents of source + check or None
+       Returns list of contents of source + check or empty list
     """
+    rval = []
     for d in data:
         if d.get('source') == source and d.get('check') == check:
-            return d
+            rval.append(d)
 
-    return None
+    return rval
 
 
 class ClusterPlugin(Plugin):
@@ -42,6 +44,14 @@ class ClusterRegistry(Registry):
 
         self.load_files(options.dir)
 
+        if not api.isdone('finalize'):
+            if not api.isdone('bootstrap'):
+                api.bootstrap(in_server=True,
+                              context='ipahealthcheck',
+                              log=None)
+            if not api.isdone('finalize'):
+                api.finalize()
+
     def load_files(self, dir):
         if self.json:
             return
@@ -53,7 +63,7 @@ class ClusterRegistry(Registry):
             try:
                 with open(fname, 'r') as fd:
                     data = fd.read()
-            except IOError as e:
+            except Exception as e:
                 logger.error("Unable to read %s: %s", fname, e)
                 continue
         
@@ -63,10 +73,10 @@ class ClusterRegistry(Registry):
                 logger.error("Unable to parse JSON in %s: %s", fname, e)
                 continue
 
-            meta = find_check(data, 'ipahealthcheck.meta.core',
+            meta = find_checks(data, 'ipahealthcheck.meta.core',
                                    'MetaCheck')
             if meta:
-                fqdn = meta.get('kw').get('fqdn')
+                fqdn = meta[0].get('kw').get('fqdn')
                 self.json[fqdn] = deepcopy(data)
             else:
                 logger.error("No fqdn defined in JSON in %s", fname)
