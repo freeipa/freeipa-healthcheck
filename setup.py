@@ -43,6 +43,7 @@ setup(
             'ipadns = ipahealthcheck.ipa.idns',
             'ipafiles = ipahealthcheck.ipa.files',
             'ipahost = ipahealthcheck.ipa.host',
+            'ipameta = ipahealthcheck.ipa.meta',
             'iparoles = ipahealthcheck.ipa.roles',
             'ipatopology = ipahealthcheck.ipa.topology',
             'ipatrust = ipahealthcheck.ipa.trust',
