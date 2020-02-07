@@ -4,7 +4,12 @@
 
 import logging
 
-from ipaclustercheck.ipa.plugin import ClusterPlugin, registry, find_checks
+from ipaclustercheck.ipa.plugin import (
+    ClusterPlugin,
+    registry,
+    find_checks,
+    get_masters
+)
 from ipahealthcheck.core.plugin import Result, duration
 from ipahealthcheck.core import constants
 from ipalib import api
@@ -29,22 +34,20 @@ class ClusterRUVCheck(ClusterPlugin):
         # Start with the list of masters from the file(s) collected
         # and find a MetaCheck with a full list of masters. For
         # backwards compatibility.
-        test_masters = list(data)
-        masters = None
-        for master in test_masters:
-            output = find_checks(data[master], 'ipahealthcheck.meta.core',
-                                 'MetaCheck')
-            # TODO: catch if no masters
-            masters = output[0].get('kw').get('masters')
-            if masters:
-                break
-
-        if masters is None:
+        try:
+            masters = get_masters(data)
+        except ValueError as e:
             yield Result(self, constants.ERROR,
-                         name='ruv',
-                         error='Full list of masters not found in log files.'
-                               'This should be in ipahealthcheck.meta.core '
-                               'MetaCheck')
+                         name='dangling_ruv',
+                         error=str(e))
+            return
+
+        if len(data.keys()) < len(masters):
+            yield Result(self, constants.ERROR,
+                         name='dangling_ruv',
+                         error='Unable to determine list of RUVs, missing '
+                               'some masters: %s' %
+                               ''.join(set(masters) - set(data.keys())))
             return
 
         # collect the full set of known RUVs for each master
@@ -62,6 +65,8 @@ class ClusterRUVCheck(ClusterPlugin):
             outputs = find_checks(data[fqdn], 'ipahealthcheck.ds.ruv',
                                   'KnownRUVCheck')
             for output in outputs:
+                if not 'suffix' in output.get('kw'):
+                    continue
                 basedn = DN(output.get('kw').get('suffix'))
 
                 ruvset = set()
@@ -76,8 +81,9 @@ class ClusterRUVCheck(ClusterPlugin):
                     info[fqdn]['ruvs'] = ruvset
                 else:
                     yield Result(self, constants.WARNING,
-                                 name='ruv',
-                                 error='Unknown suffix found %s' % basedn)
+                                 name='dangling_ruv',
+                                 error='Unknown suffix found %s expected %s'
+                                       % (basedn, api.env.basedn))
 
         # Collect the nsDS5ReplicaID for each master
         ruvs = set()
@@ -86,6 +92,8 @@ class ClusterRUVCheck(ClusterPlugin):
             outputs = find_checks(data[fqdn], 'ipahealthcheck.ds.ruv',
                                   'RUVCheck')
             for output in outputs:
+                if not 'key' in output.get('kw'):
+                    continue
                 basedn = DN(output.get('kw').get('key'))
                 ruv = (fqdn, (output.get('kw').get('ruv')))
                 if basedn == DN('o=ipaca'):
@@ -94,8 +102,9 @@ class ClusterRUVCheck(ClusterPlugin):
                     ruvs.add(ruv)
                 else:
                     yield Result(self, constants.WARNING,
-                                 name='ruv',
-                                 error='Unknown suffix found %s' % basedn)
+                                 name='dangling_ruv',
+                                 error='Unknown suffix found %s expected %s'
+                                       % (basedn, api.env.basedn))
 
         dangles = False
         # get the dangling RUVs
@@ -111,9 +120,9 @@ class ClusterRUVCheck(ClusterPlugin):
                     master_info['clean_csruv'].add(csruv)
                     dangles = True
 
+        clean_csruvs = set()
+        clean_ruvs = set()
         if dangles:
-            clean_csruvs = set()
-            clean_ruvs = set()
             for master_cn, master_info in info.items():
                 for ruv in master_info['clean_ruv']:
                     logger.debug('Dangling RUV id: {id}, hostname: {host}'
@@ -124,18 +133,19 @@ class ClusterRUVCheck(ClusterPlugin):
                                  .format(id=csruv[1], host=csruv[0]))
                     clean_csruvs.add(csruv[1])
 
-            if clean_ruvs:
-                yield Result(self, constants.ERROR,
-                             name='dangling_ruv',
-                             value=', '.join(clean_ruvs))
-            if clean_csruvs:
-                yield Result(self, constants.ERROR,
-                             name='dangling_csruv',
-                             value=', '.join(clean_csruvs))
+        if clean_ruvs:
+            yield Result(self, constants.ERROR,
+                         name='dangling_ruv',
+                         value=', '.join(clean_ruvs))
         else:
             yield Result(self, constants.SUCCESS,
                          name='dangling_ruv',
                          value='No dangling RUVs found')
+        if clean_csruvs:
+            yield Result(self, constants.ERROR,
+                         name='dangling_csruv',
+                         value=', '.join(clean_csruvs))
+        else:
             yield Result(self, constants.SUCCESS,
                          name='dangling_csruv',
                          value='No dangling CS RUVs found')
