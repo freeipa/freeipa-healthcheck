@@ -31,6 +31,34 @@ def find_checks(data, source, check):
     return rval
 
 
+def get_masters(data):
+    """
+    Return the list of known masters
+
+    This is determined from the list of loaded healthcheck logs. It
+    is possible that mixed versions are used so some may not be
+    reporting the full list of masters, so check them all, and raise
+    an exception if the list cannot be determined.
+    """
+    test_masters = list(data)
+    masters = None
+    for master in test_masters:
+        output = find_checks(data[master], 'ipahealthcheck.ipa.meta',
+                             'IPAMetaCheck')
+        if len(output) == 0:
+            raise ValueError('Unable to determine full list of masters. '
+                             'ipahealthcheck.ipa.meta:IPAMetaCheck not '
+                             'found.')
+
+        masters = output[0].get('kw').get('masters')
+        if masters:
+            return masters          
+
+    raise ValueError('Unable to determine full list of masters. '
+                     'None of ipahealthcheck.ipa.meta:IPAMetaCheck '
+                     'contain masters.')
+
+
 class ClusterPlugin(Plugin):
     def __init__(self, registry):
         super(ClusterPlugin, self).__init__(registry)
