@@ -37,7 +37,7 @@ Execute one or more checks within this given source.
 Execute this particular check within a source. A source must be supplied as well with this option.
 .TP
 \fB\-\-output\-type\fR=\fITYPE\fR
-Set the output type. The default is JSON.
+Set the output type. Supported variants are \fBhuman\fR and \fBjson\fR. The default is \fBjson\fR.
 .TP
 \fB\-\-failures\-only\fR
 Exclude SUCCESS results on output.
@@ -70,28 +70,28 @@ Take as input a JSON results output and convert it to a more human\-readable for
 .PP
 Execute healthcheck with the default JSON output:
 .PP
-.Vb 1
-\& ipa\-healthcheck
-.Ve
+.nf 1
+\&# ipa\-healthcheck
+.fi
 .PP
 Execute healthcheck with a prettier JSON output:
 .PP
-.Vb 1
-\& ipa\-healthcheck \-\-indent 2
-.Ve
+.nf 1
+\&# ipa\-healthcheck \-\-indent 2
+.fi
 .PP
 Execute healthcheck and only display errors:
 .PP
-.Vb 1
-\& ipa\-healthcheck \-\-failures\-only
-.Ve
+.nf 1
+\&# ipa\-healthcheck \-\-failures\-only
+.fi
 .PP
 Display in human\-readable output a previous report:
 .PP
-.Vb 2
-\& ipa\-healthcheck \-\-output\-format human \-\-input\-file \e
-\&        /var/log/ipa/check.json
-.Ve
+.nf 2
+\&# ipa\-healthcheck \-\-output\-type human \-\-input\-file \e
+\&        /var/log/ipa/healthcheck/healthcheck.log
+.fi
 
 .SH "FILES"
 .TP
