@@ -136,6 +136,8 @@ def list_sources(plugins):
 def add_default_options(parser, output_registry, default_output):
     output_names = [plugin.__name__.lower() for
                     plugin in output_registry.plugins]
+    parser.add_argument('--verbose', dest='verbose', action='store_true',
+                        default=False, help='Run in verbose mode')
     parser.add_argument('--debug', dest='debug', action='store_true',
                         default=False, help='Include debug output')
     parser.add_argument('--list-sources', dest='list_sources',
@@ -218,7 +220,7 @@ class RunChecks:
         plugins = []
         output = constants.DEFAULT_OUTPUT
 
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.WARNING)
 
         add_default_options(self.parser, self.output_registry,
                             self.default_output)
@@ -229,6 +231,9 @@ class RunChecks:
         rval = self.validate_options()
         if rval:
             return rval
+
+        if options.verbose:
+            logger.setLevel(logging.INFO)
 
         if options.debug:
             logger.setLevel(logging.DEBUG)
