@@ -23,7 +23,7 @@ class TestOpenSSLValidation(BaseTest):
         def run(args, raiseonerr=True):
             result = _RunResult('', '', 0)
             result.raw_output = bytes(
-                '%s: OK'.format(args[-1]).encode('utf-8'))
+                '{}: OK'.format(args[-1]).encode('utf-8'))
             result.raw_error_output = b''
             return result
 
@@ -49,7 +49,7 @@ class TestOpenSSLValidation(BaseTest):
             result.raw_output = bytes(
                 'O = EXAMPLE.TEST, CN = ipa.example.test\n'
                 'error 20 at 0 depth lookup: unable to get local issuer '
-                'certificate\nerror %s: verification failed'.format(args[-1])
+                'certificate\nerror {}: verification failed'.format(args[-1])
                 .encode('utf-8'))
             result.raw_error_output = b''
             result.error_log = ''
