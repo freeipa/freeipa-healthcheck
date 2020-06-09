@@ -210,6 +210,10 @@ and
 
 It is possible to execute a single check or all checks in a single source by passing --source and/or --check on the command-line. This is intended to help user's quickly ensure that something is fixed by re-running a check after making a change.
 
+`--source`, when used on its own i.e. without `--check`, can also
+accept a module *namespace* and all sources within that namespace
+shall be executed.
+
 # Output
 
 Output is controlled via Output plugins. These take the global Results object and iterate over it to produce output in the desired format. The result is returned as a string.

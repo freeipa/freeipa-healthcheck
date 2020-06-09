@@ -31,10 +31,10 @@ Display a list of the available sources and the checks associated with those sou
 .SS "OPTIONAL ARGUMENTS"
 .TP
 \fB\-\-source\fR=\fISOURCE\fR
-Execute one or more checks within this given source.
+Execute checks within the named source, or all sources in the given namespace.
 .TP
 \fB\-\-check\fR=\fICHECK\fR
-Execute this particular check within a source. A source must be supplied as well with this option.
+Execute this particular check within a source. The exact source must also be specified via \fB\-\-source\fR.
 .TP
 \fB\-\-output\-type\fR=\fITYPE\fR
 Set the output type. Supported variants are \fBhuman\fR and \fBjson\fR. The default is \fBjson\fR.

@@ -55,7 +55,10 @@ def source_or_check_matches(plugin, source, check):
     """Determine whether a given a plugin matches if a source
        and optional check are provided.
     """
-    if source is not None and plugin.__module__ != source:
+    if (
+        source is not None and
+        not _is_prefix_of_source(source, plugin.__module__)
+    ):
         return False
 
     if check and plugin.__class__.__name__ != check:
@@ -179,10 +182,21 @@ def limit_results(results, source, check):
     """Return ony those results which match source and/or check"""
     new_results = Results()
     for result in results.results:
-        if result.source == source:
-            if check is None or result.check == check:
+        if check is None:
+            # treat 'source' as prefix
+            if _is_prefix_of_source(source, result.source):
+                new_results.add(result)
+        else:
+            # when 'check' is given, match source fully
+            if result.source == source and result.check == check:
                 new_results.add(result)
     return new_results
+
+
+def _is_prefix_of_source(prefix, source):
+    prefix_parts = prefix.split('.')
+    source_parts = source.split('.')
+    return source_parts[:len(prefix_parts)] == prefix_parts
 
 
 class RunChecks:
