@@ -24,7 +24,11 @@ class IPAChecks(RunChecks):
                             help='File to read as input')
         parser.add_argument('--failures-only', dest='failures_only',
                             action='store_true', default=False,
-                            help='Exclude SUCCESS results on output')
+                            help='Exclude SUCCESS results on output (see'
+                            'man page for more details)')
+        parser.add_argument('--all', dest='all',
+                            action='store_true', default=False,
+                            help='Report all results on output')
         parser.add_argument('--severity', dest='severity', action="append",
                             help='Include only the selected severity(s)',
                             choices=[key for key in constants._nameToLevel])
