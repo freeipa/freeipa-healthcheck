@@ -264,8 +264,8 @@ class RunChecks:
             try:
                 registry.initialize(framework, config, options)
             except Exception as e:
-                print("Unable to initialize %s: %s" % (name, e))
-                return 1
+                logger.error("Unable to initialize %s: %s" % (name, e))
+                continue
             for plugin in find_plugins(name, registry):
                 plugins.append(plugin)
 
