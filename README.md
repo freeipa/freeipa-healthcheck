@@ -17,7 +17,7 @@ The major areas currently covered are:
 # How to use it?
 
 The simplest way to use Healthcheck is to run it from the command-line as root as ipa-healthcheck. Running from the command-line will display the output to the console unless --output-file=FILENAME is used.
-There is output for _all_ tests so we can be sure that an error condition isn't providing a false positive. The command-line option --failures-only will skip printing the SUCCESS conditions.
+There is output for _all_ tests so we can be sure that an error condition isn't providing a false positive. The command-line option --failures-only will skip printing the SUCCESS conditions. If running in a tty and not using --output-file then --failures-only defaults to True. The --all option will display all output if you want/need it.
 
 To automate running Healthcheck every day a systemd timer can be used. 
 The default destination directory for healthcheck logs is `/var/log/ipa/healthcheck` and this can be the input into a monitoring system to track changes over time or to alert if a test goes from working to error or warning.

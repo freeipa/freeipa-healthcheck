@@ -38,6 +38,7 @@ class Output:
     def __init__(self, options):
         self.filename = options.outfile
         self.failures_only = options.failures_only
+        self.all = options.all
         self.severity = options.severity
 
     def render(self, results):
@@ -63,8 +64,14 @@ class Output:
         output = []
         for line in results.output():
             result = line.get('result')
-            if self.failures_only and _nameToLevel.get(result) == SUCCESS:
-                continue
+            if _nameToLevel.get(result) == SUCCESS:
+                if self.failures_only:
+                    continue
+                if (not self.all and
+                    self.filename is None and
+                    not (self.failures_only is False and
+                         not sys.stdin.isatty())):
+                    continue
             if self.severity is not None and result not in self.severity:
                 continue
             output.append(line)
