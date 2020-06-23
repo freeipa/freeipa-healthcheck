@@ -6,6 +6,7 @@ import argparse
 import json
 import logging
 import pkg_resources
+import warnings
 
 from datetime import datetime
 
@@ -264,8 +265,13 @@ class RunChecks:
             try:
                 registry.initialize(framework, config, options)
             except Exception as e:
-                logger.error("Unable to initialize %s: %s" % (name, e))
-                continue
+                warnings.warn("Trying deprecated initialization API: %s" % e,
+                              DeprecationWarning)
+                try:
+                    registry.initialize(framework, config)
+                except Exception as e:
+                    logger.error("Unable to initialize %s: %s" % (name, e))
+                    continue
             for plugin in find_plugins(name, registry):
                 plugins.append(plugin)
 
