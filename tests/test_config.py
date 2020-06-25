@@ -41,3 +41,22 @@ def test_config_values():
         pass
     else:
         assert('KeyError not raised')
+
+
+def test_config_recursion():
+    with tempfile.NamedTemporaryFile('w') as f:
+        f.write('[default]\nfoo = bar\n')
+        f.flush()
+
+        config = read_config(f.name)
+
+    assert config.foo == 'bar'
+
+    # The config dict is in the object
+    config._Config__d
+
+    # But it isn't recursive
+    try:
+        config._Config__d['_Config__d']
+    except KeyError:
+        pass

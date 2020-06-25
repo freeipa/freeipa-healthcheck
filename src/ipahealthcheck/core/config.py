@@ -30,7 +30,7 @@ class Config:
     """
 
     def __init__(self):
-        self.__d = dict()
+        object.__setattr__(self, '_Config__d', {})
 
     def __setattr__(self, key, value):
         """
