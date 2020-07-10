@@ -14,7 +14,7 @@ from ipahealthcheck.core import constants
 from ipalib import api
 from ipalib.install.kinit import kinit_keytab
 from ipaplatform.paths import paths
-from ipaserver.install import installutils
+from ipapython import ipautil
 
 
 logger = logging.getLogger()
@@ -38,5 +38,5 @@ class IPAHostKeytab(IPAPlugin):
                 yield Result(self, constants.ERROR,
                              msg='Failed to obtain host TGT: %s' % e)
         finally:
-            installutils.remove_file(ccache_name)
+            ipautil.remove_file(ccache_name)
             os.rmdir(ccache_dir)

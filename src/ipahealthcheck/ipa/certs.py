@@ -23,7 +23,6 @@ from ipaserver.install import certs
 from ipaserver.install import dsinstance
 from ipaserver.install import krainstance
 from ipaserver.install import krbinstance
-from ipaserver.install import installutils
 from ipaserver.plugins import ldap2
 from ipapython import certdb
 from ipapython import ipautil
@@ -550,7 +549,7 @@ class IPANSSChainValidation(IPAPlugin):
                                      key=key)
         finally:
             if ca_pw_fname:
-                installutils.remove_file(ca_pw_fname)
+                ipautil.remove_file(ca_pw_fname)
 
 
 @registry
