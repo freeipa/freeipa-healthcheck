@@ -12,7 +12,7 @@ from ipaclustercheck.ipa.ruv import ClusterRUVCheck
 import clusterdata
 
 
-class TestRegistry(ClusterRegistry):
+class RUVRegistry(ClusterRegistry):
     def load_files(self, dir):
         self.json = dir
 
@@ -26,7 +26,7 @@ class Options:
         return self.data
 
 
-registry = TestRegistry()
+registry = RUVRegistry()
 
 
 class TestClusterRUV(BaseTest):
