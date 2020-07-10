@@ -9,7 +9,7 @@ from dns import (
     message,
     rrset,
 )
-from dns.resolver import Answer, NoAnswer
+from dns.resolver import Answer
 
 from base import BaseTest
 from util import capture_results, m_api
@@ -55,25 +55,16 @@ def query_srv(qname, ad_records=False):
     return rdlist
 
 
-class Response:
-    """Fake class so that a DNS NoAnswer can be raised"""
-    def __init__(self, question=None):
-        self.question = question
-
-    @property
-    def question(self):
-        return self.__question
-
-    @question.setter
-    def question(self, question):
-        self.__question = question
-
-
-def gen_addrs(num):
+def gen_addrs(rdtype=rdatatype.A, num=1):
     """Generate sequential IP addresses for the ipa-ca A record lookup"""
     ips = []
+    if rdtype == rdatatype.A:
+        ip_template = '192.168.0.%d'
+    if rdtype == rdatatype.AAAA:
+        ip_template = '2001:db8:1::%d'
+
     for i in range(num):
-        ips.append('192.168.0.%d' % (i + 1))
+        ips.append(ip_template % (i + 1))
 
     return ips
 
@@ -83,30 +74,27 @@ def fake_query(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN, count=1,
     """Fake a DNS query, returning count responses to the request
 
        Three kinds of lookups are faked:
-       1. A query for A records for a service will return the count
+       1. A query for A/AAAA records for a service will return the count
           as requested in the test. This simulates lookups for the
-          ipa-ca A record. To force a difference in responses one can
+          ipa-ca A/AAAA record. To force a difference in responses one can
           vary the count.
-       2. AAAA records are not yet supported, return no answer
-       3. TXT queries will return the Kerberos realm
+       2. TXT queries will return the Kerberos realm
 
        fake_txt will set an invalid Kerberos realm entry to provoke a
        warning.
     """
     m = message.Message()
-    if rdtype == rdatatype.A:
+    if rdtype in (rdatatype.A, rdatatype.AAAA):
         fqdn = DNSName(qname)
         fqdn = fqdn.make_absolute()
 
-        answers = Answer(fqdn, rdataclass.IN, rdatatype.A, m,
+        answers = Answer(fqdn, rdataclass.IN, rdtype, m,
                          raise_on_no_answer=False)
 
         rlist = rrset.from_text_list(fqdn, 86400, rdataclass.IN,
-                                     rdatatype.A, gen_addrs(count))
+                                     rdtype, gen_addrs(rdtype, count))
 
         answers.rrset = rlist
-    elif rdtype == rdatatype.AAAA:
-        raise NoAnswer(response=Response('no AAAA'))
     elif rdtype == rdatatype.TXT:
         if fake_txt:
             realm = 'FAKE_REALM'
