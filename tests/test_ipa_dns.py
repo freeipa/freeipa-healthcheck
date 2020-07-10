@@ -1,6 +1,7 @@
 #
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
+import re
 
 from dns import (
     rdata,
@@ -185,7 +186,7 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 9
+        assert len(self.results) == 10
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
@@ -227,7 +228,7 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 17
+        assert len(self.results) == 19
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
@@ -277,7 +278,7 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 25
+        assert len(self.results) == 28
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
@@ -325,7 +326,7 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 23
+        assert len(self.results) == 24
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
@@ -378,11 +379,11 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 25
+        assert len(self.results) == 28
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
-        assert len(ok) == 18
+        assert len(ok) == 21
         assert len(warn) == 7
 
         for result in warn:
@@ -435,16 +436,18 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 25
+        assert len(self.results) == 28
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
-        assert len(ok) == 24
-        assert len(warn) == 1
+        assert len(ok) == 26
+        assert len(warn) == 2
 
         for result in warn:
-            assert result.kw.get('msg') == \
-                'Got {count} ipa-ca A records, expected {expected}'
+            assert re.match(
+                r'^Got {count} ipa-ca (A|AAAA) records, expected {expected}$',
+                result.kw.get('msg')
+            )
             assert result.kw.get('count') == 2
             assert result.kw.get('expected') == 3
 
@@ -496,11 +499,11 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 32
+        assert len(self.results) == 35
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
-        assert len(ok) == 25
+        assert len(ok) == 28
         assert len(warn) == 7
 
         for result in warn:
@@ -531,11 +534,11 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 9
+        assert len(self.results) == 10
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
-        assert len(ok) == 8
+        assert len(ok) == 9
         assert len(warn) == 1
 
         result = warn[0]
@@ -566,7 +569,7 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 15
+        assert len(self.results) == 16
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
