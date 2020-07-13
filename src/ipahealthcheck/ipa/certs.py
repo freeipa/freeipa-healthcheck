@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta
 import itertools
 import logging
 import os
+import socket
 import tempfile
 
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
@@ -17,7 +18,7 @@ from ipalib import api
 from ipalib import errors
 from ipalib import x509
 from ipalib.install import certmonger
-from ipalib.constants import RENEWAL_CA_NAME
+from ipalib.constants import RENEWAL_CA_NAME, IPA_CA_RECORD
 from ipaplatform.paths import paths
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
@@ -391,6 +392,111 @@ class IPACertTracking(IPAPlugin):
                 yield Result(self, constants.WARNING, key=id,
                              msg='certmonger tracking request {key} found and '
                                  'is not expected on an IPA master.')
+
+
+@registry
+class IPACertDNSSAN(IPAPlugin):
+    """Check whether a IPA-issued certificates have a SAN configured
+
+       Steps:
+       1. Collect all expected certificates into `requests`
+       2. Iterate over the list of certificates
+       3. If issued by IPA and a caIPAserviceCert then verify that
+          the host FQDN is in the list of SAN
+       4. If a CA is configured on this host then also verify that
+          ipa-ca.$DOMAIN is in the SAN.
+    """
+
+    requires = ('dirsrv',)
+
+    @duration
+    def check(self):
+        fqdn = socket.getfqdn()
+        requests = get_expected_requests(self.ca, self.ds, self.serverid)
+
+        for request in requests:
+            request_id = certmonger.get_request_id(request)
+            if request_id is None:
+                yield Result(self, constants.ERROR,
+                             key=request_id,
+                             msg='Found request id {key} but it is not tracked'
+                                 'by certmonger!?')
+                continue
+
+            ca_name = certmonger.get_request_value(request_id, 'ca-name')
+            if ca_name != 'IPA':
+                logger.debug('Skipping request %s with CA %s',
+                             request_id, ca_name)
+                continue
+            profile = certmonger.get_request_value(request_id,
+                                                   'template_profile')
+            if profile != 'caIPAserviceCert':
+                logger.debug('Skipping request %s with profile %s',
+                             request_id, profile)
+                continue
+
+            certfile = None
+            if request.get('cert-file') is not None:
+                certfile = request.get('cert-file')
+                try:
+                    cert = x509.load_certificate_from_file(certfile)
+                except Exception as e:
+                    yield Result(self, constants.ERROR,
+                                 key=request_id,
+                                 certfile=certfile,
+                                 error=str(e),
+                                 msg='Unable to open cert file {certfile}: '
+                                     '{error}')
+                    continue
+            elif request.get('cert-database') is not None:
+                nickname = request.get('cert-nickname')
+                dbdir = request.get('cert-database')
+                try:
+                    db = certdb.NSSDatabase(dbdir)
+                except Exception as e:
+                    yield Result(self, constants.ERROR,
+                                 key=request_id,
+                                 dbdir=dbdir,
+                                 error=str(e),
+                                 msg='Unable to open NSS database {dbdir}: '
+                                     '{error}')
+                    continue
+                try:
+                    cert = db.get_cert(nickname)
+                except Exception as e:
+                    yield Result(self, constants.ERROR,
+                                 key=id,
+                                 dbdir=dbdir,
+                                 nickname=nickname,
+                                 error=str(e),
+                                 msg='Unable to retrieve certificate '
+                                     '\'{nickname}\' from {dbdir}: {error}')
+                    continue
+
+            hostlist = [fqdn]
+            if self.ca.is_configured() and certfile == paths.HTTPD_CERT_FILE:
+                hostlist.append(f'{IPA_CA_RECORD}.{api.env.domain}')
+            error = False
+            for host in hostlist:
+                if host not in cert.san_a_label_dns_names:
+                    error = True
+                    yield Result(self, constants.ERROR,
+                                 key=request_id,
+                                 hostname=host,
+                                 san=cert.san_a_label_dns_names,
+                                 ca=ca_name,
+                                 profile=profile,
+                                 msg='Certificate request id {key} with '
+                                     'profile {profile} for CA {ca} does not '
+                                     'have a DNS SAN {san} matching name '
+                                     '{hostname}')
+            if not error:
+                yield Result(self, constants.SUCCESS,
+                             key=request_id,
+                             hostname=hostlist,
+                             san=cert.san_a_label_dns_names,
+                             ca=ca_name,
+                             profile=profile)
 
 
 @registry

@@ -54,6 +54,7 @@ class TestTracking(BaseTest):
             "cert-file=/var/lib/ipa/ra-agent.pem, " \
             "key-file=/var/lib/ipa/ra-agent.key, " \
             "ca-name=dogtag-ipa-ca-renew-agent, " \
+            "template_profile=caSubsystemCert, " \
             "cert-storage=FILE, "\
             "cert-presave-command=" \
             "/usr/libexec/ipa/certmonger/renew_ra_cert_pre, " \
