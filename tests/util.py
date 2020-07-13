@@ -115,6 +115,7 @@ m_api.env.server = 'server.ipa.example'
 m_api.env.realm = u'IPA.EXAMPLE'
 m_api.env.domain = u'ipa.example'
 m_api.env.basedn = u'dc=ipa,dc=example'
+m_api.env.container_user = DN(('cn', 'users'), ('cn', 'accounts'))
 m_api.env.container_group = DN(('cn', 'groups'), ('cn', 'accounts'))
 m_api.env.container_host = DN(('cn', 'computers'), ('cn', 'accounts'))
 m_api.env.container_sysaccounts = DN(('cn', 'sysaccounts'), ('cn', 'etc'))

@@ -21,6 +21,7 @@ from ipahealthcheck.ipa.trust import (IPATrustAgentCheck,
                                       IPATrustControllerPrincipalCheck,
                                       IPATrustControllerServiceCheck,
                                       IPATrustControllerGroupSIDCheck,
+                                      IPATrustControllerAdminSIDCheck,
                                       IPATrustControllerConfCheck,
                                       IPATrustPackageCheck)
 
@@ -876,6 +877,80 @@ class TestControllerGroupSID(BaseTest):
         assert result.check == 'IPATrustControllerGroupSIDCheck'
         assert result.kw.get('key') == 'ipantsecurityidentifier'
         assert result.kw.get('rid') == 'S-1-5-21-1234-5678-1976041503-500'
+
+
+class TestControllerAdminSID(BaseTest):
+    patches = {
+        'ldap.initialize':
+        Mock(return_value=mock_ldap_conn()),
+    }
+
+    def test_not_trust_controller(self):
+        framework = object()
+        registry.initialize(framework, config.Config)
+        registry.trust_controller = False
+        f = IPATrustControllerAdminSIDCheck(registry)
+
+        self.results = capture_results(f)
+
+        # Zero because the call was skipped altogether
+        assert len(self.results) == 0
+
+    def test_principal_ok(self):
+        admin_dn = DN(('uid', 'admin'))
+        attrs = {
+            'ipantsecurityidentifier':
+            ['S-1-5-21-1234-5678-1976041503-500'],
+        }
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        ldapentry = LDAPEntry(fake_conn, admin_dn)
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
+
+        framework = object()
+        registry.initialize(framework, config.Config)
+        registry.trust_controller = True
+        f = IPATrustControllerAdminSIDCheck(registry)
+
+        f.conn = mock_ldap(ldapentry)
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustControllerAdminSIDCheck'
+        assert result.kw.get('key') == 'ipantsecurityidentifier'
+        assert result.kw.get('rid') == 'S-1-5-21-1234-5678-1976041503-500'
+
+    def test_principal_fail(self):
+        admin_dn = DN(('uid', 'admin'))
+        attrs = {
+            'ipantsecurityidentifier':
+            ['S-1-5-21-1234-5678-1976041503-400'],
+        }
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        ldapentry = LDAPEntry(fake_conn, admin_dn)
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
+
+        framework = object()
+        registry.initialize(framework, config.Config)
+        registry.trust_controller = True
+        f = IPATrustControllerAdminSIDCheck(registry)
+
+        f.conn = mock_ldap(ldapentry)
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.ERROR
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustControllerAdminSIDCheck'
+        assert result.kw.get('key') == 'ipantsecurityidentifier'
+        assert result.kw.get('rid') == 'S-1-5-21-1234-5678-1976041503-400'
 
 
 class TestControllerConf(BaseTest):

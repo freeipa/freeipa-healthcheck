@@ -587,6 +587,44 @@ class IPATrustControllerGroupSIDCheck(IPAPlugin):
 
 
 @registry
+class IPATrustControllerAdminSIDCheck(IPAPlugin):
+    """
+    Verify that the admin user's SID ends with 500
+    """
+    @duration
+    def check(self):
+        if not self.registry.trust_controller:
+            logger.debug('Not a trust controller, skipping')
+            return
+
+        admin_dn = DN(('uid', 'admin'),
+                      api.env.container_user, api.env.basedn)
+
+        try:
+            entry = self.conn.get_entry(
+                admin_dn,
+                attrs_list=['ipantsecurityidentifier'])
+        except Exception as e:
+            yield Result(self, constants.ERROR,
+                         key=str(admin_dn),
+                         error=str(e),
+                         msg='Error retrieving the admin user at {key}: '
+                         '{error}')
+            return
+
+        identifier = entry.get('ipantsecurityidentifier', [None])[0]
+        if not identifier or not identifier.endswith('500'):
+            yield Result(self, constants.ERROR,
+                         key='ipantsecurityidentifier',
+                         rid=identifier,
+                         msg='{key} is not a Domain Admin RID')
+        else:
+            yield Result(self, constants.SUCCESS,
+                         rid=identifier,
+                         key='ipantsecurityidentifier')
+
+
+@registry
 class IPATrustPackageCheck(IPAPlugin):
     """
     If AD trust is enabled verify that the trust-ad pkg is installed
