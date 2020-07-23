@@ -11,6 +11,8 @@ from ipalib import api
 @registry
 class IPAMetaCheck(IPAPlugin):
     """Return meta data for the IPA installation"""
+    requires = ('dirsrv',)
+
     @duration
     def check(self):
         try:
