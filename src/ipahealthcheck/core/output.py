@@ -37,9 +37,19 @@ class Output:
     """
     def __init__(self, options):
         self.filename = options.outfile
-        self.failures_only = options.failures_only
-        self.all = options.all
-        self.severity = options.severity
+
+        # Non-required options in the framework, set logical defaults to
+        # pre 0.6 behavior with everything reported.
+        self.severity = None
+        self.failures_only = False
+        self.all = True
+
+        if 'failures_only' in options:
+            self.failures_only = options.failures_only
+        if 'all' in options:
+            self.all = options.all
+        if 'severity' in options:
+            self.severity = options.severity
 
     def render(self, results):
         """Process the results into output"""
