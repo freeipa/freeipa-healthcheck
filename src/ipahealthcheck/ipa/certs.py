@@ -214,7 +214,7 @@ class IPACertmongerExpirationCheck(IPAPlugin):
                                  days=diff,
                                  msg='Request id {key} expires in {days} '
                                      'days. certmonger should renew this '
-                                     'automatically. Watch the status with'
+                                     'automatically. Watch the status with '
                                      'getcert list -i {key}.')
                 else:
                     yield Result(self, constants.SUCCESS,
