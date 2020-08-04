@@ -33,7 +33,7 @@ class TestExpiration(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACertmongerExpirationCheck(registry)
 
-        f.config.cert_expiration_days = 7
+        f.config.cert_expiration_days = '7'
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -67,7 +67,7 @@ class TestExpiration(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACertmongerExpirationCheck(registry)
 
-        f.config.cert_expiration_days = 30
+        f.config.cert_expiration_days = '30'
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -122,7 +122,7 @@ class TestChainExpiration(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACAChainExpirationCheck(registry)
 
-        f.config.cert_expiration_days = 7
+        f.config.cert_expiration_days = '7'
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -159,7 +159,7 @@ class TestChainExpiration(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACAChainExpirationCheck(registry)
 
-        f.config.cert_expiration_days = 7
+        f.config.cert_expiration_days = '7'
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -198,7 +198,7 @@ class TestChainExpiration(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACAChainExpirationCheck(registry)
 
-        f.config.cert_expiration_days = 7
+        f.config.cert_expiration_days = '7'
         self.results = capture_results(f)
 
         assert len(self.results) == 2
@@ -235,7 +235,7 @@ class TestChainExpiration(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACAChainExpirationCheck(registry)
 
-        f.config.cert_expiration_days = 7
+        f.config.cert_expiration_days = '7'
         self.results = capture_results(f)
 
         assert len(self.results) == 2

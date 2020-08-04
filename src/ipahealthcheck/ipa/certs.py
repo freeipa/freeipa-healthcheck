@@ -207,7 +207,7 @@ class IPACertmongerExpirationCheck(IPAPlugin):
             else:
                 delta = nafter - now
                 diff = int(delta.total_seconds() / DAY)
-                if diff < self.config.cert_expiration_days:
+                if diff < int(self.config.cert_expiration_days):
                     yield Result(self, constants.WARNING,
                                  key=id,
                                  expiration_date=generalized_time(nafter),
@@ -308,7 +308,7 @@ class IPACertfileExpirationCheck(IPAPlugin):
 
             delta = notafter - now
             diff = int(delta.total_seconds() / DAY)
-            if diff < self.config.cert_expiration_days:
+            if diff < int(self.config.cert_expiration_days):
                 yield Result(self, constants.WARNING,
                              key=id,
                              expiration_date=generalized_time(notafter),
@@ -875,7 +875,7 @@ class IPACAChainExpirationCheck(IPAPlugin):
             return
 
         now = datetime.now(timezone.utc)
-        soon = now + timedelta(days=self.config.cert_expiration_days)
+        soon = now + timedelta(days=int(self.config.cert_expiration_days))
         for cert in ca_certs:
             subject = DN(cert.subject)
             subject = str(subject).replace('\\;', '\\3b')
