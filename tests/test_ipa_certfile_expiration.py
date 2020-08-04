@@ -44,7 +44,7 @@ class TestIPACertificateFile(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACertfileExpirationCheck(registry)
 
-        f.config.cert_expiration_days = 28
+        f.config.cert_expiration_days = '28'
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -67,7 +67,7 @@ class TestIPACertificateFile(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACertfileExpirationCheck(registry)
 
-        f.config.cert_expiration_days = 30
+        f.config.cert_expiration_days = '30'
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -91,7 +91,7 @@ class TestIPACertificateFile(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACertfileExpirationCheck(registry)
 
-        f.config.cert_expiration_days = 30
+        f.config.cert_expiration_days = '30'
         self.results = capture_results(f)
 
         assert len(self.results) == 1
