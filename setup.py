@@ -51,6 +51,7 @@ setup(
         # plugin modules for ipahealthcheck.dogtag registry
         'ipahealthcheck.dogtag': [
             'dogtagca = ipahealthcheck.dogtag.ca',
+            'dogtagrange = ipahealthcheck.dogtag.range',
         ],
         # plugin modules for ipahealthcheck.ds registry
         'ipahealthcheck.ds': [

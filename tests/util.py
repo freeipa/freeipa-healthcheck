@@ -111,6 +111,7 @@ m_api = p_api.start()
 m_api.isdone.return_value = True
 m_api.env = Mock()
 m_api.env.host = 'server.ipa.example'
+m_api.env.ldap_uri = 'ldap://localhost'
 m_api.env.server = 'server.ipa.example'
 m_api.env.realm = u'IPA.EXAMPLE'
 m_api.env.domain = u'ipa.example'
