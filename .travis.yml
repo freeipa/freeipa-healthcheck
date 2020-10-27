@@ -13,8 +13,8 @@ cache: pip
 env:
     matrix:
         - TASK_TO_RUN="lint"
-        - TASK_TO_RUN="fedora:30"
-        - TASK_TO_RUN="fedora:31"
+        - TASK_TO_RUN="fedora:32"
+        - TASK_TO_RUN="fedora:33"
 
 install:
     - pip3 install --upgrade pip
