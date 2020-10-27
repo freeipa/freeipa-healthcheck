@@ -44,6 +44,19 @@ def add_srv_records(qname, port_map, priority=0, weight=100):
     return rdlist
 
 
+def resolve_rrsets(fqdn, rdtypes):
+    """
+    Return an A record for the hostname in an RRset type in a list.
+    """
+    rset = []
+    for rdtype in rdtypes:
+        rlist = rrset.from_text_list(fqdn, 86400, rdataclass.IN,
+                                     rdtype, gen_addrs(rdtype, 1))
+        rset.append(rlist)
+
+    return rset
+
+
 def query_srv(qname, ad_records=False):
     """
     Return a SRV for each service IPA cares about for all the hosts.
@@ -162,12 +175,16 @@ class TestDNSSystemRecords(BaseTest):
        2. fake_query() overrides dns.resolver.query to simulate
           A, AAAA and TXT record lookups.
     """
+    @patch('ipaserver.dns_data_management.resolve_rrsets')
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
-    def test_dnsrecords_single(self, mock_query, mock_query_srv):
+    def test_dnsrecords_single(self, mock_query, mock_query_srv, mock_rrset):
         """Test single CA master, all SRV records"""
         mock_query.side_effect = fake_query_one
         mock_query_srv.side_effect = query_srv([m_api.env.host])
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA))
+        ]
 
         m_api.Command.server_find.side_effect = [{
             'result': [
@@ -193,15 +210,21 @@ class TestDNSSystemRecords(BaseTest):
             assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
 
+    @patch('ipaserver.dns_data_management.resolve_rrsets')
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
-    def test_dnsrecords_two(self, mock_query, mock_query_srv):
+    def test_dnsrecords_two(self, mock_query, mock_query_srv, mock_rrset):
         """Test two CA masters, all SRV records"""
         mock_query_srv.side_effect = query_srv([
             m_api.env.host,
             'replica.' + m_api.env.domain
         ])
         mock_query.side_effect = fake_query_two
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+        ]
 
         m_api.Command.server_find.side_effect = [{
             'result': [
@@ -235,9 +258,10 @@ class TestDNSSystemRecords(BaseTest):
             assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
 
+    @patch('ipaserver.dns_data_management.resolve_rrsets')
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
-    def test_dnsrecords_three(self, mock_query, mock_query_srv):
+    def test_dnsrecords_three(self, mock_query, mock_query_srv, mock_rrset):
         """Test three CA masters, all SRV records"""
         mock_query_srv.side_effect = query_srv([
             m_api.env.host,
@@ -245,6 +269,13 @@ class TestDNSSystemRecords(BaseTest):
             'replica2.' + m_api.env.domain
         ])
         mock_query.side_effect = fake_query_three
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica2.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+        ]
 
         m_api.Command.server_find.side_effect = [{
             'result': [
@@ -285,9 +316,11 @@ class TestDNSSystemRecords(BaseTest):
             assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
 
+    @patch('ipaserver.dns_data_management.resolve_rrsets')
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
-    def test_dnsrecords_three_mixed(self, mock_query, mock_query_srv):
+    def test_dnsrecords_three_mixed(self, mock_query, mock_query_srv,
+                                    mock_rrset):
         """Test three masters, only one with a CA, all SRV records"""
         mock_query_srv.side_effect = query_srv([
             m_api.env.host,
@@ -295,6 +328,13 @@ class TestDNSSystemRecords(BaseTest):
             'replica2.' + m_api.env.domain
         ])
         mock_query.side_effect = fake_query_one
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica2.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA))
+        ]
 
         m_api.Command.server_find.side_effect = [{
             'result': [
@@ -332,9 +372,11 @@ class TestDNSSystemRecords(BaseTest):
             assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.idns'
 
+    @patch('ipaserver.dns_data_management.resolve_rrsets')
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
-    def test_dnsrecords_missing_server(self, mock_query, mock_query_srv):
+    def test_dnsrecords_missing_server(self, mock_query, mock_query_srv,
+                                       mock_rrset):
         """Drop one of the masters from query_srv
 
            This will simulate missing SRV records and cause a number of
@@ -346,6 +388,13 @@ class TestDNSSystemRecords(BaseTest):
             # replica2 is missing
         ])
         mock_query.side_effect = fake_query_three
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica2.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+        ]
 
         m_api.Command.server_find.side_effect = [{
             'result': [
@@ -389,9 +438,11 @@ class TestDNSSystemRecords(BaseTest):
         for result in warn:
             assert result.kw.get('msg') == 'Expected SRV record missing'
 
+    @patch('ipaserver.dns_data_management.resolve_rrsets')
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
-    def test_dnsrecords_missing_ipa_ca(self, mock_query, mock_query_srv):
+    def test_dnsrecords_missing_ipa_ca(self, mock_query, mock_query_srv,
+                                       mock_rrset):
         """Drop one of the masters from query_srv
 
            This will simulate missing SRV records and cause a number of
@@ -403,6 +454,13 @@ class TestDNSSystemRecords(BaseTest):
             'replica2.' + m_api.env.domain
         ])
         mock_query.side_effect = fake_query_two
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica2.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA))
+        ]
 
         m_api.Command.server_find.side_effect = [{
             'result': [
@@ -451,9 +509,11 @@ class TestDNSSystemRecords(BaseTest):
             assert result.kw.get('count') == 2
             assert result.kw.get('expected') == 3
 
+    @patch('ipaserver.dns_data_management.resolve_rrsets')
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
-    def test_dnsrecords_extra_srv(self, mock_query, mock_query_srv):
+    def test_dnsrecords_extra_srv(self, mock_query, mock_query_srv,
+                                  mock_rrset):
         """An extra SRV record set exists, report it.
 
            Add an extra master to the query_srv() which will generate
@@ -466,6 +526,15 @@ class TestDNSSystemRecords(BaseTest):
             'replica3.' + m_api.env.domain
         ])
         mock_query.side_effect = fake_query_three
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica2.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+            resolve_rrsets('replica3.' + m_api.env.domain,
+                           (rdatatype.A, rdatatype.AAAA)),
+        ]
 
         m_api.Command.server_find.side_effect = [{
             'result': [
@@ -510,12 +579,17 @@ class TestDNSSystemRecords(BaseTest):
             assert result.kw.get('msg') == \
                 'Unexpected SRV entry in DNS'
 
+    @patch('ipaserver.dns_data_management.resolve_rrsets')
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
-    def test_dnsrecords_bad_realm(self, mock_query, mock_query_srv):
+    def test_dnsrecords_bad_realm(self, mock_query, mock_query_srv,
+                                  mock_rrset):
         """Unexpected Kerberos TXT record"""
         mock_query.side_effect = fake_query_one_txt
         mock_query_srv.side_effect = query_srv([m_api.env.host])
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA))
+        ]
 
         m_api.Command.server_find.side_effect = [{
             'result': [
@@ -545,11 +619,16 @@ class TestDNSSystemRecords(BaseTest):
         assert result.kw.get('msg') == 'expected realm missing'
         assert result.kw.get('key') == '\"FAKE_REALM\"'
 
+    @patch('ipaserver.dns_data_management.resolve_rrsets')
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
-    def test_dnsrecords_one_with_ad(self, mock_query, mock_query_srv):
+    def test_dnsrecords_one_with_ad(self, mock_query, mock_query_srv,
+                                    mock_rrset):
         mock_query.side_effect = fake_query_one
         mock_query_srv.side_effect = query_srv([m_api.env.host], True)
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA))
+        ]
 
         m_api.Command.server_find.side_effect = [{
             'result': [
