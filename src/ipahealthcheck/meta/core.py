@@ -12,6 +12,9 @@ from ipapython import ipautil
 from ipapython.version import VERSION, API_VERSION
 from ipaplatform.paths import paths
 
+if 'FIPS_MODE_SETUP' not in dir(paths):
+    paths.FIPS_MODE_SETUP = '/usr/bin/fips-mode-setup'
+
 logger = logging.getLogger()
 
 
