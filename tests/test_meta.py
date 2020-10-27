@@ -13,6 +13,9 @@ from ipahealthcheck.meta.core import MetaCheck
 from ipapython import ipautil
 from ipaplatform.paths import paths
 
+if 'FIPS_MODE_SETUP' not in dir(paths):
+    paths.FIPS_MODE_SETUP = '/usr/bin/fips-mode-setup'
+
 
 class TestMetaFIPS(BaseTest):
     @patch('os.path.exists')
