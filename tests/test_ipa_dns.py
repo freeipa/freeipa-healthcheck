@@ -9,6 +9,7 @@ from dns import (
     rdatatype,
     message,
     rrset,
+    version,
 )
 from dns.resolver import Answer
 
@@ -102,8 +103,11 @@ def fake_query(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN, count=1,
         fqdn = DNSName(qname)
         fqdn = fqdn.make_absolute()
 
-        answers = Answer(fqdn, rdataclass.IN, rdtype, m,
-                         raise_on_no_answer=False)
+        if version.MAJOR < 2:
+            answers = Answer(fqdn, rdataclass.IN, rdtype, m,
+                             raise_on_no_answer=False)
+        else:
+            answers = Answer(fqdn, rdataclass.IN, rdtype, m)
 
         rlist = rrset.from_text_list(fqdn, 86400, rdataclass.IN,
                                      rdtype, gen_addrs(rdtype, count))
@@ -117,8 +121,11 @@ def fake_query(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN, count=1,
         qname = DNSName('_kerberos.' + m_api.env.domain)
         qname = qname.make_absolute()
 
-        answers = Answer(qname, rdataclass.IN, rdatatype.TXT, m,
-                         raise_on_no_answer=False)
+        if version.MAJOR < 2:
+            answers = Answer(qname, rdataclass.IN, rdatatype.TXT, m,
+                             raise_on_no_answer=False)
+        else:
+            answers = Answer(qname, rdataclass.IN, rdatatype.TXT, m)
 
         rlist = rrset.from_text_list(qname, 86400, rdataclass.IN,
                                      rdatatype.TXT, [realm])
