@@ -15,6 +15,10 @@ from ipalib import api
 from ipaplatform.paths import paths
 from ipapython import ipautil
 from ipapython.dn import DN
+from ipaserver.dcerpc_common import (
+    trust_type_string,
+    _trust_type_dict_unknown
+)
 
 try:
     import pysss_nss_idmap
@@ -42,16 +46,22 @@ def get_trust_domains():
 
     Each entry is a dictionary representating an AD domain.
     """
-    result = api.Command.trust_find()
+    result = api.Command.trust_find(all=True, raw=True)
     results = result['result']
     trust_domains = []
     for result in results:
-        if result.get('trusttype')[0] == 'Active Directory domain':
+        attributes = int(result.get('ipanttrustattributes', [0])[0])
+        if (
+            trust_type_string(result.get('ipanttrusttype')[0], attributes) !=
+            _trust_type_dict_unknown
+        ):
             domain = dict()
             domain['domain'] = result.get('cn')[0]
             domain['domainsid'] = result.get('ipanttrusteddomainsid')[0]
             domain['netbios'] = result.get('ipantflatname')[0]
             trust_domains.append(domain)
+        else:
+            logger.debug('Unhandled trust type %s', _trust_type_dict_unknown)
     return trust_domains
 
 
