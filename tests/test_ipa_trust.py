@@ -261,13 +261,18 @@ class TestTrustDomains(BaseTest):
                     'cn': ['ad.example'],
                     'ipantflatname': ['ADROOT'],
                     'ipanttrusteddomainsid': ['S-1-5-21-abc'],
+                    'ipanttrusttype': ['2'],
+                    'ipanttrustattributes': ['8'],
                     'trusttype': ['Active Directory domain'],
                 },
                 {
                     'cn': ['child.example'],
-                    'ipantflatname': ['ADROOT'],
-                    'ipanttrusteddomainsid': ['S-1-5-21-def'],
-                    'trusttype': ['Active Directory domain'],
+                    'ipantflatname': ['ADCHILD'],
+                    'ipanttrusteddomainsid': ['S-1-5-22-def'],
+                    'ipanttrusttype': ['2'],
+                    'ipanttrustattributes': ['9'],
+                    'trusttype': ['Non-transitive external trust to a domain '
+                                  'in another Active Directory forest']
                 },
             ]
         }]
@@ -325,13 +330,18 @@ class TestTrustDomains(BaseTest):
                     'cn': ['ad.example'],
                     'ipantflatname': ['ADROOT'],
                     'ipanttrusteddomainsid': ['S-1-5-21-abc'],
+                    'ipanttrusttype': ['2'],
+                    'ipanttrustattributes': ['8'],
                     'trusttype': ['Active Directory domain'],
                 },
                 {
                     'cn': ['child.example'],
-                    'ipantflatname': ['ADROOT'],
-                    'ipanttrusteddomainsid': ['S-1-5-21-def'],
-                    'trusttype': ['Active Directory domain'],
+                    'ipantflatname': ['ADCHILD'],
+                    'ipanttrusteddomainsid': ['S-1-5-22-def'],
+                    'ipanttrusttype': ['2'],
+                    'ipanttrustattributes': ['9'],
+                    'trusttype': ['Non-transitive external trust to a domain '
+                                  'in another Active Directory forest']
                 },
             ]
         }]
@@ -441,13 +451,18 @@ class TestTrustCatalog(BaseTest):
                     'cn': ['ad.example'],
                     'ipantflatname': ['ADROOT'],
                     'ipanttrusteddomainsid': ['S-1-5-21-abc'],
+                    'ipanttrusttype': ['2'],
+                    'ipanttrustattributes': ['8'],
                     'trusttype': ['Active Directory domain'],
                 },
                 {
                     'cn': ['child.example'],
-                    'ipantflatname': ['ADROOT'],
-                    'ipanttrusteddomainsid': ['S-1-5-21-def'],
-                    'trusttype': ['Active Directory domain'],
+                    'ipantflatname': ['ADCHILD'],
+                    'ipanttrusteddomainsid': ['S-1-5-22-def'],
+                    'ipanttrusttype': ['2'],
+                    'ipanttrustattributes': ['9'],
+                    'trusttype': ['Non-transitive external trust to a domain '
+                                  'in another Active Directory forest']
                 },
             ]
         }]
@@ -487,7 +502,7 @@ class TestTrustCatalog(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
         assert result.kw.get('key') == 'Domain Security Identifier'
-        assert result.kw.get('sid') == 'S-1-5-21-def'
+        assert result.kw.get('sid') == 'S-1-5-22-def'
 
         result = self.results.results[4]
         assert result.result == constants.SUCCESS
