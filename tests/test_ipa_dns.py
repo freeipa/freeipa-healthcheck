@@ -27,6 +27,13 @@ from ipaserver.dns_data_management import (
     IPA_DEFAULT_ADTRUST_SRV_REC
 )
 
+try:
+    from ipaserver.install.installutils import resolve_rrsets_nss  # noqa: F401
+except ImportError:
+    resolve_rrsets_import = 'ipaserver.dns_data_management.resolve_rrsets'
+else:
+    resolve_rrsets_import = 'ipaserver.install.installutils.resolve_rrsets_nss'
+
 
 def add_srv_records(qname, port_map, priority=0, weight=100):
     rdlist = []
@@ -182,7 +189,7 @@ class TestDNSSystemRecords(BaseTest):
        2. fake_query() overrides dns.resolver.query to simulate
           A, AAAA and TXT record lookups.
     """
-    @patch('ipaserver.dns_data_management.resolve_rrsets')
+    @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
     def test_dnsrecords_single(self, mock_query, mock_query_srv, mock_rrset):
@@ -217,7 +224,7 @@ class TestDNSSystemRecords(BaseTest):
             assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
 
-    @patch('ipaserver.dns_data_management.resolve_rrsets')
+    @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
     def test_dnsrecords_two(self, mock_query, mock_query_srv, mock_rrset):
@@ -265,7 +272,7 @@ class TestDNSSystemRecords(BaseTest):
             assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
 
-    @patch('ipaserver.dns_data_management.resolve_rrsets')
+    @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
     def test_dnsrecords_three(self, mock_query, mock_query_srv, mock_rrset):
@@ -323,7 +330,7 @@ class TestDNSSystemRecords(BaseTest):
             assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
 
-    @patch('ipaserver.dns_data_management.resolve_rrsets')
+    @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
     def test_dnsrecords_three_mixed(self, mock_query, mock_query_srv,
@@ -379,7 +386,7 @@ class TestDNSSystemRecords(BaseTest):
             assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.idns'
 
-    @patch('ipaserver.dns_data_management.resolve_rrsets')
+    @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
     def test_dnsrecords_missing_server(self, mock_query, mock_query_srv,
@@ -445,7 +452,7 @@ class TestDNSSystemRecords(BaseTest):
         for result in warn:
             assert result.kw.get('msg') == 'Expected SRV record missing'
 
-    @patch('ipaserver.dns_data_management.resolve_rrsets')
+    @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
     def test_dnsrecords_missing_ipa_ca(self, mock_query, mock_query_srv,
@@ -516,7 +523,7 @@ class TestDNSSystemRecords(BaseTest):
             assert result.kw.get('count') == 2
             assert result.kw.get('expected') == 3
 
-    @patch('ipaserver.dns_data_management.resolve_rrsets')
+    @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
     def test_dnsrecords_extra_srv(self, mock_query, mock_query_srv,
@@ -586,7 +593,7 @@ class TestDNSSystemRecords(BaseTest):
             assert result.kw.get('msg') == \
                 'Unexpected SRV entry in DNS'
 
-    @patch('ipaserver.dns_data_management.resolve_rrsets')
+    @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
     def test_dnsrecords_bad_realm(self, mock_query, mock_query_srv,
@@ -626,7 +633,7 @@ class TestDNSSystemRecords(BaseTest):
         assert result.kw.get('msg') == 'expected realm missing'
         assert result.kw.get('key') == '\"FAKE_REALM\"'
 
-    @patch('ipaserver.dns_data_management.resolve_rrsets')
+    @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
     @patch('dns.resolver.query')
     def test_dnsrecords_one_with_ad(self, mock_query, mock_query_srv,
