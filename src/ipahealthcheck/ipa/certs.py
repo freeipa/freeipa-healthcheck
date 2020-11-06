@@ -1,6 +1,7 @@
 #
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
+from __future__ import division
 
 from datetime import datetime, timezone, timedelta
 import itertools
