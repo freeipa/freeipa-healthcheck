@@ -96,7 +96,6 @@ class Output:
 
            Returns a string.
         """
-        pass
 
 
 @output_registry

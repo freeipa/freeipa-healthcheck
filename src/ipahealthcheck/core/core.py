@@ -224,11 +224,9 @@ class RunChecks:
 
     def add_options(self):
         """Add custom options for this check program"""
-        pass
 
     def validate_options(self):
         """Validate options other than source and check"""
-        pass
 
     def run_healthcheck(self):
         framework = object()
