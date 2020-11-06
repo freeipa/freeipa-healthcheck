@@ -83,7 +83,7 @@ class SSSDDomain:
         if option in ('id_provider', 'auth_provider', 'chpass_provider',
                       'access_provider'):
             return self.provider
-        elif option == 'ipa_server_mode':
+        if option == 'ipa_server_mode':
             if self.return_ipa_server_mode is None:
                 raise NoOptionError()
             return self.return_ipa_server_mode
