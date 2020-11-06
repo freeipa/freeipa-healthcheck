@@ -553,8 +553,8 @@ class IPACertNSSTrust(IPAPlugin):
                     msg='Incorrect NSS trust for {nickname} in {dbdir}. '
                         'Got {got} expected {expected}.')
                 continue
-            else:
-                yield Result(self, constants.SUCCESS, key=nickname)
+
+            yield Result(self, constants.SUCCESS, key=nickname)
 
         for nickname in expected_trust:
             yield Result(
@@ -884,7 +884,7 @@ class IPACertRevocation(IPAPlugin):
                 logger.debug('\'%s\' was not issued by IPA, skipping',
                              DN(cert.subject))
                 continue
-            elif issued is None:
+            if issued is None:
                 logger.debug('LDAP is down, skipping \'%s\'',
                              DN(cert.subject))
                 continue
