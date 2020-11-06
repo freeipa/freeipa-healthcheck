@@ -19,6 +19,8 @@ class FileCheck:
        perm is in the form of a POSIX ACL: e.g. 0440, 0770.
        Owner and group are names, not uid/gid.
     """
+    def __init__(self):
+        self.files = []
 
     @duration
     def check(self):

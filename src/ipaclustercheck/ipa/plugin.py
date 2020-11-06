@@ -65,6 +65,10 @@ class ClusterPlugin(Plugin):
 
 
 class ClusterRegistry(Registry):
+    def __init__(self):
+        super().__init__()
+        self.json = None
+
     def initialize(self, framework, config, options):
         super().initialize(framework, config, options)
 
