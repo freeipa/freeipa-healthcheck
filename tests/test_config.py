@@ -52,7 +52,7 @@ def test_config_recursion():
     assert config.foo == 'bar'
 
     # The config dict is in the object
-    config._Config__d
+    assert isinstance(config._Config__d, dict)
 
     # But it isn't recursive
     try:
