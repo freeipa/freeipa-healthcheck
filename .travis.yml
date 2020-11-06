@@ -10,21 +10,44 @@ python:
 
 cache: pip
 
-env:
-    matrix:
-        - TASK_TO_RUN="lint"
-        - TASK_TO_RUN="fedora:32"
-        - TASK_TO_RUN="fedora:33"
+matrix:
+  include:
+    - env:
+        - TOXENV=pep8,flake8
+        - DOCKER_IMAGE=""
+    - env:
+        - TOXENV=py3
+        - DOCKER_IMAGE="fedora:32"
+    - env:
+        - TOXENV=py3
+        - DOCKER_IMAGE="fedora:33"
+    - env:
+        - TOXENV=lint
+        - DOCKER_IMAGE="fedora:33"
 
 install:
     - pip3 install --upgrade pip
-    - pip3 install pycodestyle tox
+    - pip3 install tox
 
 script:
     - >
-      if [[ "$TASK_TO_RUN" == "lint" ]]; then
-          tox -epep8,flake8
+      if [[ -n "$DOCKER_IMAGE" ]]; then
+          docker pull "$DOCKER_IMAGE";
+          docker run \
+              --env TOXENV="$TOXENV" \
+              -v ${TRAVIS_BUILD_DIR}:/root/src/ "$DOCKER_IMAGE" \
+              /bin/bash -c "\
+              dnf -y install \
+                  freeipa-server \
+                  freeipa-server-trust-ad \
+                  tox \
+                  python3-pytest \
+                  python3-pylint \
+                  ; \
+              cd /root/src; \
+              tox -vv; \
+              "
       else
-          docker pull $TASK_TO_RUN;
-          docker run -v ${TRAVIS_BUILD_DIR}:/root/src/ $TASK_TO_RUN /bin/sh -c "dnf -y install freeipa-server freeipa-server-trust-ad tox python3-pytest; cd /root/src; tox -epy3"
+          # pypi's pep8, flake8
+          tox -vv
       fi

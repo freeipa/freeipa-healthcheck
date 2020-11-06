@@ -1,0 +1,48 @@
+[MASTER]
+persistent=no
+
+[MESSAGES CONTROL]
+enable=
+    all,
+    python3,
+
+disable=
+    I,
+    bad-continuation,
+    bad-indentation,
+    bad-whitespace,
+    broad-except,
+    dangerous-default-value,
+    duplicate-code,
+    fixme,
+    global-statement,
+    invalid-name,
+    line-too-long,
+    missing-docstring,
+    no-absolute-import,
+    no-self-use,
+    protected-access,
+    raise-missing-from,
+    redefined-builtin,
+    redefined-outer-name,
+    super-init-not-called,
+    superfluous-parens,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-branches,
+    too-many-instance-attributes,
+    too-many-lines,
+    too-many-locals,
+    too-many-nested-blocks,
+    too-many-public-methods,
+    too-many-return-statements,
+    too-many-statements,
+    trailing-newlines,
+    trailing-whitespace,
+    ungrouped-imports,
+    unused-argument,
+    wrong-import-order,
+    wrong-import-position,
+
+[REPORTS]
+output-format=colorized
