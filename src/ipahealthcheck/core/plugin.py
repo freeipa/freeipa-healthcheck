@@ -42,6 +42,7 @@ class Registry:
         self.plugins = []
         self.framework = None
         self.config = dict()
+        self.options = None
 
     def initialize(self, framework, config, options=None):
         self.framework = framework

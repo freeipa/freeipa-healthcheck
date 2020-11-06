@@ -31,6 +31,8 @@ class BaseTest(TestCase):
         mock.Mock(return_value=ADtrustBasedRole()),
     }
     patches = {}
+    results = None
+    applied_patches = None
 
     def setup_class(self):
         # collect the list of patches to be applied for this class of
@@ -44,8 +46,6 @@ class BaseTest(TestCase):
 
         for patch in self.applied_patches:
             patch.start()
-
-        self.results = None
 
     def teardown_class(self):
         mock.patch.stopall()
