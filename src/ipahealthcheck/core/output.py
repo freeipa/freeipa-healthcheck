@@ -96,6 +96,7 @@ class Output:
 
            Returns a string.
         """
+        raise NotImplementedError
 
 
 @output_registry
