@@ -42,10 +42,9 @@ class DSPlugin(Plugin):
         sev = ds_severity.lower()
         if sev == 'high':
             return constants.CRITICAL
-        elif sev == 'medium':
+        if sev == 'medium':
             return constants.ERROR
-        else:
-            return constants.WARNING
+        return constants.WARNING
 
     def doCheck(self, DSObj, many=False):
         """Perform a healthcheck on a specific DS/lib389 class.  First
