@@ -125,12 +125,16 @@ class ClusterRUVCheck(ClusterPlugin):
         if dangles:
             for master_cn, master_info in info.items():
                 for ruv in master_info['clean_ruv']:
-                    logger.debug('Dangling RUV id: {id}, hostname: {host}'
-                                 .format(id=ruv[1], host=ruv[0]))
+                    logger.debug(
+                        "Dangling RUV id: %s, hostname: %s", ruv[1], ruv[0]
+                    )
                     clean_ruvs.add(ruv[1])
                 for csruv in master_info['clean_csruv']:
-                    logger.debug('Dangling CS RUV id: {id}, hostname: {host}'
-                                 .format(id=csruv[1], host=csruv[0]))
+                    logger.debug(
+                        "Dangling CS RUV id: %s, hostname: %s",
+                        csruv[1],
+                        csruv[0]
+                    )
                     clean_csruvs.add(csruv[1])
 
         if clean_ruvs:

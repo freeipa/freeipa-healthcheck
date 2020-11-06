@@ -31,7 +31,7 @@ class IPAServiceCheck(ServiceCheck):
             self.service = services.knownservices[self.service_name]
         except KeyError:
             logger.debug(
-                "Service '%s' is unknown to ipaplatform, skipping check" %
+                "Service '%s' is unknown to ipaplatform, skipping check",
                 self.service_name
             )
             return ()
