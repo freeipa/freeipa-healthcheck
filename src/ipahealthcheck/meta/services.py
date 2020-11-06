@@ -52,7 +52,7 @@ class IPAServiceCheck(ServiceCheck):
 
 @registry
 class certmonger(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'certmonger'
 
         return super().check()
@@ -60,7 +60,7 @@ class certmonger(IPAServiceCheck):
 
 @registry
 class dirsrv(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'dirsrv'
 
         return super().check(realm_to_serverid(api.env.realm))
@@ -68,7 +68,7 @@ class dirsrv(IPAServiceCheck):
 
 @registry
 class gssproxy(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'gssproxy'
 
         return super().check()
@@ -76,7 +76,7 @@ class gssproxy(IPAServiceCheck):
 
 @registry
 class httpd(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'httpd'
 
         return super().check()
@@ -84,7 +84,7 @@ class httpd(IPAServiceCheck):
 
 @registry
 class ipa_custodia(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'ipa-custodia'
 
         return super().check()
@@ -92,7 +92,7 @@ class ipa_custodia(IPAServiceCheck):
 
 @registry
 class ipa_dnskeysyncd(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'ipa-dnskeysyncd'
 
         if not bindinstance.named_conf_exists():
@@ -103,7 +103,7 @@ class ipa_dnskeysyncd(IPAServiceCheck):
 
 @registry
 class ipa_otpd(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'ipa-otpd'
 
         return super().check()
@@ -111,7 +111,7 @@ class ipa_otpd(IPAServiceCheck):
 
 @registry
 class kadmin(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'kadmin'
 
         return super().check()
@@ -119,7 +119,7 @@ class kadmin(IPAServiceCheck):
 
 @registry
 class krb5kdc(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'krb5kdc'
 
         return super().check()
@@ -127,7 +127,7 @@ class krb5kdc(IPAServiceCheck):
 
 @registry
 class named(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'named'
 
         if not bindinstance.named_conf_exists():
@@ -138,7 +138,7 @@ class named(IPAServiceCheck):
 
 @registry
 class pki_tomcatd(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'pki_tomcatd'
 
         ca = cainstance.CAInstance(api.env.realm, host_name=api.env.host)
@@ -150,7 +150,7 @@ class pki_tomcatd(IPAServiceCheck):
 
 @registry
 class sssd(IPAServiceCheck):
-    def check(self):
+    def check(self, instance=''):
         self.service_name = 'sssd'
 
         return super().check()
