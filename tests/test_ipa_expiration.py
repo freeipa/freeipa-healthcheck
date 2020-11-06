@@ -11,7 +11,11 @@ from ipahealthcheck.ipa.certs import IPACertmongerExpirationCheck
 from ipahealthcheck.ipa.certs import IPACAChainExpirationCheck
 from unittest.mock import Mock, patch
 from mock_certmonger import create_mock_dbus, _certmonger
-from mock_certmonger import get_expected_requests, set_requests
+from mock_certmonger import (
+    get_expected_requests,
+    set_requests,
+    CERT_EXPIRATION_DAYS,
+)
 
 from datetime import datetime, timedelta, timezone
 
@@ -67,7 +71,7 @@ class TestExpiration(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACertmongerExpirationCheck(registry)
 
-        f.config.cert_expiration_days = '30'
+        f.config.cert_expiration_days = str(CERT_EXPIRATION_DAYS)
         self.results = capture_results(f)
 
         assert len(self.results) == 2

@@ -3,12 +3,15 @@
 #
 
 import copy
+from datetime import datetime, timedelta, timezone
 
 from ipaplatform.paths import paths
 
 # Fake certmonger tracked request list. This is similar but can be
 # distinct from the value from the overrident get_defaults() method.
 template = paths.CERTMONGER_COMMAND_TEMPLATE
+
+CERT_EXPIRATION_DAYS = 30
 
 pristine_cm_requests = [
     {
@@ -20,7 +23,11 @@ pristine_cm_requests = [
         'cert-storage': 'FILE',
         'cert-presave-command': template % 'renew_ra_cert_pre',
         'cert-postsave-command': template % 'renew_ra_cert',
-        'not-valid-after': 1024,
+        'not-valid-after': (
+            int(
+                datetime(1970, 1, 1, 0, 17, 4, tzinfo=timezone.utc).timestamp()
+            )
+        ),
     },
     {
         'nickname': '5678',
@@ -30,7 +37,14 @@ pristine_cm_requests = [
         'template_profile': 'caIPAserviceCert',
         'cert-storage': 'FILE',
         'cert-postsave-command': template % 'restart_httpd',
-        'not-valid-after': 1607204930,
+        'not-valid-after': (
+            int(
+                (
+                    datetime.now(timezone.utc) +
+                    timedelta(days=CERT_EXPIRATION_DAYS + 1)
+                ).timestamp()
+            )
+        ),
     },
 ]
 

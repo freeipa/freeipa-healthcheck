@@ -9,7 +9,11 @@ from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertfileExpirationCheck
 from unittest.mock import Mock, patch
 from mock_certmonger import create_mock_dbus, _certmonger
-from mock_certmonger import get_expected_requests, set_requests
+from mock_certmonger import (
+    get_expected_requests,
+    set_requests,
+    CERT_EXPIRATION_DAYS,
+)
 
 from datetime import datetime, timedelta
 
@@ -37,7 +41,7 @@ class TestIPACertificateFile(BaseTest):
         set_requests(remove=1)
 
         cert = IPACertificate(not_valid_after=datetime.utcnow() +
-                              timedelta(days=30))
+                              timedelta(days=CERT_EXPIRATION_DAYS))
         mock_load_cert.return_value = cert
 
         framework = object()
@@ -67,7 +71,7 @@ class TestIPACertificateFile(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACertfileExpirationCheck(registry)
 
-        f.config.cert_expiration_days = '30'
+        f.config.cert_expiration_days = str(CERT_EXPIRATION_DAYS)
         self.results = capture_results(f)
 
         assert len(self.results) == 1
@@ -91,7 +95,7 @@ class TestIPACertificateFile(BaseTest):
         registry.initialize(framework, config.Config)
         f = IPACertfileExpirationCheck(registry)
 
-        f.config.cert_expiration_days = '30'
+        f.config.cert_expiration_days = str(CERT_EXPIRATION_DAYS)
         self.results = capture_results(f)
 
         assert len(self.results) == 1
