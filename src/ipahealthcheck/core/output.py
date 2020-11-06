@@ -124,9 +124,6 @@ class Human(Output):
     """Display output in a more human-friendly way"""
     options = ()
 
-    def __init__(self, options):
-        super().__init__(options)
-
     def generate(self, data):
         output = ''
         for line in data:

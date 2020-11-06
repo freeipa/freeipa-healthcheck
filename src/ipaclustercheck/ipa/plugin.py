@@ -60,8 +60,7 @@ def get_masters(data):
 
 
 class ClusterPlugin(Plugin):
-    def __init__(self, registry):
-        super().__init__(registry)
+    pass
 
 
 class ClusterRegistry(Registry):
