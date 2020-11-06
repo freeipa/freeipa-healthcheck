@@ -18,7 +18,7 @@ class ClusterOutput(Output):
 
     def strip_output(self, results):
         """Nothing to strip out"""
-        return [result for result in results.output()]
+        return list(results.output())
 
 
 @output_registry
