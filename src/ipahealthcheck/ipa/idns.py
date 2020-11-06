@@ -34,8 +34,10 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
 
     @duration
     def check(self):
+        # pylint: disable=import-outside-toplevel
         from ipapython.dnsutil import query_srv
         from ipaserver.dns_data_management import IPASystemRecords
+        # pylint: enable=import-outside-toplevel
 
         system_records = IPASystemRecords(api)
         base_records = system_records.get_base_records()
