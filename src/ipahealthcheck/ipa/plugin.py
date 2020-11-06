@@ -38,7 +38,9 @@ class IPARegistry(Registry):
     def initialize(self, framework, config, options=None):
         super().initialize(framework, config)
         # deferred import for mock
+        # pylint: disable=import-outside-toplevel
         from ipaserver.servroles import ADtrustBasedRole, ServiceBasedRole
+        # pylint: enable=import-outside-toplevel
 
         installutils.check_server_configuration()
 
@@ -61,9 +63,9 @@ class IPARegistry(Registry):
         # and is required to lookup trust users. If this is not installed
         # then it can be inferred that trust is not enabled.
         try:
-            # pylint: disable=unused-import
+            # pylint: disable=unused-import,import-outside-toplevel
             import pysss_nss_idmap  # noqa: F401
-            # pylint: enable=unused-import
+            # pylint: enable=unused-import,import-outside-toplevel
         except ImportError:
             return
 
