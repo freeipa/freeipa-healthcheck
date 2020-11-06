@@ -49,6 +49,8 @@ class mock_ldap_conn:
         if option == OPT_X_SASL_SSF_MIN:
             return 256
 
+        return None
+
     def search_s(self, base, scope, filterstr=None,
                  attrlist=None, attrsonly=0):
         return tuple()
