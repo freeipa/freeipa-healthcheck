@@ -96,8 +96,8 @@ class mock_dbus:
     """
     def __init__(self, request_id):
         self.index = None
-        for i in range(len(cm_requests)):
-            if request_id == cm_requests[i].get('nickname'):
+        for i, cm_request in enumerate(cm_requests):
+            if request_id == cm_request.get('nickname'):
                 self.index = i
                 break
         self.prop_if = mock_property(self.index)
