@@ -40,7 +40,7 @@ class Ansible(ClusterOutput):
     )
 
     def __init__(self, options):
-        super(Ansible, self).__init__(options)
+        super().__init__(options)
         self.indent = options.indent
 
     def generate(self, data):

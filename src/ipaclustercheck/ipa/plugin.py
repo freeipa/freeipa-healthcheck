@@ -61,12 +61,12 @@ def get_masters(data):
 
 class ClusterPlugin(Plugin):
     def __init__(self, registry):
-        super(ClusterPlugin, self).__init__(registry)
+        super().__init__(registry)
 
 
 class ClusterRegistry(Registry):
     def initialize(self, framework, config, options):
-        super(ClusterRegistry, self).initialize(framework, config, options)
+        super().initialize(framework, config, options)
 
         self.json = {}
 

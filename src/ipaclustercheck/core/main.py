@@ -16,7 +16,7 @@ class ClusterChecks(RunChecks):
                             help='Directory holding healthcheck logs')
 
     def validate_options(self):
-        super(ClusterChecks, self).validate_options()
+        super().validate_options()
 
         if self.options.dir is None:
             print("--directory containing logs to check is required")

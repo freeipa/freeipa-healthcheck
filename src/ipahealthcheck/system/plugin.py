@@ -7,7 +7,7 @@ from ipahealthcheck.core.plugin import Plugin, Registry
 
 class SystemPlugin(Plugin):
     def __init__(self, registry):
-        super(SystemPlugin, self).__init__(registry)
+        super().__init__(registry)
         pass
 
 
