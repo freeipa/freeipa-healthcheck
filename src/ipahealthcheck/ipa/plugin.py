@@ -61,7 +61,9 @@ class IPARegistry(Registry):
         # and is required to lookup trust users. If this is not installed
         # then it can be inferred that trust is not enabled.
         try:
+            # pylint: disable=unused-import
             import pysss_nss_idmap  # noqa: F401
+            # pylint: enable=unused-import
         except ImportError:
             return
 

@@ -655,7 +655,9 @@ class IPATrustPackageCheck(IPAPlugin):
 
         # The trust-ad package provides this import
         try:
+            # pylint: disable=unused-import
             from ipaserver.install import adtrustinstance  # noqa: F401
+            # pylint: enable=unused-import
             yield Result(self, constants.SUCCESS,
                          key='adtrustpackage')
         except ImportError:
