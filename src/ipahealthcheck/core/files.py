@@ -17,7 +17,11 @@ class FileCheck:
            (path, expected_perm, expected_owner, expected_group)
 
        perm is in the form of a POSIX ACL: e.g. 0440, 0770.
-       Owner and group are names, not uid/gid.
+       owner and group are names or a tuple of names, not uid/gid.
+
+       If owner and/or group are tuples then all names are checked.
+       If a match is found that that is the one reported in SUCCESS.
+       If it fails then all values are reported.
     """
     def __init__(self):
         self.files = []
@@ -25,6 +29,10 @@ class FileCheck:
     @duration
     def check(self):
         for (path, owner, group, mode) in self.files:
+            if not isinstance(owner, tuple):
+                owner = tuple((owner,))
+            if not isinstance(group, tuple):
+                group = tuple((group,))
             stat = os.stat(path)
             fmode = str(oct(stat.st_mode)[-4:])
             key = '%s_mode' % path.replace('/', '_')
@@ -45,30 +53,55 @@ class FileCheck:
                 yield Result(self, constants.SUCCESS, key=key,
                              type='mode', path=path)
 
-            fowner = pwd.getpwnam(owner)
-            key = '%s_owner' % path.replace('/', '_')
-            if fowner.pw_uid != stat.st_uid:
+            found = False
+            for o in owner:
+                fowner = pwd.getpwnam(o)
+                if fowner.pw_uid == stat.st_uid:
+                    found = True
+                    break
+
+            if not found:
                 actual = pwd.getpwuid(stat.st_uid)
+                key = '%s_owner' % path.replace('/', '_')
+                if len(owner) == 1:
+                    msg = 'Ownership of %s is %s and should ' \
+                          'be %s' % \
+                          (path, actual.pw_name, owner[0])
+                else:
+                    msg = 'Ownership of %s is %s and should ' \
+                          'be one of %s' % \
+                          (path, actual.pw_name, ','.join(owner))
+                owner = ','.join(owner)
                 yield Result(self, constants.WARNING, key=key,
                              path=path, type='owner', expected=owner,
                              got=actual.pw_name,
-                             msg='Ownership of %s is %s and should '
-                                 'be %s' %
-                                 (path, actual.pw_name, owner))
+                             msg=msg)
             else:
                 yield Result(self, constants.SUCCESS, key=key,
                              type='owner', path=path)
 
-            fgroup = grp.getgrnam(group)
-            key = '%s_group' % path.replace('/', '_')
-            if fgroup.gr_gid != stat.st_gid:
+            found = False
+            for g in group:
+                fgroup = grp.getgrnam(g)
+                if fgroup.gr_gid == stat.st_gid:
+                    found = True
+                    break
+
+            if not found:
+                key = '%s_group' % path.replace('/', '_')
                 actual = grp.getgrgid(stat.st_gid)
+                if len(group) == 1:
+                    msg = 'Group of %s is %s and should ' \
+                          'be %s' % \
+                          (path, actual.gr_name, group[0])
+                else:
+                    msg = 'Group of %s is %s and should ' \
+                          'be one of %s' % \
+                          (path, actual.gr_name, ','.join(group))
                 yield Result(self, constants.WARNING, key=key,
                              path=path, type='group', expected=group,
                              got=actual.gr_name,
-                             msg='Group of %s is %s and should '
-                                 'be %s' %
-                                 (path, actual.gr_name, group))
+                             msg=msg)
             else:
                 yield Result(self, constants.SUCCESS, key=key,
                              type='group', path=path)
