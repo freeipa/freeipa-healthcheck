@@ -3,7 +3,6 @@
 #
 
 import json
-import sys
 from ipahealthcheck.core.output import OutputRegistry, Output
 
 
