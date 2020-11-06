@@ -92,7 +92,8 @@ class IPAFileCheck(IPAPlugin, FileCheck):
         self.files.append((paths.IPA_CA_CRT, 'root', 'root', '0644'))
         self.files.append((paths.IPA_CUSTODIA_KEYS, 'root', 'root', '0600'))
 
-        self.files.append((paths.RESOLV_CONF, 'root', 'root', '0644'))
+        self.files.append((paths.RESOLV_CONF, ('root', 'systemd-resolve'),
+                          ('root', 'systemd-resolve'), '0644'))
         self.files.append((paths.HOSTS, 'root', 'root', '0644'))
 
         return FileCheck.check(self)
