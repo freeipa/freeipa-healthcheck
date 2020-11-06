@@ -532,8 +532,11 @@ class IPACertNSSTrust(IPAPlugin):
                 try:
                     expected = expected_trust[nickname]
                 except KeyError:
-                    logger.debug("%s not found in %s, assuming 3rd party"
-                                 % (nickname, paths.PKI_TOMCAT_ALIAS_DIR))
+                    logger.debug(
+                        "%s not found in %s, assuming 3rd party",
+                        nickname,
+                        paths.PKI_TOMCAT_ALIAS_DIR,
+                    )
                     continue
             try:
                 expected_trust.pop(nickname)
@@ -971,8 +974,9 @@ class IPACAChainExpirationCheck(IPAPlugin):
                          msg='Error opening IPA CA chain at {key}: {error}')
             return
         except ValueError as e:
-            logger.debug("% contains an invalid certificate" %
-                         paths.IPA_CA_CRT)
+            logger.debug(
+                "% contains an invalid certificate", paths.IPA_CA_CRT
+            )
             yield Result(self, constants.ERROR,
                          key=paths.IPA_CA_CRT,
                          error=str(e),
@@ -987,13 +991,13 @@ class IPACAChainExpirationCheck(IPAPlugin):
             subject = str(subject).replace('\\;', '\\3b')
             dt = cert.not_valid_after.replace(tzinfo=timezone.utc)
             if dt < now:
-                logger.debug("%s is expired" % subject)
+                logger.debug("%s is expired", subject)
                 yield Result(self, constants.CRITICAL,
                              path=paths.IPA_CA_CRT,
                              key=subject,
                              msg='CA \'{key}\' in {path} is expired.')
             elif dt <= soon:
-                logger.debug("%s is expiring soon" % subject)
+                logger.debug("%s is expiring soon", subject)
                 yield Result(self, constants.WARNING,
                              path=paths.IPA_CA_CRT,
                              key=subject,

@@ -93,7 +93,7 @@ class KnownRUVCheck(DSPlugin):
                     ) = urlparse(data.group(2))
                     servers.append((re.sub(r':\d+', '', netloc), rid))
                 else:
-                    logger.debug("Unable to decode RUV: %s" % ruv)
+                    logger.debug("Unable to decode RUV: %s", ruv)
 
         return servers
 

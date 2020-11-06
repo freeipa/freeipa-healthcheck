@@ -82,19 +82,21 @@ def read_config(config_file):
     config = Config()
     config.merge(DEFAULT_CONFIG)
     if not os.path.exists(config_file):
-        logging.warning("config file {} does not exist, using defaults".
-                        format(config_file))
+        logging.warning(
+            "config file %s does not exist, using defaults", config_file
+        )
         return config
 
     parser = ConfigParser()
     try:
         parser.read(config_file)
     except ParsingError as e:
-        logging.error("Unable to parse {}: {}".format(config_file, e))
+        logging.error("Unable to parse %s: %s", config_file, e)
         return None
     if not parser.has_section(CONFIG_SECTION):
-        logging.error("Config file {} missing {} section".format(
-            config_file, CONFIG_SECTION))
+        logging.error(
+            "Config file %s missing %s section", config_file, CONFIG_SECTION
+        )
         return None
 
     items = parser.items(CONFIG_SECTION)

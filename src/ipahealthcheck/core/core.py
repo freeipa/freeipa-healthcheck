@@ -109,7 +109,7 @@ def run_plugins(plugins, available, source, check):
         if not source_or_check_matches(plugin, source, check):
             continue
 
-        logger.debug('Calling check %s' % plugin)
+        logger.debug("Calling check %s", plugin)
         if not set(plugin.requires).issubset(available):
             logger.debug('Skipping %s:%s because %s service(s) not running',
                          plugin.__class__.__module__,
@@ -270,7 +270,7 @@ class RunChecks:
                 try:
                     registry.initialize(framework, config)
                 except Exception as e:
-                    logger.error("Unable to initialize %s: %s" % (name, e))
+                    logger.error("Unable to initialize %s: %s", name, e)
                     continue
             for plugin in find_plugins(name, registry):
                 plugins.append(plugin)
