@@ -10,14 +10,13 @@ from ipalib import api, errors
 
 class DogtagPlugin(Plugin):
     def __init__(self, reg):
-        super(DogtagPlugin, self).__init__(reg)
-        self.ca = cainstance.CAInstance(api.env.realm,
-                                        host_name=api.env.host)
+        super().__init__(reg)
+        self.ca = cainstance.CAInstance(api.env.realm, host_name=api.env.host)
 
 
 class DogtagRegistry(Registry):
     def initialize(self, framework, config, options=None):
-        super(DogtagRegistry, self).initialize(framework, config)
+        super().initialize(framework, config)
         installutils.check_server_configuration()
         if not api.isdone('bootstrap'):
             api.bootstrap(in_server=True,

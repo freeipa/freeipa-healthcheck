@@ -21,9 +21,8 @@ logging.getLogger()
 
 class IPAPlugin(Plugin):
     def __init__(self, reg):
-        super(IPAPlugin, self).__init__(reg)
-        self.ca = cainstance.CAInstance(api.env.realm,
-                                        host_name=api.env.host)
+        super().__init__(reg)
+        self.ca = cainstance.CAInstance(api.env.realm, host_name=api.env.host)
         self.http = httpinstance.HTTPInstance()
         self.ds = dsinstance.DsInstance()
         self.serverid = realm_to_serverid(api.env.realm)
@@ -32,12 +31,12 @@ class IPAPlugin(Plugin):
 
 class IPARegistry(Registry):
     def __init__(self):
-        super(IPARegistry, self).__init__()
+        super().__init__()
         self.trust_agent = False
         self.trust_controller = False
 
     def initialize(self, framework, config, options=None):
-        super(IPARegistry, self).initialize(framework, config)
+        super().initialize(framework, config)
         # deferred import for mock
         from ipaserver.servroles import ADtrustBasedRole, ServiceBasedRole
 

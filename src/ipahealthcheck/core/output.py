@@ -109,7 +109,7 @@ class JSON(Output):
     )
 
     def __init__(self, options):
-        super(JSON, self).__init__(options)
+        super().__init__(options)
         self.indent = options.indent
 
     def generate(self, data):
@@ -126,7 +126,7 @@ class Human(Output):
     options = ()
 
     def __init__(self, options):
-        super(Human, self).__init__(options)
+        super().__init__(options)
 
     def generate(self, data):
         output = ''

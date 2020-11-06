@@ -32,7 +32,7 @@ class DSPlugin(Plugin):
     many = False
 
     def __init__(self, registry):
-        super(DSPlugin, self).__init__(registry)
+        super().__init__(registry)
         self.ds = self.ds = dsinstance.DsInstance()
         self.conn = api.Backend.ldap2
         self.serverid = realm_to_serverid(api.env.realm)
@@ -116,7 +116,7 @@ class DSPlugin(Plugin):
 
 class DSRegistry(Registry):
     def initialize(self, framework, config, options=None):
-        super(DSRegistry, self).initialize(framework, config)
+        super().initialize(framework, config)
         installutils.check_server_configuration()
         if not api.isdone('bootstrap'):
             api.bootstrap(in_server=True,

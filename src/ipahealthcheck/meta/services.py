@@ -52,7 +52,7 @@ class certmonger(IPAServiceCheck):
     def check(self):
         self.service_name = 'certmonger'
 
-        return super(certmonger, self).check()
+        return super().check()
 
 
 @registry
@@ -60,7 +60,7 @@ class dirsrv(IPAServiceCheck):
     def check(self):
         self.service_name = 'dirsrv'
 
-        return super(dirsrv, self).check(realm_to_serverid(api.env.realm))
+        return super().check(realm_to_serverid(api.env.realm))
 
 
 @registry
@@ -68,7 +68,7 @@ class gssproxy(IPAServiceCheck):
     def check(self):
         self.service_name = 'gssproxy'
 
-        return super(gssproxy, self).check()
+        return super().check()
 
 
 @registry
@@ -76,7 +76,7 @@ class httpd(IPAServiceCheck):
     def check(self):
         self.service_name = 'httpd'
 
-        return super(httpd, self).check()
+        return super().check()
 
 
 @registry
@@ -84,7 +84,7 @@ class ipa_custodia(IPAServiceCheck):
     def check(self):
         self.service_name = 'ipa-custodia'
 
-        return super(ipa_custodia, self).check()
+        return super().check()
 
 
 @registry
@@ -95,7 +95,7 @@ class ipa_dnskeysyncd(IPAServiceCheck):
         if not bindinstance.named_conf_exists():
             return ()
 
-        return super(ipa_dnskeysyncd, self).check()
+        return super().check()
 
 
 @registry
@@ -103,7 +103,7 @@ class ipa_otpd(IPAServiceCheck):
     def check(self):
         self.service_name = 'ipa-otpd'
 
-        return super(ipa_otpd, self).check()
+        return super().check()
 
 
 @registry
@@ -111,7 +111,7 @@ class kadmin(IPAServiceCheck):
     def check(self):
         self.service_name = 'kadmin'
 
-        return super(kadmin, self).check()
+        return super().check()
 
 
 @registry
@@ -119,7 +119,7 @@ class krb5kdc(IPAServiceCheck):
     def check(self):
         self.service_name = 'krb5kdc'
 
-        return super(krb5kdc, self).check()
+        return super().check()
 
 
 @registry
@@ -130,7 +130,7 @@ class named(IPAServiceCheck):
         if not bindinstance.named_conf_exists():
             return ()
 
-        return super(named, self).check()
+        return super().check()
 
 
 @registry
@@ -142,7 +142,7 @@ class pki_tomcatd(IPAServiceCheck):
         if not ca.is_configured():
             return ()
 
-        return super(pki_tomcatd, self).check()
+        return super().check()
 
 
 @registry
@@ -150,4 +150,4 @@ class sssd(IPAServiceCheck):
     def check(self):
         self.service_name = 'sssd'
 
-        return super(sssd, self).check()
+        return super().check()
