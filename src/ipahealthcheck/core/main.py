@@ -33,7 +33,7 @@ class IPAChecks(RunChecks):
                             help='Report all results on output')
         parser.add_argument('--severity', dest='severity', action="append",
                             help='Include only the selected severity(s)',
-                            choices=[key for key in constants._nameToLevel])
+                            choices=list(constants._nameToLevel))
 
 
 def main():

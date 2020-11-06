@@ -61,7 +61,7 @@ def test_Result():
 
     assert len(results) == 2
 
-    output = [x for x in results.output()]
+    output = list(results.output())
     assert len(output) == 2
     for x in output:
         assert x['source'] == 'ipahealthcheck.core.plugin'
