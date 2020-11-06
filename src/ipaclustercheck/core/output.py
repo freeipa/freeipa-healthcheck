@@ -46,7 +46,6 @@ class Ansible(ClusterOutput):
         output = []
         for line in data:
             kw = line.get('kw')
-            result = line.get('result')
             name = kw.get('name')
             value = kw.get('value')
             error = kw.get('error')

@@ -123,7 +123,7 @@ class ClusterRUVCheck(ClusterPlugin):
         clean_csruvs = set()
         clean_ruvs = set()
         if dangles:
-            for master_cn, master_info in info.items():
+            for _, master_info in info.items():
                 for ruv in master_info['clean_ruv']:
                     logger.debug(
                         "Dangling RUV id: %s, hostname: %s", ruv[1], ruv[0]
