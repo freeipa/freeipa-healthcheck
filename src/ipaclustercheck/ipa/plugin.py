@@ -68,7 +68,7 @@ class ClusterRegistry(Registry):
         super().__init__()
         self.json = None
 
-    def initialize(self, framework, config, options):
+    def initialize(self, framework, config, options=None):
         super().initialize(framework, config, options)
 
         self.json = {}
