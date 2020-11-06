@@ -2,8 +2,11 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from ipahealthcheck.core.config import read_config
 import tempfile
+
+import pytest
+
+from ipahealthcheck.core.config import read_config
 
 
 def test_config_no_section():
@@ -35,12 +38,8 @@ def test_config_values():
 
     assert config.foo == 'bar'
 
-    try:
-        config.bar
-    except KeyError:
-        pass
-    else:
-        assert('KeyError not raised')
+    with pytest.raises(KeyError):
+        config.bar  # pylint: disable=pointless-statement
 
 
 def test_config_recursion():
