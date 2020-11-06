@@ -220,13 +220,14 @@ class RunChecks:
         self.options = None
 
     def pre_check(self):
-        pass
+        return None
 
     def add_options(self):
         """Add custom options for this check program"""
 
     def validate_options(self):
         """Validate options other than source and check"""
+        return None
 
     def run_healthcheck(self):
         framework = object()
@@ -241,7 +242,10 @@ class RunChecks:
         self.add_options()
         options = parse_options(self.parser)
         self.options = options
+
+        # pylint: disable=assignment-from-none
         rval = self.validate_options()
+        # pylint: enable=assignment-from-none
         if rval is not None:
             return rval
 
@@ -255,7 +259,9 @@ class RunChecks:
         if config is None:
             return 1
 
+        # pylint: disable=assignment-from-none
         rval = self.pre_check()
+        # pylint: enable=assignment-from-none
         if rval is not None:
             return rval
 

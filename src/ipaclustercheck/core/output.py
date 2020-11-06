@@ -20,6 +20,9 @@ class ClusterOutput(Output):
         """Nothing to strip out"""
         return list(results.output())
 
+    def generate(self, data):
+        raise NotImplementedError
+
 
 @output_registry
 class Ansible(ClusterOutput):
