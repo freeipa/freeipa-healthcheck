@@ -18,6 +18,8 @@ class IPAChecks(RunChecks):
             print("IPA is not configured")
             return 1
 
+        return None
+
     def add_options(self):
         parser = self.parser
         parser.add_argument('--input-file', dest='infile',

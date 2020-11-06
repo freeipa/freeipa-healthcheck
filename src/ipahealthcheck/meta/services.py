@@ -42,9 +42,12 @@ class IPAServiceCheck(ServiceCheck):
             yield Result(self, constants.ERROR,
                          status=status, msg='%s: not running' %
                          self.service.service_name)
+
         else:
             yield Result(self, constants.SUCCESS,
                          status=status)
+
+        return None
 
 
 @registry

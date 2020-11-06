@@ -242,7 +242,7 @@ class RunChecks:
         options = parse_options(self.parser)
         self.options = options
         rval = self.validate_options()
-        if rval:
+        if rval is not None:
             return rval
 
         if options.verbose:

@@ -22,6 +22,8 @@ class ClusterChecks(RunChecks):
             print("--directory containing logs to check is required")
             return 1
 
+        return None
+
 
 def main():
     clusterchecks = ClusterChecks(['ipaclustercheck.registry'],
