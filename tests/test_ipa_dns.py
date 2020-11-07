@@ -113,8 +113,10 @@ def fake_query(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN, count=1,
         fqdn = fqdn.make_absolute()
 
         if version.MAJOR < 2:
+            # pylint: disable=unexpected-keyword-arg
             answers = Answer(fqdn, rdataclass.IN, rdtype, m,
                              raise_on_no_answer=False)
+            # pylint: enable=unexpected-keyword-arg
         else:
             answers = Answer(fqdn, rdataclass.IN, rdtype, m)
 
@@ -131,8 +133,10 @@ def fake_query(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN, count=1,
         qname = qname.make_absolute()
 
         if version.MAJOR < 2:
+            # pylint: disable=unexpected-keyword-arg
             answers = Answer(qname, rdataclass.IN, rdatatype.TXT, m,
                              raise_on_no_answer=False)
+            # pylint: enable=unexpected-keyword-arg
         else:
             answers = Answer(qname, rdataclass.IN, rdatatype.TXT, m)
 
