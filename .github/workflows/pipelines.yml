@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  lint:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox
+    - name: Lint with flake8
+      run: |
+        tox -vv -eflake8
+    - name: Lint with pep8
+      run: |
+        tox -vv -epep8
+
+  container:
+
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        fedora-release: [32, 33]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Lint with pylint fedora:${{ matrix.fedora-release }}
+      run: |
+        docker pull fedora:${{ matrix.fedora-release }}
+        docker run \
+            -v ${GITHUB_WORKSPACE}:/root/src/ fedora:${{ matrix.fedora-release }} \
+            /bin/bash -c "\
+            dnf -y install \
+                freeipa-server \
+                freeipa-server-trust-ad \
+                tox \
+                python3-pylint \
+                python3-pytest \
+                ; \
+            cd /root/src; \
+            tox -vv -elint; \
+            "
+    - name: pytest fedora:${{ matrix.fedora-release }}
+      run: |
+        docker pull fedora:${{ matrix.fedora-release }}
+        docker run \
+            -v ${GITHUB_WORKSPACE}:/root/src/ fedora:${{ matrix.fedora-release }} \
+            /bin/bash -c "\
+            dnf -y install \
+                freeipa-server \
+                freeipa-server-trust-ad \
+                tox \
+                python3-pylint \
+                python3-pytest \
+                ; \
+            cd /root/src; \
+            tox -vv -epy3; \
+            "
