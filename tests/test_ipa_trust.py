@@ -74,6 +74,56 @@ class mock_ldap_conn:
         return tuple()
 
 
+#
+# Construct a setup with two direct trusts and one sub domain
+#
+def trust_find():
+    return [{
+        'result': [
+            {
+                'cn': ['ad.example'],
+            },
+            {
+                'cn': ['child.example'],
+            },
+        ]
+    }]
+
+
+def trustdomain_find():
+    return [
+        {
+            "result": [
+                {
+                    "cn": ["ad.example"],
+                    "ipantflatname": ["ADROOT"],
+                    "ipanttrusteddomainsid": ["S-1-5-21-abc"],
+                    "ipanttrusttype": ["2"],
+                    "ipanttrustattributes": ["8"],
+                },
+                {
+                    "cn": ["child.ad.example"],
+                    "ipantflatname": ["CHILD.ADROOT"],
+                    "ipanttrusteddomainsid": ["S-1-5-22-def"],
+                    "ipanttrusttype": ["2"],
+                    "ipanttrustattributes": ["1"],
+                },
+            ],
+        },
+        {
+            "result": [
+                {
+                    "cn": ["child.example"],
+                    "ipantflatname": ["CHILD"],
+                    "ipanttrusteddomainsid": ["S-1-5-21-ghi"],
+                    "ipanttrusttype": ["2"],
+                    "ipanttrustattributes": ["8"],
+                },
+            ],
+        },
+    ]
+
+
 class SSSDDomain:
     def __init__(self, return_ipa_server_mode=True, provider='ipa'):
         self.return_ipa_server_mode = return_ipa_server_mode
@@ -250,36 +300,17 @@ class TestTrustDomains(BaseTest):
         dlresult.returncode = 0
         dlresult.error_log = ''
         dlresult.output = 'implicit_files\nipa.example\nad.example\n' \
-            'child.example\n'
+            'child.ad.example\nchild.example\n'
         olresult = namedtuple('run', ['returncode', 'error_log'])
         olresult.returncode = 0
         olresult.error_log = ''
         olresult.output = 'Online status: Online\n\n'
 
-        mock_run.side_effect = [dlresult, olresult, olresult]
+        mock_run.side_effect = [dlresult, olresult, olresult, olresult]
 
         # get_trust_domains()
-        m_api.Command.trust_find.side_effect = [{
-            'result': [
-                {
-                    'cn': ['ad.example'],
-                    'ipantflatname': ['ADROOT'],
-                    'ipanttrusteddomainsid': ['S-1-5-21-abc'],
-                    'ipanttrusttype': ['2'],
-                    'ipanttrustattributes': ['8'],
-                    'trusttype': ['Active Directory domain'],
-                },
-                {
-                    'cn': ['child.example'],
-                    'ipantflatname': ['ADCHILD'],
-                    'ipanttrusteddomainsid': ['S-1-5-22-def'],
-                    'ipanttrusttype': ['2'],
-                    'ipanttrustattributes': ['9'],
-                    'trusttype': ['Non-transitive external trust to a domain '
-                                  'in another Active Directory forest']
-                },
-            ]
-        }]
+        m_api.Command.trust_find.side_effect = trust_find()
+        m_api.Command.trustdomain_find.side_effect = trustdomain_find()
 
         framework = object()
         registry.initialize(framework, config.Config)
@@ -288,15 +319,17 @@ class TestTrustDomains(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 3
+        assert len(self.results) == 4
 
         result = self.results.results[0]
         assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain-list'
-        assert result.kw.get('trust_domains') == 'ad.example, child.example'
-        assert result.kw.get('sssd_domains') == 'ad.example, child.example'
+        assert result.kw.get('trust_domains') == \
+            'ad.example, child.ad.example, child.example'
+        assert result.kw.get('sssd_domains') == \
+            'ad.example, child.ad.example, child.example'
 
         result = self.results.results[1]
         assert result.result == constants.SUCCESS
@@ -306,6 +339,13 @@ class TestTrustDomains(BaseTest):
         assert result.kw.get('domain') == 'ad.example'
 
         result = self.results.results[2]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustDomainsCheck'
+        assert result.kw.get('key') == 'domain-status'
+        assert result.kw.get('domain') == 'child.ad.example'
+
+        result = self.results.results[3]
         assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
@@ -328,27 +368,8 @@ class TestTrustDomains(BaseTest):
         mock_run.side_effect = [dlresult, olresult, olresult]
 
         # get_trust_domains()
-        m_api.Command.trust_find.side_effect = [{
-            'result': [
-                {
-                    'cn': ['ad.example'],
-                    'ipantflatname': ['ADROOT'],
-                    'ipanttrusteddomainsid': ['S-1-5-21-abc'],
-                    'ipanttrusttype': ['2'],
-                    'ipanttrustattributes': ['8'],
-                    'trusttype': ['Active Directory domain'],
-                },
-                {
-                    'cn': ['child.example'],
-                    'ipantflatname': ['ADCHILD'],
-                    'ipanttrusteddomainsid': ['S-1-5-22-def'],
-                    'ipanttrusttype': ['2'],
-                    'ipanttrustattributes': ['9'],
-                    'trusttype': ['Non-transitive external trust to a domain '
-                                  'in another Active Directory forest']
-                },
-            ]
-        }]
+        m_api.Command.trust_find.side_effect = trust_find()
+        m_api.Command.trustdomain_find.side_effect = trustdomain_find()
 
         framework = object()
         registry.initialize(framework, config.Config)
@@ -364,7 +385,8 @@ class TestTrustDomains(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustDomainsCheck'
         assert result.kw.get('key') == 'domain-list'
-        assert result.kw.get('trust_domains') == 'ad.example, child.example'
+        assert result.kw.get('trust_domains') == \
+            'ad.example, child.ad.example, child.example'
         assert result.kw.get('sssd_domains') == 'child.example'
 
         result = self.results.results[1]
@@ -442,34 +464,16 @@ class TestTrustCatalog(BaseTest):
         ds2result.output = 'Active servers:\nAD Global Catalog: ' \
             'root-dc.ad.vm\nAD Domain Controller: root-dc.ad.vm\n' \
 
-        mock_run.side_effect = [dsresult, ds2result]
+        mock_run.side_effect = [dsresult, dsresult, ds2result]
         mock_getnamebysid.side_effect = [
            {'S-1-5-21-abc-500': {'name': 'admin@ad.example', 'type': 3}},
+           {'S-1-5-21-ghi-500': {'name': 'admin@child.ad.example', 'type': 3}},
            {'S-1-5-21-def-500': {'name': 'admin@child.example', 'type': 3}}
         ]
 
         # get_trust_domains()
-        m_api.Command.trust_find.side_effect = [{
-            'result': [
-                {
-                    'cn': ['ad.example'],
-                    'ipantflatname': ['ADROOT'],
-                    'ipanttrusteddomainsid': ['S-1-5-21-abc'],
-                    'ipanttrusttype': ['2'],
-                    'ipanttrustattributes': ['8'],
-                    'trusttype': ['Active Directory domain'],
-                },
-                {
-                    'cn': ['child.example'],
-                    'ipantflatname': ['ADCHILD'],
-                    'ipanttrusteddomainsid': ['S-1-5-22-def'],
-                    'ipanttrusttype': ['2'],
-                    'ipanttrustattributes': ['9'],
-                    'trusttype': ['Non-transitive external trust to a domain '
-                                  'in another Active Directory forest']
-                },
-            ]
-        }]
+        m_api.Command.trust_find.side_effect = trust_find()
+        m_api.Command.trustdomain_find.side_effect = trustdomain_find()
 
         framework = object()
         registry.initialize(framework, config.Config)
@@ -478,7 +482,7 @@ class TestTrustCatalog(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 6
+        assert len(self.results) == 9
 
         result = self.results.results[0]
         assert result.result == constants.SUCCESS
@@ -513,9 +517,29 @@ class TestTrustCatalog(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
         assert result.kw.get('key') == 'AD Global Catalog'
-        assert result.kw.get('domain') == 'child.example'
+        assert result.kw.get('domain') == 'child.ad.example'
 
         result = self.results.results[5]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'AD Domain Controller'
+
+        result = self.results.results[6]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'Domain Security Identifier'
+        assert result.kw.get('sid') == 'S-1-5-21-ghi'
+
+        result = self.results.results[7]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'AD Global Catalog'
+        assert result.kw.get('domain') == 'child.example'
+
+        result = self.results.results[8]
         assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustCatalogCheck'
