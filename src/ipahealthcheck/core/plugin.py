@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from functools import wraps
 
-from ipahealthcheck.core.constants import getLevelName
+from ipahealthcheck.core.constants import getLevelName, getLevel
 
 
 def duration(f):
@@ -204,7 +204,7 @@ def json_to_results(data):
     results = Results()
 
     for line in data:
-        result = line.pop('result')
+        result = getLevel(line.pop('result'))
         source = line.pop('source')
         check = line.pop('check')
         duration = line.pop('duration')

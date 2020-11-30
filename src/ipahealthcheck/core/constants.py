@@ -36,7 +36,25 @@ def getLevelName(level):
     is passed in instead the corresponding string representation is
     returned.
     """
-    return _levelToName.get(level) or _nameToLevel.get(level) or level
+    name = _levelToName.get(level) or _nameToLevel.get(level)
+    if name is not None:
+        return name
+
+    return level
+
+
+def getLevel(name):
+    """
+    Translate between level text and their numeric constants
+
+    If the level is one of the predefined levels then returns the
+    corresponding number.
+    """
+    level = _nameToLevel.get(name)
+    if level is not None:
+        return level
+
+    return name
 
 
 CONFIG_FILE = '/etc/ipahealthcheck/ipahealthcheck.conf'
