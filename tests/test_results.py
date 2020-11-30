@@ -69,3 +69,11 @@ def test_Result():
         assert x['result'] in (constants.getLevelName(constants.SUCCESS),
                                constants.getLevelName(constants.CRITICAL))
         assert len(x['kw']) == 0
+
+
+def test_getLevel():
+    assert constants.getLevel('SUCCESS') == constants.SUCCESS
+    assert constants.getLevel('WARNING') == constants.WARNING
+    assert constants.getLevel('ERROR') == constants.ERROR
+    assert constants.getLevel('CRITICAL') == constants.CRITICAL
+    assert constants.getLevel('FOO') == 'FOO'
