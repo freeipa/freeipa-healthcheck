@@ -49,8 +49,31 @@ class MetaCheck(Plugin):
                 else:
                     fips = "unknown"
 
+        if not os.path.exists('/usr/sbin/ipa-acme-manage'):
+            acme = "missing {}".format('/usr/sbin/ipa-acme-manage')
+            logger.debug('%s is not installed, skipping',
+                         '/usr/sbin/ipa-acme-manage')
+        else:
+            try:
+                result = ipautil.run(['ipa-acme-manage', 'status'],
+                                     capture_output=True,
+                                     raiseonerr=False,)
+            except Exception as e:
+                logger.debug('ipa-acme-manage failed: %s', e)
+                acme = "failed to check"
+                rval = constants.ERROR
+            else:
+                logger.debug(result.raw_output.decode('utf-8'))
+                if "disabled" in result.output_log:
+                    acme = "disabled"
+                elif "enabled" in result.output_log:
+                    acme = "enabled"
+                else:
+                    acme = "unknown"
+
         yield Result(self, rval,
                      fqdn=socket.getfqdn(),
                      fips=fips,
+                     acme=acme,
                      ipa_version=VERSION,
                      ipa_api_version=API_VERSION,)
