@@ -107,7 +107,11 @@ def fake_query(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN, count=1,
        fake_txt will set an invalid Kerberos realm entry to provoke a
        warning.
     """
-    m = message.Message()
+    if version.MAJOR < 2 or (version.MAJOR == 2 and version.MINOR == 0):
+        m = message.Message()
+    elif version.MAJOR == 2 and version.MINOR > 0:
+        m = message.QueryMessage()  # pylint: disable=E1101
+        m = message.make_response(m)  # pylint: disable=E1101
     if rdtype in (rdatatype.A, rdatatype.AAAA):
         fqdn = DNSName(qname)
         fqdn = fqdn.make_absolute()
@@ -118,6 +122,9 @@ def fake_query(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN, count=1,
                              raise_on_no_answer=False)
             # pylint: enable=unexpected-keyword-arg
         else:
+            if version.MAJOR == 2 and version.MINOR > 0:
+                question = rrset.RRset(fqdn, rdataclass.IN, rdtype)
+                m.question = [question]
             answers = Answer(fqdn, rdataclass.IN, rdtype, m)
 
         rlist = rrset.from_text_list(fqdn, 86400, rdataclass.IN,
@@ -138,6 +145,9 @@ def fake_query(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN, count=1,
                              raise_on_no_answer=False)
             # pylint: enable=unexpected-keyword-arg
         else:
+            if version.MAJOR == 2 and version.MINOR > 0:
+                question = rrset.RRset(qname, rdataclass.IN, rdtype)
+                m.question = [question]
             answers = Answer(qname, rdataclass.IN, rdatatype.TXT, m)
 
         rlist = rrset.from_text_list(qname, 86400, rdataclass.IN,
