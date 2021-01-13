@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='ipahealthcheck',
-    version='0.7',
+    version='0.8',
     namespace_packages=['ipahealthcheck', 'ipaclustercheck'],
     package_dir={'': 'src'},
     # packages=find_packages(where='src'),
