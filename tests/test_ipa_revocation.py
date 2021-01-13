@@ -2,16 +2,16 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from util import capture_results, CAInstance
-from util import m_api
-from base import BaseTest
+from tests.util import capture_results, CAInstance
+from tests.util import m_api
+from tests.base import BaseTest
 from unittest.mock import Mock
 
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertRevocation
-from mock_certmonger import create_mock_dbus, _certmonger
-from mock_certmonger import get_expected_requests, set_requests
+from tests.mock_certmonger import create_mock_dbus, _certmonger
+from tests.mock_certmonger import get_expected_requests, set_requests
 
 
 class IPACertificate:

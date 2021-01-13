@@ -9,7 +9,7 @@ from ipahealthcheck.core import constants
 from ipahealthcheck.core.plugin import Results
 from unittest.mock import patch
 
-from util import capture_results
+from tests.util import capture_results
 
 nobody = pwd.getpwnam('nobody')
 

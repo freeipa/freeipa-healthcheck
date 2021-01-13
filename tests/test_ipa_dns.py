@@ -13,8 +13,8 @@ from dns import (
 )
 from dns.resolver import Answer
 
-from base import BaseTest
-from util import capture_results, m_api
+from tests.base import BaseTest
+from tests.util import capture_results, m_api
 from unittest.mock import patch
 
 from ipahealthcheck.core import config, constants

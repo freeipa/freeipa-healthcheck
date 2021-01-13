@@ -2,15 +2,15 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from util import capture_results
-from base import BaseTest
+from tests.util import capture_results
+from tests.base import BaseTest
 
 from ipahealthcheck.core import constants, config
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertTracking
 from unittest.mock import Mock
-from mock_certmonger import create_mock_dbus, _certmonger
-from mock_certmonger import get_expected_requests, set_requests
+from tests.mock_certmonger import create_mock_dbus, _certmonger
+from tests.mock_certmonger import get_expected_requests, set_requests
 
 
 class TestTracking(BaseTest):

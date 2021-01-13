@@ -2,9 +2,9 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from util import capture_results, CAInstance
-from util import m_api
-from base import BaseTest
+from tests.util import capture_results, CAInstance
+from tests.util import m_api
+from tests.base import BaseTest
 from ipahealthcheck.core import constants, config
 from ipahealthcheck.dogtag.plugin import registry
 from ipahealthcheck.dogtag.ca import DogtagCertsConnectivityCheck

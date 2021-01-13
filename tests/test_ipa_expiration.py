@@ -2,16 +2,16 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from util import capture_results
-from base import BaseTest
+from tests.util import capture_results
+from tests.base import BaseTest
 from ipaplatform.paths import paths
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertmongerExpirationCheck
 from ipahealthcheck.ipa.certs import IPACAChainExpirationCheck
 from unittest.mock import Mock, patch
-from mock_certmonger import create_mock_dbus, _certmonger
-from mock_certmonger import (
+from tests.mock_certmonger import create_mock_dbus, _certmonger
+from tests.mock_certmonger import (
     get_expected_requests,
     set_requests,
     CERT_EXPIRATION_DAYS,

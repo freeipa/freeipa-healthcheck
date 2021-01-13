@@ -2,9 +2,9 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from base import BaseTest
+from tests.base import BaseTest
 from unittest.mock import Mock
-from util import capture_results, m_api
+from tests.util import capture_results, m_api
 
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ds.plugin import registry

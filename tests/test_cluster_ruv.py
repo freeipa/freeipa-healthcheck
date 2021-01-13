@@ -2,14 +2,14 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from base import BaseTest
-from util import capture_results
+from tests.base import BaseTest
+from tests.util import capture_results
 
 from ipahealthcheck.core import config
 from ipaclustercheck.ipa.plugin import ClusterRegistry
 from ipaclustercheck.ipa.ruv import ClusterRUVCheck
 
-import clusterdata
+from tests import clusterdata
 
 
 class RUVRegistry(ClusterRegistry):

@@ -2,10 +2,10 @@
 # Copyright (C) 2020 FreeIPA Contributors see COPYING for license
 #
 
-from base import BaseTest
+from tests.base import BaseTest
 from collections import namedtuple
 from unittest.mock import patch
-from util import capture_results
+from tests.util import capture_results
 
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.meta.plugin import registry

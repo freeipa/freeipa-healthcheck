@@ -4,11 +4,11 @@
 
 import sys
 
-from base import BaseTest
+from tests.base import BaseTest
 from collections import namedtuple
 from unittest.mock import Mock, patch
-from util import capture_results
-from util import m_api
+from tests.util import capture_results
+from tests.util import m_api
 
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry

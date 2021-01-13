@@ -2,8 +2,8 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 from unittest import mock, TestCase
-from util import no_exceptions
-from util import ADtrustBasedRole, ServiceBasedRole
+from tests.util import no_exceptions
+from tests.util import ADtrustBasedRole, ServiceBasedRole
 
 
 class BaseTest(TestCase):

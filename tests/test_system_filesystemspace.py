@@ -3,9 +3,9 @@
 #
 from __future__ import division
 
-from base import BaseTest
+from tests.base import BaseTest
 from unittest.mock import Mock
-from util import capture_results
+from tests.util import capture_results
 from collections import namedtuple
 
 from ipahealthcheck.core import config, constants

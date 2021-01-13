@@ -2,8 +2,8 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from util import capture_results, CAInstance
-from base import BaseTest
+from tests.util import capture_results, CAInstance
+from tests.base import BaseTest
 from ipahealthcheck.core import constants, config
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertmongerCA
