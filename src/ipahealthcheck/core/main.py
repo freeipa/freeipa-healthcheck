@@ -15,7 +15,7 @@ from ipaserver.install.installutils import is_ipa_configured
 class IPAChecks(RunChecks):
     def pre_check(self):
         if not is_ipa_configured():
-            print("IPA is not configured")
+            print("IPA server is not configured")
             return 1
 
         return None
