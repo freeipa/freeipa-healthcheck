@@ -22,8 +22,8 @@ def test_Result():
     r = Result(p, constants.SUCCESS, **kw)
 
     e = raises(TypeError, Result)
-    assert str(e) == "__init__() missing 2 required positional arguments: " \
-                     "'plugin' and 'result'"
+    assert "__init__() missing 2 required positional arguments: " \
+           "'plugin' and 'result'" in str(e)
 
     # Test passing source and check to Result. This is used for loading
     # a previous output.
