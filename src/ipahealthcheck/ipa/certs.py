@@ -145,6 +145,23 @@ def get_expected_requests(ca, ds, serverid):
     else:
         logger.debug('No KDC pkinit certificate')
 
+    # See if a host certificate was issued. This is only to
+    # prevent a false-positive if one is indeed installed.
+    local = {
+        paths.IPA_NSSDB_DIR: 'Local IPA host',
+        paths.NSS_DB_DIR: 'IPA Machine Certificate - %s' % socket.getfqdn(),
+    }
+    for db, nickname in local.items():
+        nssdb = certdb.NSSDatabase(db)
+        if nssdb.has_nickname(nickname):
+            requests.append(
+                {
+                    'cert-database': db,
+                    'cert-nickname': nickname,
+                    'ca-name': 'IPA',
+                }
+            )
+
     return requests
 
 
