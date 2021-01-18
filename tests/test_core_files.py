@@ -67,9 +67,17 @@ def test_files_owner(mock_stat):
     results = capture_results(f)
     my_results = get_results(results, 'owner')
     assert my_results.results[0].result == constants.WARNING
+    assert my_results.results[0].kw.get('got') == 'nobody'
+    assert my_results.results[0].kw.get('expected') == 'root'
+    assert my_results.results[0].kw.get('type') == 'owner'
+
     assert my_results.results[1].result == constants.SUCCESS
     assert my_results.results[2].result == constants.SUCCESS
+
     assert my_results.results[3].result == constants.WARNING
+    assert my_results.results[3].kw.get('got') == 'nobody'
+    assert my_results.results[3].kw.get('expected') == 'root,bin'
+    assert my_results.results[3].kw.get('type') == 'owner'
     assert my_results.results[3].kw.get('msg') == \
         'Ownership of fiz is nobody and should be one of root,bin'
 
@@ -97,9 +105,17 @@ def test_files_group(mock_stat):
     results = capture_results(f)
     my_results = get_results(results, 'group')
     assert my_results.results[0].result == constants.WARNING
+    assert my_results.results[0].kw.get('got') == 'nobody'
+    assert my_results.results[0].kw.get('expected') == 'root'
+    assert my_results.results[0].kw.get('type') == 'group'
+
     assert my_results.results[1].result == constants.SUCCESS
     assert my_results.results[2].result == constants.SUCCESS
+
     assert my_results.results[3].result == constants.WARNING
+    assert my_results.results[3].kw.get('got') == 'nobody'
+    assert my_results.results[3].kw.get('expected') == 'root,bin'
+    assert my_results.results[3].kw.get('type') == 'group'
     assert my_results.results[3].kw.get('msg') == \
         'Group of fiz is nobody and should be one of root,bin'
 

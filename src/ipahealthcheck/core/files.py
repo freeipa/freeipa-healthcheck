@@ -98,6 +98,7 @@ class FileCheck:
                     msg = 'Group of %s is %s and should ' \
                           'be one of %s' % \
                           (path, actual.gr_name, ','.join(group))
+                group = ','.join(group)
                 yield Result(self, constants.WARNING, key=key,
                              path=path, type='group', expected=group,
                              got=actual.gr_name,
