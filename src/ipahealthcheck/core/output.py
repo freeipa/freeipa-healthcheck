@@ -126,6 +126,8 @@ class Human(Output):
     options = ()
 
     def generate(self, data):
+        if not data:
+            return "No issues found.\n"
         output = ''
         for line in data:
             kw = line.get('kw')
