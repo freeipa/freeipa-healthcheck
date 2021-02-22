@@ -478,18 +478,18 @@ class IPANSSChainValidation(IPAPlugin):
         try:
             for (dbdir, nickname, pinfile) in validate:
                 args = [paths.CERTUTIL, "-V", "-u", "V", "-e"]
-                args.extend(["-d", dbdir])
+                args.extend(["-d", "sql:" + dbdir])
                 args.extend(["-n", nickname])
                 args.extend(["-f", pinfile])
 
                 key = os.path.normpath(dbdir) + ':' + nickname
                 try:
-                    response = ipautil.run(args)
+                    response = ipautil.run(args, raiseonerr=False)
                 except ipautil.CalledProcessError as e:
                     result = Result(
                         self, constants.ERROR, key=key,
                         msg='Validation of %s in %s failed: %s'
-                            % (nickname, dbdir, e))
+                            % (nickname, dbdir, response.output_error))
                 else:
                     if 'certificate is valid' not in \
                             response.raw_output.decode('utf-8'):
@@ -523,7 +523,7 @@ class IPAOpenSSLChainValidation(IPAPlugin):
         """
         args = [paths.OPENSSL, "verify", file]
 
-        return ipautil.run(args)
+        return ipautil.run(args, raiseonerr=False)
 
     def check(self):
         results = Results()
@@ -545,7 +545,7 @@ class IPAOpenSSLChainValidation(IPAPlugin):
                     result = Result(
                         self, constants.ERROR, key=cert,
                         msg='Certificate validation for %s failed: %s' %
-                            (cert, response.raw_output.decode('utf-8')))
+                            (cert, response.raw_error_output.decode('utf-8')))
                 else:
                     result = Result(
                         self, constants.SUCCESS, key=cert)
@@ -692,7 +692,7 @@ class IPACertRevocation(IPAPlugin):
             try:
                 if result['result']['revoked']:
                     reason = result['result']['revocation_reason']
-                    reason_txt = revocation_reason[reason]
+                    reason_txt = self.revocation_reason[reason]
                     result = Result(self, constants.ERROR,
                                     key=id,
                                     msg='Certificate is revoked, %s' %
