@@ -547,7 +547,21 @@ Verify the description and userCertificate values in uid=ipara,ou=People,o=ipaca
       "kw": {
         "expected": "2;125;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST",
         "got": "2;7;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST",
-        "msg": "RA agent description does not match 2;7;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST in LDAP and expected 2;125;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST"
+        "msg": "RA agent description does not match. Found 2;7;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST in LDAP and expected 2;125;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST"
+      }
+    }
+
+### IPAKRAAgent
+Verify the description and userCertificate values in uid=ipakra,ou=people,o=kra,o=ipaca.
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPAKRAAgent",
+      "result": "ERROR",
+      "kw": {
+        "expected": "2;125;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST",
+        "got": "2;7;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST",
+        "msg": "KRA agent description does not match. Found 2;7;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST in LDAP and expected 2;125;CN=Certificate Authority,O=EXAMPLE.TEST;CN=IPA RA,O=EXAMPLE.TEST"
       }
     }
 
