@@ -724,6 +724,83 @@ class IPAOpenSSLChainValidation(IPAPlugin):
                         self, constants.SUCCESS, key=cert)
 
 
+def check_agent(plugin, base_dn, agent_type):
+    """Check RA/KRA Agent"""
+
+    try:
+        cert = x509.load_certificate_from_file(paths.RA_AGENT_PEM)
+    except Exception as e:
+        yield Result(plugin, constants.ERROR,
+                     error=str(e),
+                     msg='Unable to load RA cert: {error}')
+        return
+    serial_number = cert.serial_number
+    subject = DN(cert.subject)
+    issuer = DN(cert.issuer)
+    description = '2;%d;%s;%s' % (serial_number, issuer, subject)
+    logger.debug('%s agent description should be %s', agent_type, description)
+    db_filter = ldap2.ldap2.combine_filters(
+        [
+            ldap2.ldap2.make_filter({'objectClass': 'inetOrgPerson'}),
+            ldap2.ldap2.make_filter(
+                {'description': ';%s;%s' % (issuer, subject)},
+                exact=False, trailing_wildcard=False),
+        ],
+        ldap2.ldap2.MATCH_ALL)
+    try:
+        entries = plugin.conn.get_entries(base_dn,
+                                          plugin.conn.SCOPE_SUBTREE,
+                                          db_filter)
+    except errors.NotFound:
+        yield Result(plugin, constants.ERROR,
+                     description=description,
+                     msg='%s agent not found in LDAP' % agent_type)
+        return
+    except Exception as e:
+        yield Result(plugin, constants.ERROR,
+                     error=str(e),
+                     msg='Retrieving %s agent from LDAP failed {error}'
+                         % agent_type)
+        return
+    else:
+        logger.debug('%s agent description is %s', agent_type, description)
+        if len(entries) != 1:
+            yield Result(plugin, constants.ERROR,
+                         found=len(entries),
+                         msg='Too many %s agent entries found, {found}'
+                             % agent_type)
+            return
+        entry = entries[0]
+        raw_desc = entry.get('description')
+        if raw_desc is None:
+            yield Result(plugin, constants.ERROR,
+                         msg='%s agent is missing the description '
+                             'attribute or it is not readable' % agent_type)
+            return
+        ra_desc = raw_desc[0]
+        ra_certs = entry.get('usercertificate')
+        if ra_desc != description:
+            yield Result(plugin, constants.ERROR,
+                         expected=description,
+                         got=ra_desc,
+                         msg='%s agent description does not match. Found '
+                         '{got} in LDAP and expected {expected}' % agent_type)
+            return
+        found = False
+        for candidate in ra_certs:
+            if candidate == cert:
+                found = True
+                break
+        if not found:
+            yield Result(plugin, constants.ERROR,
+                         certfile=paths.RA_AGENT_PEM,
+                         dn=str(entry.dn),
+                         msg='%s agent certificate in {certfile} not '
+                             'found in LDAP userCertificate attribute '
+                             'for the entry {dn}' % agent_type)
+        yield Result(plugin, constants.SUCCESS)
+
+
 @registry
 class IPARAAgent(IPAPlugin):
     """Validate the RA Agent used to talk to the CA
@@ -739,82 +816,32 @@ class IPARAAgent(IPAPlugin):
             logger.debug('CA is not configured, skipping RA Agent check')
             return
 
-        try:
-            cert = x509.load_certificate_from_file(paths.RA_AGENT_PEM)
-        except Exception as e:
-            yield Result(self, constants.ERROR,
-                         error=str(e),
-                         msg='Unable to load RA cert: {error}')
+        base_dn = DN('uid=ipara,ou=people,o=ipaca')
+        yield from check_agent(self, base_dn, 'RA')
+
+
+@registry
+class IPAKRAAgent(IPAPlugin):
+    """Validate the KRA Agent
+
+       Compare the description and usercertificate values.
+    """
+
+    requires = ('dirsrv',)
+
+    @duration
+    def check(self):
+        if not self.ca.is_configured():
+            logger.debug('CA is not configured, skipping KRA Agent check')
             return
 
-        serial_number = cert.serial_number
-        subject = DN(cert.subject)
-        issuer = DN(cert.issuer)
-        description = '2;%d;%s;%s' % (serial_number, issuer, subject)
-
-        logger.debug('RA agent description should be %s', description)
-
-        db_filter = ldap2.ldap2.combine_filters(
-            [
-                ldap2.ldap2.make_filter({'objectClass': 'inetOrgPerson'}),
-                ldap2.ldap2.make_filter({'sn': 'ipara'}),
-                ldap2.ldap2.make_filter(
-                    {'description': ';%s;%s' % (issuer, subject)},
-                    exact=False, trailing_wildcard=False),
-            ],
-            ldap2.ldap2.MATCH_ALL)
-
-        base_dn = DN(('o', 'ipaca'))
-        try:
-            entries = self.conn.get_entries(base_dn,
-                                            self.conn.SCOPE_SUBTREE,
-                                            db_filter)
-        except errors.NotFound:
-            yield Result(self, constants.ERROR,
-                         description=description,
-                         msg='RA agent not found in LDAP')
+        kra = krainstance.KRAInstance(api.env.realm)
+        if not kra.is_installed():
+            logger.debug('KRA is not installed, skipping KRA Agent check')
             return
-        except Exception as e:
-            yield Result(self, constants.ERROR,
-                         error=str(e),
-                         msg='Retrieving RA agent from LDAP failed {error}')
-            return
-        else:
-            logger.debug('RA agent description is %s', description)
-            if len(entries) != 1:
-                yield Result(self, constants.ERROR,
-                             found=len(entries),
-                             msg='Too many RA agent entries found, {found}')
-                return
-            entry = entries[0]
-            raw_desc = entry.get('description')
-            if raw_desc is None:
-                yield Result(self, constants.ERROR,
-                             msg='RA agent is missing the description '
-                                 'attribute or it is not readable')
-                return
-            ra_desc = raw_desc[0]
-            ra_certs = entry.get('usercertificate')
-            if ra_desc != description:
-                yield Result(self, constants.ERROR,
-                             expected=description,
-                             got=ra_desc,
-                             msg='RA agent description does not match. Found '
-                             '{got} in LDAP and expected {expected}')
-                return
-            found = False
-            for candidate in ra_certs:
-                if candidate == cert:
-                    found = True
-                    break
-            if not found:
-                yield Result(self, constants.ERROR,
-                             certfile=paths.RA_AGENT_PEM,
-                             dn=str(entry.dn),
-                             msg='RA agent certificate in {certfile} not '
-                                 'found in LDAP userCertificate attribute '
-                                 'for the entry {dn}')
-            yield Result(self, constants.SUCCESS)
+
+        base_dn = DN('uid=ipakra,ou=people,o=kra,o=ipaca')
+        yield from check_agent(self, base_dn, 'KRA')
 
 
 @registry
