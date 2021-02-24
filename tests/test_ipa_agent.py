@@ -4,11 +4,11 @@
 
 from base import BaseTest
 from unittest.mock import Mock, patch
-from util import capture_results, CAInstance
+from util import capture_results, CAInstance, KRAInstance
 
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
-from ipahealthcheck.ipa.certs import IPARAAgent
+from ipahealthcheck.ipa.certs import IPARAAgent, IPAKRAAgent
 
 from ipalib import errors
 from ipapython.dn import DN
@@ -218,3 +218,173 @@ class TestNSSAgent(BaseTest):
         assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPARAAgent'
+
+
+class TestKRAAgent(BaseTest):
+    cert = IPACertificate()
+    patches = {
+        'ldap.initialize':
+        Mock(return_value=mock_ldap_conn()),
+        'ipaserver.install.krainstance.KRAInstance':
+        Mock(return_value=KRAInstance()),
+        'ipalib.x509.load_certificate_from_file':
+        Mock(return_value=cert),
+    }
+
+    def test_kra_agent_ok(self):
+
+        attrs = dict(
+            description=['2;1;CN=ISSUER;CN=RA AGENT'],
+            usercertificate=[self.cert],
+        )
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        ldapentry = LDAPEntry(fake_conn,
+                              DN('uid=ipakra,ou=people,o=kra,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
+
+        framework = object()
+        registry.initialize(framework, config.Config())
+        f = IPAKRAAgent(registry)
+
+        f.conn = mock_ldap([ldapentry])
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.certs'
+        assert result.check == 'IPAKRAAgent'
+
+    def test_kra_agent_no_description(self):
+
+        attrs = dict(
+            usercertificate=[self.cert],
+        )
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        ldapentry = LDAPEntry(fake_conn,
+                              DN('uid=ipakra,ou=people,o=kra,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
+
+        framework = object()
+        registry.initialize(framework, config.Config())
+        f = IPAKRAAgent(registry)
+
+        f.conn = mock_ldap([ldapentry])
+        self.results = capture_results(f)
+        result = self.results.results[0]
+
+        assert result.result == constants.ERROR
+        assert 'description' in result.kw.get('msg')
+
+    @patch('ipalib.x509.load_certificate_from_file')
+    def test_kra_agent_load_failure(self, mock_load_cert):
+
+        mock_load_cert.side_effect = IOError('test')
+
+        framework = object()
+        registry.initialize(framework, config.Config())
+        f = IPAKRAAgent(registry)
+
+        self.results = capture_results(f)
+        result = self.results.results[0]
+
+        assert result.result == constants.ERROR
+        assert result.kw.get('error') == 'test'
+
+    def test_kra_agent_no_entry_found(self):
+
+        framework = object()
+        registry.initialize(framework, config.Config())
+        f = IPAKRAAgent(registry)
+
+        f.conn = mock_ldap(None)  # None == NotFound
+        self.results = capture_results(f)
+        result = self.results.results[0]
+
+        assert result.result == constants.ERROR
+        assert result.kw.get('msg') == 'KRA agent not found in LDAP'
+
+    def test_kra_agent_too_many(self):
+
+        attrs = dict(
+            description=['2;1;CN=ISSUER;CN=RA AGENT'],
+            usercertificate=[self.cert],
+        )
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        ldapentry = LDAPEntry(fake_conn,
+                              DN('uid=ipakra,ou=people,o=kra,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
+
+        ldapentry2 = LDAPEntry(fake_conn,
+                               DN('uid=ipakra,ou=people,o=kra,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
+
+        framework = object()
+        registry.initialize(framework, config.Config())
+        f = IPAKRAAgent(registry)
+
+        f.conn = mock_ldap([ldapentry, ldapentry2])
+        self.results = capture_results(f)
+        result = self.results.results[0]
+
+        assert result.result == constants.ERROR
+        assert result.kw.get('found') == 2
+
+    def test_kra_agent_nonmatching_cert(self):
+
+        cert2 = IPACertificate(2)
+
+        attrs = dict(
+            description=['2;1;CN=ISSUER;CN=RA AGENT'],
+            usercertificate=[cert2],
+        )
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        ldapentry = LDAPEntry(fake_conn,
+                              DN('uid=ipakra,ou=people,o=kra,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
+
+        framework = object()
+        registry.initialize(framework, config.Config())
+        f = IPAKRAAgent(registry)
+
+        f.conn = mock_ldap([ldapentry])
+        self.results = capture_results(f)
+        result = self.results.results[0]
+
+        assert result.result == constants.ERROR
+        assert result.kw.get('certfile') == paths.RA_AGENT_PEM
+        assert result.kw.get('dn') == 'uid=ipakra,ou=people,o=kra,o=ipaca'
+
+    def test_kra_agent_multiple_certs(self):
+
+        cert2 = IPACertificate(2)
+
+        attrs = dict(
+            description=['2;1;CN=ISSUER;CN=RA AGENT'],
+            usercertificate=[cert2, self.cert],
+        )
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        ldapentry = LDAPEntry(fake_conn,
+                              DN('uid=ipakra,ou=people,o=kra,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
+
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPAKRAAgent(registry)
+
+        f.conn = mock_ldap([ldapentry])
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.certs'
+        assert result.check == 'IPAKRAAgent'
