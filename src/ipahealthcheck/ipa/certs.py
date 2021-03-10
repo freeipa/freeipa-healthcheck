@@ -305,7 +305,7 @@ class IPACertfileExpirationCheck(IPAPlugin):
             if now > notafter:
                 result = Result(self, constants.ERROR,
                                 key=id,
-                                msg='Request id %s is expired: %s' % id)
+                                msg='Request id %s is expired' % id)
                 results.add(result)
                 continue
 
