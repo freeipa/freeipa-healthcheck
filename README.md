@@ -507,6 +507,30 @@ The trust for certificates stored in NSS databases is compared against a known g
       }
     }
 
+### IPACertMatchCheck
+Ensure CA certificate entries in LDAP and NSS databases match.
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPACertMatchCheck",
+      "result": "ERROR",
+      "kw": {
+        "msg": "CA Certificate from /etc/ipa/nssdb does not match /etc/ipa/ca.crt"
+      }
+    }
+
+### IPADogtagCertsMatchCheck
+Check if Dogtag certificates present in both NSS DB and LDAP match.
+
+    {
+      "source": "ipahealthcheck.ipa.certs",
+      "check": "IPADogtagCertsMatchCheck",
+      "result": "ERROR",
+      "kw": {
+        "msg": "'subsystemCert cert-pki-ca' certificate in NSS DB does not match entry in LDAP"
+      }
+    }
+
 ### IPANSSChainValidation
 Validate the certificate chain of the NSS certificates. This executes: certutil -V -u V -e -d [dbdir] -n [nickname].
 
