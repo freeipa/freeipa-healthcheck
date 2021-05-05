@@ -92,6 +92,8 @@ class ipa_custodia(IPAServiceCheck):
 
 @registry
 class ipa_dnskeysyncd(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = 'ipa-dnskeysyncd'
 

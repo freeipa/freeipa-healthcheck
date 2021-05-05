@@ -84,6 +84,26 @@ def run_service_plugins(plugins, source, check):
         if not isinstance(plugin, ServiceCheck):
             continue
 
+        # Try to save some time to not check dependent services if the
+        # parent is down.
+        if not set(plugin.requires).issubset(available):
+            # A required service is not available. Either it hasn't been
+            # checked yet or it isn't running. If not running break.
+            running = True
+            for result in results.results:
+                if result.check in plugin.requires:
+                    # if not in available but in results the service failed
+                    running = False
+                    break
+            if not running:
+                logger.debug(
+                    'Skipping %s:%s because %s service(s) not running',
+                    plugin.__class__.__module__,
+                    plugin.__class__.__name__,
+                    ', '.join(set(plugin.requires) - set(available))
+                )
+                continue
+
         logger.debug('Calling check %s', plugin)
         for result in plugin.check():
             # always run the service checks so dependencies work
