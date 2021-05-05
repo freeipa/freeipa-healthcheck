@@ -21,12 +21,15 @@ logger = logging.getLogger()
 
 
 def find_registries(entry_points):
+    # Loading the resources may reset the log level, save it.
+    log_level = logger.level
     registries = {}
     for entry_point in entry_points:
         registries.update({
             ep.name: ep.resolve()
             for ep in pkg_resources.iter_entry_points(entry_point)
         })
+    logger.setLevel(log_level)
     return registries
 
 
