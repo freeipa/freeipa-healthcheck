@@ -25,6 +25,8 @@ class IPACRLManagerCheck(IPAPlugin):
     """
     @duration
     def check(self):
+        if not self.ca.is_configured():
+            return
         try:
             enabled = self.ca.is_crlgen_enabled()
         except AttributeError:
