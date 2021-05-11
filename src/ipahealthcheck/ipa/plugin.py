@@ -33,6 +33,7 @@ class IPARegistry(Registry):
         super().__init__()
         self.trust_agent = False
         self.trust_controller = False
+        self.ca_configured = False
 
     def initialize(self, framework, config, options=None):
         super().initialize(framework, config)
@@ -83,6 +84,9 @@ class IPARegistry(Registry):
         role = roles[1].status(api)[0]
         if role.get('status') == 'enabled':
             self.trust_controller = True
+
+        ca = cainstance.CAInstance(api.env.realm, host_name=api.env.host)
+        self.ca_configured = ca.is_configured()
 
 
 registry = IPARegistry()

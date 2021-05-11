@@ -280,6 +280,13 @@ class RunChecks:
         if rval is not None:
             return rval
 
+        # If we have IPA configured without a CA then we want to skip
+        # the pkihealthcheck plugins otherwise they will generated a
+        # lot of false positives. The IPA plugins are loaded first so
+        # which should set ca_configured in its registry to True or
+        # False. We will skip the pkihealthcheck plugins only if
+        # ca_configured is False which means that it was set by IPA.
+        ca_configured = None
         for name, registry in find_registries(self.entry_points).items():
             try:
                 registry.initialize(framework, config, options)
@@ -291,6 +298,11 @@ class RunChecks:
                 except Exception as e:
                     logger.error("Unable to initialize %s: %s", name, e)
                     continue
+            if hasattr(registry, 'ca_configured'):
+                ca_configured = registry.ca_configured
+            if 'pkihealthcheck' in name and ca_configured is False:
+                logger.debug('IPA CA is not configured, skipping %s', name)
+                continue
             for plugin in find_plugins(name, registry):
                 plugins.append(plugin)
 
