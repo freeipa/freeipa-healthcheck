@@ -48,6 +48,18 @@ class TestCRLManagerRole(BaseTest):
         assert result.check == 'IPACRLManagerCheck'
         assert result.kw.get('crlgen_enabled') is True
 
+    @patch('ipaserver.install.cainstance.CAInstance')
+    def test_crlmanager_no_ca(self, mock_ca):
+        """There should be no CRLManagerCheck without a CA"""
+        mock_ca.return_value = CAInstance(False)
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPACRLManagerCheck(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 0
+
 
 class TestRenewalMaster(BaseTest):
     def test_renewal_master_not_set(self):
