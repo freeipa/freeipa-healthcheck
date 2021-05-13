@@ -157,6 +157,8 @@ def add_default_options(parser, output_registry, default_output):
                         default=default_output, help='Output method')
     parser.add_argument('--output-file', dest='outfile', default=None,
                         help='File to store output')
+    parser.add_argument('--version', dest='version', action='store_true',
+                        help='Report the version number and exit')
 
 
 def add_output_options(parser, output_registry):
@@ -242,6 +244,16 @@ class RunChecks:
         self.add_options()
         options = parse_options(self.parser)
         self.options = options
+
+        if options.version:
+            for registry in self.entry_points:
+                name = registry.split('.')[0]
+                try:
+                    version = pkg_resources.get_distribution(name).version
+                except pkg_resources.DistributionNotFound:
+                    continue
+                print('%s: %s' % (name, version))
+            return 0
 
         # pylint: disable=assignment-from-none
         rval = self.validate_options()
