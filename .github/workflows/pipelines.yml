@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9]
+        python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        fedora-release: [32, 33]
+        fedora-release: [33, 34]
 
     steps:
     - uses: actions/checkout@v2
