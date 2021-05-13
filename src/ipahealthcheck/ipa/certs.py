@@ -390,7 +390,7 @@ class IPACertTracking(IPAPlugin):
                              key=request_id,
                              error=str(e),
                              msg='Found request id {key} but it is not tracked'
-                                 'by certmonger!?: {error}')
+                                 ' by certmonger!?: {error}')
                 continue
 
             # The criteria was not met
@@ -435,10 +435,14 @@ class IPACertDNSSAN(IPAPlugin):
         for request in requests:
             request_id = certmonger.get_request_id(request)
             if request_id is None:
-                yield Result(self, constants.ERROR,
-                             key=request_id,
-                             msg='Found request id {key} but it is not tracked'
-                                 'by certmonger!?')
+                # log and skip. Missed tracking is reported by IPACertTracking
+                flatten = ', '.join("{!s}={!s}".format(key, val)
+                                    for (key, val) in request.items())
+
+                logger.debug(
+                    "Skipping %s since it is handled by IPACertTracking",
+                    flatten
+                )
                 continue
 
             ca_name = certmonger.get_request_value(request_id, 'ca-name')
