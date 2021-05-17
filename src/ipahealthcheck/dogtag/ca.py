@@ -53,14 +53,14 @@ class DogtagCertsConfigCheck(DogtagPlugin):
         db = certs.CertDB(api.env.realm, paths.PKI_TOMCAT_ALIAS_DIR)
         for nickname, _trust_flags in db.list_certs():
             if nickname in skip:
-                logging.debug('Skipping nickname %s because it isn\'t in '
-                              'the configuration file')
+                logger.debug('Skipping nickname %s because it isn\'t in '
+                             'the configuration file')
                 continue
             try:
                 val = get_directive(paths.CA_CS_CFG_PATH,
                                     blobs[nickname], '=')
             except KeyError:
-                print("%s not found, assuming 3rd party" % nickname)
+                logger.debug("%s not found, assuming 3rd party", nickname)
                 continue
             if val is None:
                 yield Result(self, constants.ERROR,
