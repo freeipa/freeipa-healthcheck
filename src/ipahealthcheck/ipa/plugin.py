@@ -15,8 +15,7 @@ from ipaserver.install import installutils
 
 from ipahealthcheck.core.plugin import Plugin, Registry
 
-
-logging.getLogger()
+logger = logging.getLogger()
 
 
 class IPAPlugin(Plugin):
@@ -56,7 +55,7 @@ class IPARegistry(Registry):
             try:
                 api.Backend.ldap2.connect()
             except (errors.CCacheError, errors.NetworkError) as e:
-                logging.debug('Failed to connect to LDAP: %s', e)
+                logger.debug('Failed to connect to LDAP: %s', e)
             return
 
         # This package is pulled in when the trust package is installed

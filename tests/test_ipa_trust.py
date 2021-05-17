@@ -409,7 +409,6 @@ class TestIPADomain(BaseTest):
 
         self.results = capture_results(f)
 
-        print(self.results.results)
         assert len(self.results) == 1
 
         result = self.results.results[0]
