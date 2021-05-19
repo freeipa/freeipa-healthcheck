@@ -2,6 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+import glob
 import logging
 import os
 
@@ -95,6 +96,67 @@ class IPAFileCheck(IPAPlugin, FileCheck):
         self.files.append((paths.RESOLV_CONF, ('root', 'systemd-resolve'),
                           ('root', 'systemd-resolve'), '0644'))
         self.files.append((paths.HOSTS, 'root', 'root', '0644'))
+
+        # IPA log files that may vary by installation. Only verify
+        # those that exist
+        for filename in (
+            paths.IPABACKUP_LOG,
+            paths.IPARESTORE_LOG,
+            paths.IPACLIENT_INSTALL_LOG,
+            paths.IPACLIENT_UNINSTALL_LOG,
+            paths.IPAREPLICA_CA_INSTALL_LOG,
+            paths.IPAREPLICA_CONNCHECK_LOG,
+            paths.IPAREPLICA_INSTALL_LOG,
+            paths.IPASERVER_INSTALL_LOG,
+            paths.IPASERVER_KRA_INSTALL_LOG,
+            paths.IPASERVER_UNINSTALL_LOG,
+            paths.IPAUPGRADE_LOG,
+            paths.IPATRUSTENABLEAGENT_LOG,
+        ):
+            if os.path.exists(filename):
+                self.files.append((filename, 'root', 'root', '0600'))
+
+        self.files.append((paths.IPA_CUSTODIA_AUDIT_LOG,
+                          'root', 'root', '0644'))
+
+        self.files.append((paths.KADMIND_LOG, 'root', 'root', '0600'))
+        self.files.append((paths.KRB5KDC_LOG, 'root', 'root', '0640'))
+
+        inst = api.env.realm.replace('.', '-')
+        self.files.append((paths.SLAPD_INSTANCE_ACCESS_LOG_TEMPLATE % inst,
+                           'dirsrv', 'dirsrv', '0600'))
+        self.files.append((paths.SLAPD_INSTANCE_ERROR_LOG_TEMPLATE % inst,
+                           'dirsrv', 'dirsrv', '0600'))
+
+        self.files.append((paths.VAR_LOG_HTTPD_ERROR, 'root', 'root', '0644'))
+
+        for globpath in glob.glob("%s/debug*.log" % paths.TOMCAT_CA_DIR):
+            self.files.append((globpath, "pkiuser", "pkiuser", "0644"))
+
+        for globpath in glob.glob(
+            "%s/ca_audit*" % paths.TOMCAT_SIGNEDAUDIT_DIR
+        ):
+            self.files.append((globpath, 'pkiuser', 'pkiuser', '0640'))
+
+        for filename in ('selftests.log', 'system', 'transactions'):
+            self.files.append((
+                os.path.join(paths.TOMCAT_CA_DIR, filename),
+                'pkiuser', 'pkiuser', '0640'
+            ))
+
+        for globpath in glob.glob("%s/debug*.log" % paths.TOMCAT_KRA_DIR):
+            self.files.append((globpath, "pkiuser", "pkiuser", "0644"))
+
+        for globpath in glob.glob(
+            "%s/ca_audit*" % paths.TOMCAT_KRA_SIGNEDAUDIT_DIR
+        ):
+            self.files.append((globpath, 'pkiuser', 'pkiuser', '0640'))
+
+        for filename in ('selftests.log', 'system', 'transactions'):
+            self.files.append((
+                os.path.join(paths.TOMCAT_KRA_DIR, filename),
+                'pkiuser', 'pkiuser', '0640'
+            ))
 
         return FileCheck.check(self)
 
