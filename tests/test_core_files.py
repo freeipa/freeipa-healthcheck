@@ -144,3 +144,20 @@ def test_files_mode(mock_stat):
     my_results = get_results(results, 'mode')
     assert my_results.results[0].result == constants.WARNING
     assert my_results.results[1].result == constants.WARNING
+
+
+@patch('os.path.exists')
+def test_files_not_found(mock_exists):
+    mock_exists.return_value = False
+
+    f = FileCheck()
+    f.files = files
+
+    results = capture_results(f)
+
+    for type in ('mode', 'group', 'owner'):
+        my_results = get_results(results, type)
+        assert len(my_results.results) == 4
+        for result in my_results.results:
+            assert result.result == constants.SUCCESS
+            assert result.kw.get('msg') == 'File does not exist'
