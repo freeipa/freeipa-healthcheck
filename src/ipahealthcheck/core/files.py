@@ -33,6 +33,13 @@ class FileCheck:
                 owner = tuple((owner,))
             if not isinstance(group, tuple):
                 group = tuple((group,))
+            if not os.path.exists(path):
+                for type in ('mode', 'owner', 'group'):
+                    key = '%s_%s' % (path.replace('/', '_'), type)
+                    yield Result(self, constants.SUCCESS, key=key,
+                                 type=type, path=path,
+                                 msg='File does not exist')
+                continue
             stat = os.stat(path)
             fmode = str(oct(stat.st_mode)[-4:])
             key = '%s_mode' % path.replace('/', '_')
