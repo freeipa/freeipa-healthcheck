@@ -1,6 +1,9 @@
 [MASTER]
 persistent=no
 
+extension-pkg-whitelist=
+    _ldap,
+
 [MESSAGES CONTROL]
 enable=
     all,
