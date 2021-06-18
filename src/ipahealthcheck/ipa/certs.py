@@ -719,7 +719,7 @@ class IPADogtagCertsMatchCheck(IPAPlugin):
                              msg=('Unable to load %s certificate:'
                                   '{error}' % cert_nick))
                 return False
-            cert_matched = any([cert == nsscert for cert in entry[attr]])
+            cert_matched = any(cert == nsscert for cert in entry[attr])
             if not cert_matched:
                 yield Result(plugin, constants.ERROR,
                              key=cert_nick,
@@ -736,10 +736,12 @@ class IPADogtagCertsMatchCheck(IPAPlugin):
             all_ok = True
             for nick, subject in expected_nicks_subjects.items():
                 cert = db.get_cert_from_db(nick)
-                ok = any([cert in entry['userCertificate'] and
-                          subject == entry['subjectName'][0]
-                          for entry in entries
-                          if 'userCertificate' in entry])
+                ok = any(
+                    cert in entry["userCertificate"]
+                    and subject == entry["subjectName"][0]
+                    for entry in entries
+                    if "userCertificate" in entry
+                )
                 if not ok:
                     all_ok = False
                     yield Result(plugin, constants.ERROR,
