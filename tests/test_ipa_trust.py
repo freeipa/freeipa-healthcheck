@@ -28,6 +28,11 @@ from ipahealthcheck.ipa.trust import (IPATrustAgentCheck,
 from ipalib import errors
 from ipapython.dn import DN
 from ipapython.ipaldap import LDAPClient, LDAPEntry
+try:
+    from ipaserver.masters import ENABLED_SERVICE, HIDDEN_SERVICE
+except ImportError:
+    from ipaserver.install.service import ENABLED_SERVICE, HIDDEN_SERVICE
+
 
 try:
     from ipapython.ipaldap import realm_to_serverid
@@ -795,31 +800,32 @@ class TestControllerService(BaseTest):
         # Zero because the call was skipped altogether
         assert len(self.results) == 0
 
-    def test_principal_ok(self):
+    def test_service_enabled(self):
         service_dn = DN(('cn', 'ADTRUST'))
-        attrs = {
-            'ipaconfigstring': ['enabledService'],
-        }
-        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
-        ldapentry = LDAPEntry(fake_conn, service_dn)
-        for attr, values in attrs.items():
-            ldapentry[attr] = values
+        for type in [ENABLED_SERVICE, HIDDEN_SERVICE]:
+            attrs = {
+                'ipaconfigstring': [type],
+            }
+            fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+            ldapentry = LDAPEntry(fake_conn, service_dn)
+            for attr, values in attrs.items():
+                ldapentry[attr] = values
 
-        framework = object()
-        registry.initialize(framework, config.Config)
-        registry.trust_controller = True
-        f = IPATrustControllerServiceCheck(registry)
+            framework = object()
+            registry.initialize(framework, config.Config)
+            registry.trust_controller = True
+            f = IPATrustControllerServiceCheck(registry)
 
-        f.conn = mock_ldap(ldapentry)
-        self.results = capture_results(f)
+            f.conn = mock_ldap(ldapentry)
+            self.results = capture_results(f)
 
-        assert len(self.results) == 1
+            assert len(self.results) == 1
 
-        result = self.results.results[0]
-        assert result.result == constants.SUCCESS
-        assert result.source == 'ipahealthcheck.ipa.trust'
-        assert result.check == 'IPATrustControllerServiceCheck'
-        assert result.kw.get('key') == 'ADTRUST'
+            result = self.results.results[0]
+            assert result.result == constants.SUCCESS
+            assert result.source == 'ipahealthcheck.ipa.trust'
+            assert result.check == 'IPATrustControllerServiceCheck'
+            assert result.kw.get('key') == 'ADTRUST'
 
     def test_principal_fail(self):
         service_dn = DN(('cn', 'ADTRUST'))

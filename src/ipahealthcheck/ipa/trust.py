@@ -23,9 +23,9 @@ except ImportError:
     # be skipped
     pass
 try:
-    from ipaserver.masters import ENABLED_SERVICE
+    from ipaserver.masters import ENABLED_SERVICE, HIDDEN_SERVICE
 except ImportError:
-    from ipaserver.install.service import ENABLED_SERVICE
+    from ipaserver.install.service import ENABLED_SERVICE, HIDDEN_SERVICE
 try:
     from ipapython.ipaldap import realm_to_serverid
 except ImportError:
@@ -476,7 +476,7 @@ class IPATrustControllerServiceCheck(IPAPlugin):
             configs = entry.get('ipaconfigstring', [])
             enabled = False
             for config in configs:
-                if config == ENABLED_SERVICE:
+                if config in [ENABLED_SERVICE, HIDDEN_SERVICE]:
                     enabled = True
                     break
 
