@@ -11,7 +11,11 @@ from ipahealthcheck.core.plugin import Result, duration
 from ipahealthcheck.core import constants
 
 from ipalib import api
-from dns import resolver
+
+try:
+    from dns.resolver import resolve
+except ImportError:
+    from dns.resolver import query as resolve
 
 
 logger = logging.getLogger()
@@ -66,7 +70,7 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
                     elif rd.rdtype == rdatatype.AAAA:
                         aaaa_rec.append(rd.to_text())
                     else:
-                        logger.error("Unhandler rdtype %d", rd.rdtype)
+                        logger.error("Unhandled rdtype %d", rd.rdtype)
 
         # For each SRV record that IPA thinks it should have, do a DNS
         # lookup of it and ensure that DNS has the same set of values
@@ -100,7 +104,7 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
         for txt in txt_rec:
             logger.debug("Search DNS for TXT record of %s", txt)
             try:
-                answers = resolver.query(txt, rdatatype.TXT)
+                answers = resolve(txt, rdatatype.TXT)
             except DNSException as e:
                 logger.debug("DNS record not found: %s", e.__class__.__name__)
                 answers = []
@@ -123,7 +127,7 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
             qname = "ipa-ca." + api.env.domain + "."
             logger.debug("Search DNS for A record of %s", qname)
             try:
-                answers = resolver.query(qname, rdatatype.A)
+                answers = resolve(qname, rdatatype.A)
             except DNSException as e:
                 logger.debug("DNS record not found: %s", e.__class__.__name__)
                 answers = []
@@ -157,7 +161,7 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
             qname = "ipa-ca." + api.env.domain + "."
             logger.debug("Search DNS for AAAA record of %s", qname)
             try:
-                answers = resolver.query(qname, rdatatype.AAAA)
+                answers = resolve(qname, rdatatype.AAAA)
             except DNSException as e:
                 logger.debug("DNS record not found: %s", e.__class__.__name__)
                 answers = []
