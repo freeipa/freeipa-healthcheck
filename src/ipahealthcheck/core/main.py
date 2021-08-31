@@ -8,8 +8,7 @@ import sys
 from ipahealthcheck.core import constants
 from ipahealthcheck.core.core import RunChecks
 
-
-from ipaserver.install.installutils import is_ipa_configured
+from ipalib.facts import is_ipa_configured
 
 
 class IPAChecks(RunChecks):
