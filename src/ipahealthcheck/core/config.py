@@ -63,7 +63,7 @@ class Config:
         """
         Merge variables from dict ``d`` into the configuration
 
-        The last one wins.
+        The first one wins.
 
         :param d: dict containing configuration
         """

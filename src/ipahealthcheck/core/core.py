@@ -163,6 +163,8 @@ def list_sources(plugins):
 def add_default_options(parser, output_registry, default_output):
     output_names = [plugin.__name__.lower() for
                     plugin in output_registry.plugins]
+    parser.add_argument('--config', dest='config',
+                        default=None, help='Config file to load')
     parser.add_argument('--verbose', dest='verbose', action='store_true',
                         default=False, help='Run in verbose mode')
     parser.add_argument('--debug', dest='debug', action='store_true',
@@ -176,9 +178,10 @@ def add_default_options(parser, output_registry, default_output):
     parser.add_argument('--check', dest='check',
                         default=None,
                         help='Check to execute, e.g. BazCheck')
-    parser.add_argument('--output-type', dest='output', choices=output_names,
+    parser.add_argument('--output-type', dest='output_type',
+                        choices=output_names,
                         default=default_output, help='Output method')
-    parser.add_argument('--output-file', dest='outfile', default=None,
+    parser.add_argument('--output-file', dest='output_file', default=None,
                         help='File to store output')
     parser.add_argument('--version', dest='version', action='store_true',
                         help='Report the version number and exit')
@@ -266,7 +269,6 @@ class RunChecks:
         add_output_options(self.parser, self.output_registry)
         self.add_options()
         options = parse_options(self.parser)
-        self.options = options
 
         if options.version:
             for registry in self.entry_points:
@@ -290,9 +292,19 @@ class RunChecks:
         if options.debug:
             logger.setLevel(logging.DEBUG)
 
-        config = read_config(self.configfile)
+        if options.config is not None:
+            config = read_config(options.config)
+        else:
+            config = read_config(self.configfile)
         if config is None:
             return 1
+
+        # Unify config and options. One of these variables will be
+        # eventually deprecated in the future. This way all cli
+        # options can be set in config instead.
+        config.merge(vars(options))
+        self.options = config
+        options = config
 
         # pylint: disable=assignment-from-none
         rval = self.pre_check()
@@ -327,7 +339,7 @@ class RunChecks:
                 plugins.append(plugin)
 
         for out in self.output_registry.plugins:
-            if out.__name__.lower() == options.output:
+            if out.__name__.lower() == options.output_type:
                 output = out(options)
                 break
 

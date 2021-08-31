@@ -36,7 +36,7 @@ class Output:
        which will render the results into a string for writing.
     """
     def __init__(self, options):
-        self.filename = options.outfile
+        self.filename = options.output_file
 
         # Non-required options in the framework, set logical defaults to
         # pre 0.6 behavior with everything reported.
@@ -110,7 +110,7 @@ class JSON(Output):
 
     def __init__(self, options):
         super().__init__(options)
-        self.indent = options.indent
+        self.indent = int(options.indent)
 
     def generate(self, data):
         output = json.dumps(data, indent=self.indent)

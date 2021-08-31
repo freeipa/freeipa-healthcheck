@@ -14,7 +14,7 @@ class ClusterOutput(Output):
        severity doesn't apply in this case so exclude those.
     """
     def __init__(self, options):
-        self.filename = options.outfile
+        self.filename = options.output_file
 
     def strip_output(self, results):
         """Nothing to strip out"""
