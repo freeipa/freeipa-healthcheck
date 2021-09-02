@@ -8,6 +8,7 @@ import logging
 import pkg_resources
 import signal
 import warnings
+import traceback
 
 from datetime import datetime
 
@@ -61,7 +62,9 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
                      start=start)
     except Exception as e:
         logger.debug('Exception raised: %s', e)
+        logger.debug(traceback.format_exc())
         yield Result(plugin, constants.CRITICAL, exception=str(e),
+                     traceback=traceback.format_exc(),
                      start=start)
     finally:
         signal.alarm(0)
