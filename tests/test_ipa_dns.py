@@ -29,6 +29,15 @@ from ipaserver.dns_data_management import (
 
 try:
     # pylint: disable=unused-import
+    from ipaserver.dns_data_management import IPA_DEFAULT_MASTER_URI_REC  # noqa
+except ImportError:
+    has_uri_support = False
+else:
+    has_uri_support = True
+
+
+try:
+    # pylint: disable=unused-import
     from ipaserver.install.installutils import resolve_rrsets_nss  # noqa: F401
     # pylint: enable=unused-import
 except ImportError:
@@ -77,6 +86,45 @@ def query_srv(qname, ad_records=False):
     if ad_records:
         rdlist.extend(add_srv_records(qname, IPA_DEFAULT_ADTRUST_SRV_REC))
     return rdlist
+
+
+def query_uri(hosts):
+    """
+    Return a list containing two answers, one for each uri type
+    """
+    answers = []
+    if version.MAJOR < 2 or (version.MAJOR == 2 and version.MINOR == 0):
+        m = message.Message()
+    elif version.MAJOR == 2 and version.MINOR > 0:
+        m = message.QueryMessage()  # pylint: disable=E1101
+        m = message.make_response(m)  # pylint: disable=E1101
+
+    rdtype = rdatatype.URI
+    for name in ('_kerberos.', '_kpasswd.'):
+        qname = DNSName(name + m_api.env.domain)
+        qname = qname.make_absolute()
+        if version.MAJOR < 2:
+            # pylint: disable=unexpected-keyword-arg
+            answer = Answer(qname, rdataclass.IN, rdtype, m,
+                            raise_on_no_answer=False)
+            # pylint: enable=unexpected-keyword-arg
+        else:
+            if version.MAJOR == 2 and version.MINOR > 0:
+                question = rrset.RRset(qname, rdataclass.IN, rdtype)
+                m.question = [question]
+            answer = Answer(qname, rdataclass.IN, rdtype, m)
+
+        rl = []
+        for host in hosts:
+            rlist = rrset.from_text_list(
+                qname, 86400, rdataclass.IN,
+                rdatatype.URI, ['0 100 "krb5srv:m:tcp:%s."' % host,
+                                '0 100 "krb5srv:m:udp:%s."' % host, ]
+            )
+            rl.extend(rlist)
+        answer.rrset = rl
+        answers.append(answer)
+    return answers
 
 
 def gen_addrs(rdtype=rdatatype.A, num=1):
@@ -202,16 +250,19 @@ class TestDNSSystemRecords(BaseTest):
 
        1. The query_srv() override returns the set of configured
           servers for each type of SRV record.
-       2. fake_query() overrides dns.resolver.query to simulate
+       2. fake_query() overrides ipahealthcheck.ipa.idns.resolve to simulate
           A, AAAA and TXT record lookups.
     """
     @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
-    @patch('dns.resolver.query')
-    def test_dnsrecords_single(self, mock_query, mock_query_srv, mock_rrset):
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_single(self, mock_query, mock_query_uri,
+                               mock_query_srv, mock_rrset):
         """Test single CA master, all SRV records"""
         mock_query.side_effect = fake_query_one
         mock_query_srv.side_effect = query_srv([m_api.env.host])
+        mock_query_uri.side_effect = query_uri([m_api.env.host])
         mock_rrset.side_effect = [
             resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA))
         ]
@@ -233,7 +284,11 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 10
+        if has_uri_support:
+            expected = 14
+        else:
+            expected = 10
+        assert len(self.results) == expected
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
@@ -242,10 +297,16 @@ class TestDNSSystemRecords(BaseTest):
 
     @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
-    @patch('dns.resolver.query')
-    def test_dnsrecords_two(self, mock_query, mock_query_srv, mock_rrset):
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_two(self, mock_query, mock_query_uri,
+                            mock_query_srv, mock_rrset):
         """Test two CA masters, all SRV records"""
         mock_query_srv.side_effect = query_srv([
+            m_api.env.host,
+            'replica.' + m_api.env.domain
+        ])
+        mock_query_uri.side_effect = query_uri([
             m_api.env.host,
             'replica.' + m_api.env.domain
         ])
@@ -281,7 +342,11 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 19
+        if has_uri_support:
+            expected = 27
+        else:
+            expected = 19
+        assert len(self.results) == expected
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
@@ -290,10 +355,17 @@ class TestDNSSystemRecords(BaseTest):
 
     @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
-    @patch('dns.resolver.query')
-    def test_dnsrecords_three(self, mock_query, mock_query_srv, mock_rrset):
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_three(self, mock_query, mock_query_uri,
+                              mock_query_srv, mock_rrset):
         """Test three CA masters, all SRV records"""
         mock_query_srv.side_effect = query_srv([
+            m_api.env.host,
+            'replica.' + m_api.env.domain,
+            'replica2.' + m_api.env.domain
+        ])
+        mock_query_uri.side_effect = query_uri([
             m_api.env.host,
             'replica.' + m_api.env.domain,
             'replica2.' + m_api.env.domain
@@ -339,7 +411,11 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 28
+        if has_uri_support:
+            expected = 40
+        else:
+            expected = 28
+        assert len(self.results) == expected
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
@@ -348,11 +424,17 @@ class TestDNSSystemRecords(BaseTest):
 
     @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
-    @patch('dns.resolver.query')
-    def test_dnsrecords_three_mixed(self, mock_query, mock_query_srv,
-                                    mock_rrset):
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_three_mixed(self, mock_query, mock_query_uri,
+                                    mock_query_srv, mock_rrset):
         """Test three masters, only one with a CA, all SRV records"""
         mock_query_srv.side_effect = query_srv([
+            m_api.env.host,
+            'replica.' + m_api.env.domain,
+            'replica2.' + m_api.env.domain
+        ])
+        mock_query_uri.side_effect = query_uri([
             m_api.env.host,
             'replica.' + m_api.env.domain,
             'replica2.' + m_api.env.domain
@@ -396,7 +478,11 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 24
+        if has_uri_support:
+            expected = 36
+        else:
+            expected = 24
+        assert len(self.results) == expected
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
@@ -404,9 +490,10 @@ class TestDNSSystemRecords(BaseTest):
 
     @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
-    @patch('dns.resolver.query')
-    def test_dnsrecords_missing_server(self, mock_query, mock_query_srv,
-                                       mock_rrset):
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_missing_server(self, mock_query, mock_query_uri,
+                                       mock_query_srv, mock_rrset):
         """Drop one of the masters from query_srv
 
            This will simulate missing SRV records and cause a number of
@@ -416,6 +503,11 @@ class TestDNSSystemRecords(BaseTest):
             m_api.env.host,
             'replica.' + m_api.env.domain
             # replica2 is missing
+        ])
+        mock_query_uri.side_effect = query_uri([
+            m_api.env.host,
+            'replica.' + m_api.env.domain,
+            'replica2.' + m_api.env.domain
         ])
         mock_query.side_effect = fake_query_three
         mock_rrset.side_effect = [
@@ -458,27 +550,41 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 28
+        if has_uri_support:
+            expected = 40
+        else:
+            expected = 28
+        assert len(self.results) == expected
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
-        assert len(ok) == 21
-        assert len(warn) == 7
+        if has_uri_support:
+            assert len(ok) == 33
+            assert len(warn) == 7
+        else:
+            assert len(ok) == 21
+            assert len(warn) == 7
 
         for result in warn:
             assert result.kw.get('msg') == 'Expected SRV record missing'
 
     @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
-    @patch('dns.resolver.query')
-    def test_dnsrecords_missing_ipa_ca(self, mock_query, mock_query_srv,
-                                       mock_rrset):
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_missing_ipa_ca(self, mock_query, mock_query_uri,
+                                       mock_query_srv, mock_rrset):
         """Drop one of the masters from query_srv
 
            This will simulate missing SRV records and cause a number of
            warnings to be thrown.
         """
         mock_query_srv.side_effect = query_srv([
+            m_api.env.host,
+            'replica.' + m_api.env.domain,
+            'replica2.' + m_api.env.domain
+        ])
+        mock_query_uri.side_effect = query_uri([
             m_api.env.host,
             'replica.' + m_api.env.domain,
             'replica2.' + m_api.env.domain
@@ -524,12 +630,20 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 28
+        if has_uri_support:
+            expected = 40
+        else:
+            expected = 28
+        assert len(self.results) == expected
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
-        assert len(ok) == 26
-        assert len(warn) == 2
+        if has_uri_support:
+            assert len(ok) == 38
+            assert len(warn) == 2
+        else:
+            assert len(ok) == 26
+            assert len(warn) == 2
 
         for result in warn:
             assert re.match(
@@ -541,9 +655,10 @@ class TestDNSSystemRecords(BaseTest):
 
     @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
-    @patch('dns.resolver.query')
-    def test_dnsrecords_extra_srv(self, mock_query, mock_query_srv,
-                                  mock_rrset):
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_extra_srv(self, mock_query, mock_query_uri,
+                                  mock_query_srv, mock_rrset):
         """An extra SRV record set exists, report it.
 
            Add an extra master to the query_srv() which will generate
@@ -554,6 +669,11 @@ class TestDNSSystemRecords(BaseTest):
             'replica.' + m_api.env.domain,
             'replica2.' + m_api.env.domain,
             'replica3.' + m_api.env.domain
+        ])
+        mock_query_uri.side_effect = query_uri([
+            m_api.env.host,
+            'replica.' + m_api.env.domain,
+            'replica2.' + m_api.env.domain,
         ])
         mock_query.side_effect = fake_query_three
         mock_rrset.side_effect = [
@@ -598,12 +718,20 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 35
+        if has_uri_support:
+            expected = 47
+        else:
+            expected = 35
+        assert len(self.results) == expected
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
-        assert len(ok) == 28
-        assert len(warn) == 7
+        if has_uri_support:
+            assert len(ok) == 40
+            assert len(warn) == 7
+        else:
+            assert len(ok) == 28
+            assert len(warn) == 7
 
         for result in warn:
             assert result.kw.get('msg') == \
@@ -611,12 +739,14 @@ class TestDNSSystemRecords(BaseTest):
 
     @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
-    @patch('dns.resolver.query')
-    def test_dnsrecords_bad_realm(self, mock_query, mock_query_srv,
-                                  mock_rrset):
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_bad_realm(self, mock_query, mock_query_uri,
+                                  mock_query_srv, mock_rrset):
         """Unexpected Kerberos TXT record"""
         mock_query.side_effect = fake_query_one_txt
         mock_query_srv.side_effect = query_srv([m_api.env.host])
+        mock_query_uri.side_effect = query_uri([m_api.env.host])
         mock_rrset.side_effect = [
             resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA))
         ]
@@ -638,12 +768,20 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 10
+        if has_uri_support:
+            expected = 14
+        else:
+            expected = 10
+        assert len(self.results) == expected
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
-        assert len(ok) == 9
-        assert len(warn) == 1
+        if has_uri_support:
+            assert len(ok) == 13
+            assert len(warn) == 1
+        else:
+            assert len(ok) == 9
+            assert len(warn) == 1
 
         result = warn[0]
         assert result.kw.get('msg') == 'expected realm missing'
@@ -651,11 +789,13 @@ class TestDNSSystemRecords(BaseTest):
 
     @patch(resolve_rrsets_import)
     @patch('ipapython.dnsutil.query_srv')
-    @patch('dns.resolver.query')
-    def test_dnsrecords_one_with_ad(self, mock_query, mock_query_srv,
-                                    mock_rrset):
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_one_with_ad(self, mock_query, mock_query_uri,
+                                    mock_query_srv, mock_rrset):
         mock_query.side_effect = fake_query_one
         mock_query_srv.side_effect = query_srv([m_api.env.host], True)
+        mock_query_uri.side_effect = query_uri([m_api.env.host])
         mock_rrset.side_effect = [
             resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA))
         ]
@@ -678,7 +818,11 @@ class TestDNSSystemRecords(BaseTest):
 
         self.results = capture_results(f)
 
-        assert len(self.results) == 16
+        if has_uri_support:
+            expected = 20
+        else:
+            expected = 16
+        assert len(self.results) == expected
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
