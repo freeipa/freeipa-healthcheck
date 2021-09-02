@@ -38,6 +38,15 @@ else:
 
 try:
     # pylint: disable=unused-import
+    from ipaserver.dns_data_management import IPA_DEFAULT_MASTER_URI_REC  # noqa
+except ImportError:
+    has_uri_support = False
+else:
+    has_uri_support = True
+
+
+try:
+    # pylint: disable=unused-import
     from ipaserver.install.installutils import resolve_rrsets_nss  # noqa: F401
     # pylint: enable=unused-import
 except ImportError:
