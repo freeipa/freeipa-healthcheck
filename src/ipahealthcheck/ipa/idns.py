@@ -21,6 +21,15 @@ except ImportError:
 logger = logging.getLogger()
 
 
+def query_uri(uri):
+    try:
+        answers = resolve(uri, rdatatype.URI)
+    except DNSException as e:
+        logger.debug("DNS record not found: %s", e.__class__.__name__)
+        answers = []
+    return answers
+
+
 @registry
 class IPADNSSystemRecordsCheck(IPAPlugin):
     """
@@ -36,6 +45,10 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
         """Combine the SRV record and target into a unique name."""
         return srv + ":" + target
 
+    def uri_to_name(self, uri, target):
+        """Combine the SRV record and target into a unique name."""
+        return uri + ":" + target
+
     @duration
     def check(self):
         # pylint: disable=import-outside-toplevel
@@ -49,6 +62,7 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
         # collect the list of expected values
         txt_rec = dict()
         srv_rec = dict()
+        uri_rec = dict()
         a_rec = list()
         aaaa_rec = list()
 
@@ -69,6 +83,15 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
                         a_rec.append(rd.to_text())
                     elif rd.rdtype == rdatatype.AAAA:
                         aaaa_rec.append(rd.to_text())
+                    elif rd.rdtype == rdatatype.URI:
+                        if name.ToASCII() in uri_rec:
+                            uri_rec[name.ToASCII()].append(
+                                rd.target.decode('utf-8')
+                            )
+                        else:
+                            uri_rec[name.ToASCII()] = [
+                                rd.target.decode('utf-8')
+                            ]
                     else:
                         logger.error("Unhandled rdtype %d", rd.rdtype)
 
@@ -100,6 +123,35 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
                     self, constants.WARNING,
                     msg='Expected SRV record missing',
                     key=self.srv_to_name(srv, host))
+
+        for uri in uri_rec:
+            logger.debug("Search DNS for URI record of %s", uri)
+            answers = query_uri(uri)
+            hosts = uri_rec[uri]
+            for answer in answers:
+                logger.debug("DNS record found: %s", answer)
+                try:
+                    hosts.remove(answer.target.decode('utf-8'))
+                    yield Result(
+                         self, constants.SUCCESS,
+                         key=self.uri_to_name(
+                             uri, answer.target.decode('utf-8')
+                         )
+                    )
+                except ValueError:
+                    yield Result(
+                        self, constants.WARNING,
+                        msg='Unexpected URI entry in DNS',
+                        key=self.uri_to_name(
+                            uri, answer.target.decode('utf-8')
+                        )
+                    )
+            for host in hosts:
+                yield Result(
+                    self, constants.WARNING,
+                    msg='Expected URI record missing',
+                    key=self.uri_to_name(uri, host)
+                )
 
         for txt in txt_rec:
             logger.debug("Search DNS for TXT record of %s", txt)
