@@ -7,6 +7,7 @@ import json
 import logging
 import pkg_resources
 import warnings
+import traceback
 
 from datetime import datetime
 
@@ -51,7 +52,9 @@ def run_plugin(plugin, available=()):
             yield result
     except Exception as e:
         logger.debug('Exception raised: %s', e)
+        logger.debug(traceback.format_exc())
         yield Result(plugin, constants.CRITICAL, exception=str(e),
+                     traceback=traceback.format_exc(),
                      start=start)
 
 
