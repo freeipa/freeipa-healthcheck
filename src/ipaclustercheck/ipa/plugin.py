@@ -52,7 +52,7 @@ def get_masters(data):
 
         masters = output[0].get('kw').get('masters')
         if masters:
-            return masters          
+            return masters
 
     raise ValueError('Unable to determine full list of masters. '
                      'None of ipahealthcheck.ipa.meta:IPAMetaCheck '
@@ -97,7 +97,7 @@ class ClusterRegistry(Registry):
             except Exception as e:
                 logger.error("Unable to read %s: %s", fname, e)
                 continue
-        
+
             try:
                 data = json.loads(data)
             except Exception as e:
@@ -112,6 +112,6 @@ class ClusterRegistry(Registry):
             else:
                 logger.error("No fqdn defined in JSON in %s", fname)
                 continue
-        
-        
+
+
 registry = ClusterRegistry()

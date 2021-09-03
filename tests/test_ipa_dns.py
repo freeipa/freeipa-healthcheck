@@ -48,7 +48,7 @@ else:
 
 def add_srv_records(qname, port_map, priority=0, weight=100):
     rdlist = []
-    for _, port in port_map:
+    for _unused, port in port_map:
         answerlist = []
         for host in qname:
             hostname = DNSName(host)

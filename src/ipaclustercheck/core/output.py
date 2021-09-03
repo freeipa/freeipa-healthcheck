@@ -60,7 +60,7 @@ class Ansible(ClusterOutput):
 
             rval = {'%s' % name: value}
             output.append(rval)
-            
+
         output = json.dumps(output, indent=self.indent)
         if self.filename is None:
             output += '\n'
