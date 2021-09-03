@@ -41,7 +41,7 @@ class DogtagCertsConfigCheck(DogtagPlugin):
         # Nicknames to skip because their certs are not in CS.cfg
         skip = []
 
-        if kra.is_installed:
+        if kra.is_installed():
             kra_blobs = {
                 'transportCert cert-pki-kra':
                 'ca.connector.KRA.transportCert',
