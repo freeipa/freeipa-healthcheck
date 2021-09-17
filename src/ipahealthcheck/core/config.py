@@ -5,11 +5,21 @@
 import logging
 import os
 from configparser import ConfigParser, ParsingError
+from collections import OrderedDict
 
-from ipahealthcheck.core.constants import CONFIG_SECTION
+from ipahealthcheck.core.constants import CONFIG_SECTION, EXCLUDE_SECTION
 from ipahealthcheck.core.constants import DEFAULT_CONFIG
 
 logger = logging.getLogger()
+
+
+class DuplicateOrderedDict(OrderedDict):
+    def __setitem__(self, key, value):
+        """Duplicate keys will be concatenated strings separated by new-line"""
+        if isinstance(value, list) and key in self:
+            self[key].extend(value)
+        else:
+            super().__setitem__(key, value)
 
 
 class Config:
@@ -52,6 +62,18 @@ class Config:
         """
         return self.__d[key]
 
+    def __getitem__(self, key):
+        """
+        Return the value corresponding to ``key``.
+        """
+        return self.__d[key]
+
+    def __contains__(self, key):
+        """
+        Return True if instance contains ``key``; otherwise return False.
+        """
+        return key in self.__d
+
     def __iter__(self):
         """
         Iterate through keys in ascending order.
@@ -87,7 +109,7 @@ def read_config(config_file):
         )
         return config
 
-    parser = ConfigParser()
+    parser = ConfigParser(dict_type=DuplicateOrderedDict, strict=False)
     try:
         parser.read(config_file)
     except ParsingError as e:
@@ -102,6 +124,12 @@ def read_config(config_file):
     items = parser.items(CONFIG_SECTION)
 
     for (key, value) in items:
-        config[key] = value
+        if not key.startswith('excludes_'):
+            config[key] = value
+
+    if parser.has_section(EXCLUDE_SECTION):
+        items = parser.items(EXCLUDE_SECTION)
+        for (key, value) in items:
+            config[EXCLUDE_SECTION + '_' + key] = value.split(os.linesep)
 
     return config

@@ -59,6 +59,7 @@ def getLevel(name):
 
 CONFIG_FILE = '/etc/ipahealthcheck/ipahealthcheck.conf'
 CONFIG_SECTION = 'default'
+EXCLUDE_SECTION = 'excludes'
 
 DEFAULT_TIMEOUT = 10
 

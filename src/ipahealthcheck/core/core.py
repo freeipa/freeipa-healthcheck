@@ -83,6 +83,27 @@ def source_or_check_matches(plugin, source, check):
     return True
 
 
+def exclude_source_or_check(source, check, config):
+    """Return True if a source or check should be excluded, otherwise False"""
+    exclude_source = []
+    exclude_check = []
+
+    if 'excludes_source' in config:
+        exclude_source = config.excludes_source
+    if 'excludes_check' in config:
+        exclude_check = config.excludes_check
+
+    for exclude in exclude_source:
+        if _is_prefix_of_source(exclude, source):
+            return True
+
+    for exclude in exclude_check:
+        if exclude == check:
+            return True
+
+    return False
+
+
 def run_service_plugins(plugins, source, check):
     """Execute plugins with the base class of ServiceCheck
 
@@ -130,7 +151,7 @@ def run_service_plugins(plugins, source, check):
 
 
 def run_plugins(plugins, available, source, check,
-                timeout=constants.DEFAULT_TIMEOUT):
+                config, timeout=constants.DEFAULT_TIMEOUT):
     """Execute plugins without the base class of ServiceCheck
 
        These are the remaining, non-service checking checks
@@ -142,6 +163,12 @@ def run_plugins(plugins, available, source, check,
         if isinstance(plugin, ServiceCheck):
             continue
 
+        if exclude_source_or_check(
+            plugin.__module__, plugin.__class__.__name__, config
+        ):
+            logger.debug("Excluding %s::%s per config",
+                         plugin.__module__, plugin.__class__.__name__)
+            continue
         if not source_or_check_matches(plugin, source, check):
             continue
 
@@ -232,6 +259,23 @@ def limit_results(results, source, check):
             # when 'check' is given, match source fully
             if result.source == source and result.check == check:
                 new_results.add(result)
+    return new_results
+
+
+def exclude_keys(config, results):
+    """Generate a new result, excluding unwanted keys"""
+    new_results = Results()
+
+    for result in results.results:
+        if (
+            'excludes_key' in config and
+            result.kw.get("key") in config.excludes_key
+        ):
+            logger.debug("Excluding %s::%s::%s per config",
+                         result.source, result.check, result.kw.get('key'))
+        else:
+            new_results.add(result)
+
     return new_results
 
 
@@ -378,7 +422,7 @@ class RunChecks:
                                                      options.source,
                                                      options.check)
             results.extend(run_plugins(plugins, available,
-                                       options.source, options.check,
+                                       options.source, options.check, config,
                                        int(config.timeout)))
 
         if options.source and len(results.results) == 0:
@@ -399,6 +443,8 @@ class RunChecks:
             else:
                 print("Source '%s' not found" % options.source)
             return 1
+
+        results = exclude_keys(config, results)
 
         try:
             output.render(results)
