@@ -140,7 +140,7 @@ too much information.
 
 Some predefined keys of the kw dictionary are:
 
-* key: some checks can have multiple tests. This provides for uniqueuess.
+* key: some checks can have multiple tests. This provides for uniqueness.
 * msg: A message that can take other keywords as input
 * exception: used when a check raises an exception
 
