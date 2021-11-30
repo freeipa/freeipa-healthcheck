@@ -8,11 +8,18 @@ import sys
 from ipahealthcheck.core import constants
 from ipahealthcheck.core.core import RunChecks
 
-from ipalib.facts import is_ipa_configured
+try:
+    from ipalib.facts import is_ipa_configured
+except ImportError:
+    is_ipa_configured = None
 
 
 class IPAChecks(RunChecks):
     def pre_check(self):
+        if is_ipa_configured is None:
+            print("IPA server is not installed")
+            return 1
+
         if not is_ipa_configured():
             print("IPA server is not configured")
             return 1
