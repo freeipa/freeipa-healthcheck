@@ -6,11 +6,13 @@ import argparse
 import json
 import logging
 import pkg_resources
+import signal
 import warnings
 
 from datetime import datetime
 
 from ipahealthcheck.core.config import read_config
+from ipahealthcheck.core.exceptions import TimeoutError
 from ipahealthcheck.core.plugin import Result, Results, json_to_results
 from ipahealthcheck.core.output import output_registry
 from ipahealthcheck.core import constants
@@ -40,19 +42,29 @@ def find_plugins(name, registry):
     return registry.get_plugins()
 
 
-def run_plugin(plugin, available=()):
+def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
+    def signal_handler(signum, frame):
+        raise TimeoutError('Request timed out')
+
     # manually calculate duration when we create results of our own
     start = datetime.utcnow()
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(timeout)
     try:
         for result in plugin.check():
             if result is None:
                 # Treat no result as success, fudge start time
                 result = Result(plugin, constants.SUCCESS, start=start)
             yield result
+    except TimeoutError as e:
+        yield Result(plugin, constants.ERROR, exception=str(e),
+                     start=start)
     except Exception as e:
         logger.debug('Exception raised: %s', e)
         yield Result(plugin, constants.CRITICAL, exception=str(e),
                      start=start)
+    finally:
+        signal.alarm(0)
 
 
 def source_or_check_matches(plugin, source, check):
@@ -117,7 +129,8 @@ def run_service_plugins(plugins, source, check):
     return results, set(available)
 
 
-def run_plugins(plugins, available, source, check):
+def run_plugins(plugins, available, source, check,
+                timeout=constants.DEFAULT_TIMEOUT):
     """Execute plugins without the base class of ServiceCheck
 
        These are the remaining, non-service checking checks
@@ -142,7 +155,7 @@ def run_plugins(plugins, available, source, check):
             # service isn't available then this could generate a lot of
             # false positives.
         else:
-            for result in run_plugin(plugin, available):
+            for result in run_plugin(plugin, available, timeout):
                 results.add(result)
 
     return results
@@ -364,7 +377,8 @@ class RunChecks:
                                                      options.source,
                                                      options.check)
             results.extend(run_plugins(plugins, available,
-                                       options.source, options.check))
+                                       options.source, options.check,
+                                       int(config.timeout)))
 
         if options.source and len(results.results) == 0:
             for plugin in plugins:
