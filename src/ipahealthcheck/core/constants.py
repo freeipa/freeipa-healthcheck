@@ -60,6 +60,9 @@ def getLevel(name):
 CONFIG_FILE = '/etc/ipahealthcheck/ipahealthcheck.conf'
 CONFIG_SECTION = 'default'
 
+DEFAULT_TIMEOUT = 10
+
 DEFAULT_CONFIG = {
     'cert_expiration_days': 28,
+    'timeout': DEFAULT_TIMEOUT,
 }

@@ -6,6 +6,7 @@ import logging
 import os
 import socket
 from ipahealthcheck.core import constants
+from ipahealthcheck.core.exceptions import TimeoutError
 from ipahealthcheck.core.plugin import Result, duration
 from ipahealthcheck.meta.plugin import Plugin, registry
 from ipapython import ipautil
@@ -34,6 +35,10 @@ class MetaCheck(Plugin):
                                       '--is-enabled'],
                                      capture_output=True,
                                      raiseonerr=False,)
+            except TimeoutError:
+                logger.debug('fips-mode-setup timed out')
+                fips = "check timed out"
+                rval = constants.ERROR
             except Exception as e:
                 logger.debug('fips-mode-setup failed: %s', e)
                 fips = "failed to check"
@@ -58,6 +63,10 @@ class MetaCheck(Plugin):
                 result = ipautil.run(['ipa-acme-manage', 'status'],
                                      capture_output=True,
                                      raiseonerr=False,)
+            except TimeoutError:
+                logger.debug('ipa-acme-manage timed out')
+                acme = "check timed out"
+                rval = constants.ERROR
             except Exception as e:
                 logger.debug('ipa-acme-manage failed: %s', e)
                 acme = "failed to check"
