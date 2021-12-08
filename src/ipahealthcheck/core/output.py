@@ -2,6 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+from datetime import datetime
 import json
 import sys
 from ipahealthcheck.core.constants import _nameToLevel, SUCCESS
@@ -146,3 +147,100 @@ class Human(Output):
             output += outline + '\n'
 
         return output
+
+
+@output_registry
+class Prometheus(Output):
+    """Render results as Prometheus text metric exposition format"""
+
+    options = (
+        ('--metric-prefix', dict(dest='metric_prefix', default='ipa',
+         help='Metric name prefix')),
+    )
+
+    def __init__(self, options):
+        super().__init__(options)
+        self.metric_prefix = options.metric_prefix
+
+    def generate(self, data):
+        if not data:
+            return '\n'
+
+        crt = {}
+        svc = {}
+        chk = {}
+        for line in data:
+            kw = line.get('kw')
+            result = line.get('result')
+            source = line.get('source')
+            check = line.get('check')
+
+            if result in chk:
+                chk[result] += 1
+            else:
+                chk[result] = 1
+
+            if source == 'ipahealthcheck.meta.services':
+                state = 1.0 if _nameToLevel.get(result) == SUCCESS else 0.0
+                svc[check] = state
+            elif (source == 'ipahealthcheck.ipa.certs' and
+                  check == "IPACertmongerExpirationCheck"):
+
+                # only unsuccessful checks carry the expiration information
+                if 'key' in kw and 'expiration_date' in kw:
+                    expiration = datetime.strptime(kw['expiration_date'],
+                                                   '%Y%m%d%H%M%SZ')
+                    crt[kw['key']] = expiration.timestamp()
+
+        metrics = []
+        self.generate_check_metrics(metrics, chk)
+        self.generate_service_metrics(metrics, svc)
+        self.generate_certificate_metrics(metrics, crt)
+
+        metrics.append('')
+        return "\n".join(metrics)
+
+    def generate_check_metrics(self, out, data):
+        if not data:
+            return
+
+        metric_name = 'healthcheck'
+        out.append('HELP %s_%s %s' %
+                   (self.metric_prefix, metric_name,
+                    'Number of healthchecks with a certain result'))
+        out.append('TYPE %s_%s gauge' %
+                   (self.metric_prefix, metric_name))
+        for check, quantity in data.items():
+            out.append('%s_%s{result="%s"} %.1f' %
+                       (self.metric_prefix, metric_name,
+                        check, quantity))
+
+    def generate_service_metrics(self, out, data):
+        if not data:
+            return
+
+        metric_name = 'service_state'
+        out.append('HELP %s_%s %s' %
+                   (self.metric_prefix, metric_name,
+                    'State of the services monitored by IPA healthcheck'))
+        out.append('TYPE %s_%s gauge' %
+                   (self.metric_prefix, metric_name))
+        for service, state in data.items():
+            out.append('%s_%s{service="%s"} %.1f' %
+                       (self.metric_prefix, metric_name,
+                        service, state))
+
+    def generate_certificate_metrics(self, out, data):
+        if not data:
+            return
+
+        metric_name = 'cert_expiration'
+        out.append('HELP %s_%s %s' %
+                   (self.metric_prefix, metric_name,
+                    'Expiration date of certificates in warning/error state'))
+        out.append('TYPE %s_%s gauge' %
+                   (self.metric_prefix, metric_name))
+        for certificate, timestamp in data.items():
+            out.append('%s_%s{certificate_request_id="%s"} %.9e' %
+                       (self.metric_prefix, metric_name,
+                        certificate, timestamp))
