@@ -37,7 +37,7 @@ Execute checks within the named source, or all sources in the given namespace.
 Execute this particular check within a source. The exact source must also be specified via \fB\-\-source\fR.
 .TP
 \fB\-\-output\-type\fR=\fITYPE\fR
-Set the output type. Supported variants are \fBhuman\fR and \fBjson\fR. The default is \fBjson\fR.
+Set the output type. Supported variants are \fBhuman\fR, \fBjson\fR, and \fBprometheus\fR. The default is \fBjson\fR.
 .TP
 \fB\-\-failures\-only\fR
 Exclude SUCCESS results on output. If stdin is a tty then this will default to True. In all other cases it defaults to False.
@@ -71,6 +71,14 @@ The results are displayed in a more human\-readable format.
 .TP
 \fB\-\-input\-file\fR=\fIFILENAME\fR
 Take as input a JSON results output and convert it to a more human\-readable form.
+
+.SS "PROMETHEUS OUTPUT"
+The results are displayed in the Prometheus text metric exposition format.
+.TP
+\fB\-\-input\-file\fR=\fIFILENAME\fR
+Uses the JSON-formatted results output as metrics source.
+\fB\-\-metric\-prefix\fR=\fIPREFIX\fR
+Prefix to use for metric names.
 
 .SH "EXAMPLES"
 .PP
