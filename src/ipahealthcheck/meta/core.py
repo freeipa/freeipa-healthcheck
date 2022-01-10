@@ -81,6 +81,7 @@ class MetaCheck(Plugin):
                     acme = "unknown"
 
         yield Result(self, rval,
+                     key='meta',
                      fqdn=socket.getfqdn(),
                      fips=fips,
                      acme=acme,

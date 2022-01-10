@@ -621,6 +621,7 @@ class IPACertMatchCheck(IPAPlugin):
                 dbcacerts = self.get_cert_list_from_db(db, nickname)
             except Exception as e:
                 yield Result(plugin, constants.ERROR,
+                             key=nickname,
                              error=str(e),
                              msg='Unable to load CA cert: {error}')
                 return False
@@ -630,6 +631,7 @@ class IPACertMatchCheck(IPAPlugin):
                 if cert not in cacerts:
                     ok = False
                     yield Result(plugin, constants.ERROR,
+                                 key=nickname,
                                  nickname=nickname,
                                  serial_number=cert.serial_number,
                                  dbdir=dbpath,
@@ -644,6 +646,7 @@ class IPACertMatchCheck(IPAPlugin):
             cacerts = x509.load_certificate_list_from_file(paths.IPA_CA_CRT)
         except Exception:
             yield Result(self, constants.ERROR,
+                         key=paths.IPA_CA_CRT.replace(os.path.sep, '_'),
                          path=paths.IPA_CA_CRT,
                          msg='Unable to load CA cert file {path}: {error}')
             return
@@ -656,6 +659,7 @@ class IPACertMatchCheck(IPAPlugin):
             entry = self.conn.get_entry(dn)
         except errors.NotFound:
             yield Result(self, constants.ERROR,
+                         key=str(dn),
                          dn=str(dn),
                          msg='CA Certificate entry \'{dn}\' '
                              'not found in LDAP')
@@ -667,6 +671,7 @@ class IPACertMatchCheck(IPAPlugin):
             if cert not in cacerts:
                 cacerts_ok = False
                 yield Result(self, constants.ERROR,
+                             key=str(dn),
                              dn=str(dn),
                              serial_number=cert.serial_number,
                              msg=('CA Certificate serial number {serial} is '
@@ -709,12 +714,14 @@ class IPADogtagCertsMatchCheck(IPAPlugin):
                 entry = ldap.get_entry(cert_dn)
             except errors.NotFound:
                 yield Result(plugin, constants.ERROR,
+                             key=cert_dn,
                              msg='%s entry not found in LDAP' % cert_dn)
                 return False
             try:
                 nsscert = db.get_cert_from_db(cert_nick)
             except Exception as e:
                 yield Result(plugin, constants.ERROR,
+                             key=cert_nick,
                              error=str(e),
                              msg=('Unable to load %s certificate:'
                                   '{error}' % cert_nick))
@@ -835,6 +842,7 @@ class IPANSSChainValidation(IPAPlugin):
             except IOError as e:
                 yield Result(
                     self, constants.ERROR,
+                    key='db_authenticate',
                     error=str(e),
                     msg='Unable to read CA NSSDB token password: {error}')
                 return
@@ -956,6 +964,7 @@ def check_agent(plugin, base_dn, agent_type):
         cert = x509.load_certificate_from_file(paths.RA_AGENT_PEM)
     except Exception as e:
         yield Result(plugin, constants.ERROR,
+                     key=paths.RA_AGENT_PEM.replace(os.path.sep, '_'),
                      error=str(e),
                      msg='Unable to load RA cert: {error}')
         return
@@ -978,11 +987,13 @@ def check_agent(plugin, base_dn, agent_type):
                                           db_filter)
     except errors.NotFound:
         yield Result(plugin, constants.ERROR,
+                     key=agent_type,
                      description=description,
                      msg='%s agent not found in LDAP' % agent_type)
         return
     except Exception as e:
         yield Result(plugin, constants.ERROR,
+                     key=agent_type,
                      error=str(e),
                      msg='Retrieving %s agent from LDAP failed {error}'
                          % agent_type)
@@ -991,6 +1002,7 @@ def check_agent(plugin, base_dn, agent_type):
         logger.debug('%s agent description is %s', agent_type, description)
         if len(entries) != 1:
             yield Result(plugin, constants.ERROR,
+                         key='too_many_agents',
                          found=len(entries),
                          msg='Too many %s agent entries found, {found}'
                              % agent_type)
@@ -999,6 +1011,7 @@ def check_agent(plugin, base_dn, agent_type):
         raw_desc = entry.get('description')
         if raw_desc is None:
             yield Result(plugin, constants.ERROR,
+                         key='agent_missing_description',
                          msg='%s agent is missing the description '
                              'attribute or it is not readable' % agent_type)
             return
@@ -1006,6 +1019,7 @@ def check_agent(plugin, base_dn, agent_type):
         ra_certs = entry.get('usercertificate')
         if ra_desc != description:
             yield Result(plugin, constants.ERROR,
+                         key='description_mismatch',
                          expected=description,
                          got=ra_desc,
                          msg='%s agent description does not match. Found '
@@ -1018,6 +1032,7 @@ def check_agent(plugin, base_dn, agent_type):
                 break
         if not found:
             yield Result(plugin, constants.ERROR,
+                         key='ldap_mismatch',
                          certfile=paths.RA_AGENT_PEM,
                          dn=str(entry.dn),
                          msg='%s agent certificate in {certfile} not '
