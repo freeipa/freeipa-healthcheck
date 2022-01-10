@@ -42,6 +42,7 @@ class IPADNARangeCheck(IPAPlugin):
                          next_max=next_max or 0)
         else:
             yield Result(self, constants.WARNING,
+                         key='no_dna_range_defined',
                          range_start=0,
                          range_max=0,
                          next_start=0,

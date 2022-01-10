@@ -204,6 +204,7 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
             if len(answers) != ca_count:
                 yield Result(
                     self, constants.WARNING,
+                    key='ca_count_a_rec',
                     msg='Got {count} ipa-ca A records, expected {expected}',
                     count=len(answers),
                     expected=ca_count)
@@ -238,6 +239,7 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
             if len(answers) != ca_count:
                 yield Result(
                     self, constants.WARNING,
+                    key='ca_count_aaaa_rec',
                     msg='Got {count} ipa-ca AAAA records, expected {expected}',
                     count=len(answers),
                     expected=ca_count)

@@ -67,6 +67,7 @@ class FileSystemSpaceCheck(SystemPlugin):
             except FileNotFoundError:
                 yield Result(
                     self, constants.WARNING,
+                    key=store,
                     msg='File system {store} is not mounted',
                     store=store
                 )
@@ -74,6 +75,7 @@ class FileSystemSpaceCheck(SystemPlugin):
             if percent_free < self.min_free_percent:
                 yield Result(
                     self, constants.ERROR,
+                    key=store,
                     msg='%s: %s %s%% < %s%%' % (
                         store, 'free space percentage under threshold:',
                         percent_free, self.min_free_percent
@@ -84,6 +86,7 @@ class FileSystemSpaceCheck(SystemPlugin):
             else:
                 yield Result(
                     self, constants.SUCCESS,
+                    key=store,
                     msg='%s: %s %s%% >= %s%%' % (
                         store, 'free space percentage within limits:',
                         percent_free, self.min_free_percent
@@ -95,19 +98,21 @@ class FileSystemSpaceCheck(SystemPlugin):
             threshold = self._pathchecks[store]
             if free_space < threshold:
                 yield Result(
-                     self, constants.ERROR,
-                     msg='%s: %s %s MiB < %s MiB' % (
-                         store, 'free space under threshold:',
-                         free_space, threshold
-                     ),
-                     store=store, free_space=free_space, threshold=threshold
+                    self, constants.ERROR,
+                    key=store,
+                    msg='%s: %s %s MiB < %s MiB' % (
+                        store, 'free space under threshold:',
+                        free_space, threshold
+                    ),
+                    store=store, free_space=free_space, threshold=threshold
                 )
             else:
                 yield Result(
-                     self, constants.SUCCESS,
-                     msg='%s: %s %s MiB >= %s MiB' % (
-                         store, 'free space within limits:',
-                         free_space, threshold
-                     ),
-                     store=store, free_space=free_space, threshold=threshold
+                    self, constants.SUCCESS,
+                    key=store,
+                    msg='%s: %s %s MiB >= %s MiB' % (
+                        store, 'free space within limits:',
+                        free_space, threshold
+                    ),
+                    store=store, free_space=free_space, threshold=threshold
                 )

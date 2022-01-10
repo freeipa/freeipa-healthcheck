@@ -109,12 +109,14 @@ class DogtagCertsConnectivityCheck(DogtagPlugin):
         except errors.CertificateOperationError as e:
             if 'not found' not in str(e):
                 yield Result(self, constants.ERROR,
+                             key='cert_show_1',
                              msg='Request for certificate failed, %s' %
                                  e)
             else:
                 yield Result(self, constants.SUCCESS)
         except Exception as e:
             yield Result(self, constants.ERROR,
+                         key='cert_show_1',
                          msg='Request for certificate failed, %s' %
                              e)
         else:
