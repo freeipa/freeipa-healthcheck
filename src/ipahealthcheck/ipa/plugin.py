@@ -59,6 +59,9 @@ class IPARegistry(Registry):
                 logger.debug('Failed to connect to LDAP: %s', e)
             return
 
+        ca = cainstance.CAInstance(api.env.realm, host_name=api.env.host)
+        self.ca_configured = ca.is_configured()
+
         # This package is pulled in when the trust package is installed
         # and is required to lookup trust users. If this is not installed
         # then it can be inferred that trust is not enabled.
@@ -84,9 +87,6 @@ class IPARegistry(Registry):
         role = roles[1].status(api)[0]
         if role.get('status') == 'enabled':
             self.trust_controller = True
-
-        ca = cainstance.CAInstance(api.env.realm, host_name=api.env.host)
-        self.ca_configured = ca.is_configured()
 
 
 registry = IPARegistry()
