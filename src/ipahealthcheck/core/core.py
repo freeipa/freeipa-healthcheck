@@ -331,7 +331,7 @@ class RunChecks:
         # which should set ca_configured in its registry to True or
         # False. We will skip the pkihealthcheck plugins only if
         # ca_configured is False which means that it was set by IPA.
-        ca_configured = None
+        ca_configured = False
         for name, registry in find_registries(self.entry_points).items():
             try:
                 registry.initialize(framework, config, options)
@@ -345,6 +345,7 @@ class RunChecks:
                     continue
             if hasattr(registry, 'ca_configured'):
                 ca_configured = registry.ca_configured
+        for name, registry in find_registries(self.entry_points).items():
             if 'pkihealthcheck' in name and ca_configured is False:
                 logger.debug('IPA CA is not configured, skipping %s', name)
                 continue
