@@ -29,7 +29,7 @@ def test_timeout():
     r(plugin2)
 
     # Collect the results
-    results = run_plugins(r.get_plugins(), (), None, None, timeout=1)
+    results = run_plugins(r.get_plugins(), (), None, None, {}, timeout=1)
 
     assert len(results.results) == 2
 
