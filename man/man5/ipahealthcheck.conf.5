@@ -32,7 +32,7 @@ Options must appear in the section named [default]. There are no other sections 
 
 Options may be defined that are not used. Be careful of misspellings, they will not be rejected.
 .SH "EXCLUDES"
-There may be reasons that a user will want to suppress some results. One example is a customer certificate that is generating a warning because it is unknown to IPA. Excluding a result key does not prevent it from running, it is filtered from the reported results. Excluding by source or key will prevent it from running at all. Services will not be excluded because other checks may rely on them (ipahealthcheck.meta.services).
+There may be reasons that a user will want to suppress some results. One example is a customer certificate that is generating a warning because it is unknown to IPA. Excluding a result key does not prevent it from running, it is filtered from the reported results. Excluding by source or check will prevent it from running at all. Services will not be excluded because other checks may rely on them (ipahealthcheck.meta.services).
 
 Each excludes type may be listed multiple times. Invalid sources, checks and/or keys will not be flagged. These configuration options are only processed when found in the EXCLUDES section and are otherwise ignored.
 
