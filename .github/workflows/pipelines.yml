@@ -49,9 +49,10 @@ jobs:
                 freeipa-server \
                 freeipa-server-trust-ad \
                 tox \
-                python3-pylint \
+                python3-pip \
                 python3-pytest \
                 ; \
+            python3 -m pip install --user --ignore-installed 'pylint ~= 2.12.2' ; \
             cd /root/src; \
             tox -vv -elint; \
             "
@@ -65,7 +66,6 @@ jobs:
                 freeipa-server \
                 freeipa-server-trust-ad \
                 tox \
-                python3-pylint \
                 python3-pytest \
                 ; \
             cd /root/src; \
