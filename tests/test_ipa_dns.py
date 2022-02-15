@@ -96,8 +96,8 @@ def query_uri(hosts):
     if version.MAJOR < 2 or (version.MAJOR == 2 and version.MINOR == 0):
         m = message.Message()
     elif version.MAJOR == 2 and version.MINOR > 0:
-        m = message.QueryMessage()  # pylint: disable=E1101
-        m = message.make_response(m)  # pylint: disable=E1101
+        m = message.QueryMessage()
+        m = message.make_response(m)
 
     rdtype = rdatatype.URI
     for name in ('_kerberos.', '_kpasswd.'):
@@ -158,8 +158,8 @@ def fake_query(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN, count=1,
     if version.MAJOR < 2 or (version.MAJOR == 2 and version.MINOR == 0):
         m = message.Message()
     elif version.MAJOR == 2 and version.MINOR > 0:
-        m = message.QueryMessage()  # pylint: disable=E1101
-        m = message.make_response(m)  # pylint: disable=E1101
+        m = message.QueryMessage()
+        m = message.make_response(m)
     if rdtype in (rdatatype.A, rdatatype.AAAA):
         fqdn = DNSName(qname)
         fqdn = fqdn.make_absolute()
