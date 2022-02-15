@@ -7,6 +7,8 @@ from collections import namedtuple
 from unittest.mock import patch
 from util import capture_results
 
+from ipaplatform.constants import constants as platform_constants
+
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.nss import IPAGroupMemberCheck
@@ -22,10 +24,11 @@ def make_group(name, members):
 
 
 class TestGroupMember(BaseTest):
-    @patch('grp.getgrnam')
+    @patch('ipahealthcheck.ipa.nss.grp.getgrnam')
     def test_ipaapi_group_ok(self, mock_grp):
-        mock_grp.return_value = make_group('apache', ('apache', 'ipaapi',))
-
+        mock_grp.return_value = make_group(
+            platform_constants.IPAAPI_GROUP, (platform_constants.HTTPD_USER,),
+        )
         framework = object()
         registry.initialize(framework, config.Config)
         registry.trust_agent = True
@@ -38,9 +41,11 @@ class TestGroupMember(BaseTest):
         result = self.results.results[0]
         assert result.result == constants.SUCCESS
 
-    @patch('grp.getgrnam')
+    @patch('ipahealthcheck.ipa.nss.grp.getgrnam')
     def test_ipaapi_bad_group(self, mock_grp):
-        mock_grp.side_effect = KeyError("name not found: 'ipaapi'")
+        mock_grp.side_effect = KeyError(
+            f"name not found: '{platform_constants.IPAAPI_GROUP}'"
+        )
 
         framework = object()
         registry.initialize(framework, config.Config)
@@ -53,12 +58,14 @@ class TestGroupMember(BaseTest):
 
         result = self.results.results[0]
         assert result.result == constants.ERROR
-        assert result.kw.get('key') == 'ipaapi'
+        assert result.kw.get('key') == platform_constants.IPAAPI_GROUP
         assert result.kw.get('msg') == 'group {key} does not exist'
 
-    @patch('grp.getgrnam')
+    @patch('ipahealthcheck.ipa.nss.grp.getgrnam')
     def test_ipaapi_missing_member(self, mock_grp):
-        mock_grp.return_value = make_group('apache', ('foo',))
+        mock_grp.return_value = make_group(
+            platform_constants.IPAAPI_GROUP, ('foo',)
+        )
 
         framework = object()
         registry.initialize(framework, config.Config)
@@ -71,6 +78,6 @@ class TestGroupMember(BaseTest):
 
         result = self.results.results[0]
         assert result.result == constants.ERROR
-        assert result.kw.get('key') == 'ipaapi'
+        assert result.kw.get('key') == platform_constants.IPAAPI_GROUP
         assert result.kw.get('msg') == \
             '{member} is not a member of group {key}'
