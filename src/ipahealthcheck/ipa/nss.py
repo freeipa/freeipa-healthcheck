@@ -5,6 +5,8 @@
 import grp
 import logging
 
+from ipaplatform.constants import constants as platform_constants
+
 from ipahealthcheck.ipa.plugin import IPAPlugin, registry
 from ipahealthcheck.core.plugin import Result
 from ipahealthcheck.core.plugin import duration
@@ -22,7 +24,7 @@ logger = logging.getLogger()
 #
 # (group_name, (members,))
 GROUP_MEMBERS = (
-    ('ipaapi', ('apache',)),
+    (platform_constants.IPAAPI_GROUP, (platform_constants.HTTPD_USER,)),
 )
 
 
