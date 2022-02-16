@@ -35,20 +35,20 @@ class IPAFileNSSDBCheck(IPAPlugin, FileCheck):
         self.files = []
 
         self.collect_files(dsinstance.config_dirname(self.serverid),
-                           NSS_SQL_FILES, 'dirsrv', 'root', '0640')
+                           NSS_SQL_FILES, constants.DS_USER, 'root', '0640')
 
         # There always has to be a special one. pkcs11.txt has a different
         # group so pop off the auto-generated one and add a replacement.
         old = (os.path.join(dsinstance.config_dirname(self.serverid),
-               'pkcs11.txt'), 'dirsrv', 'root', '0640')
+               'pkcs11.txt'), constants.DS_USER, 'root', '0640')
         self.files.remove(old)
         new = (os.path.join(dsinstance.config_dirname(self.serverid),
-               'pkcs11.txt'), 'dirsrv', 'dirsrv', '0640')
+               'pkcs11.txt'), constants.DS_USER, constants.DS_GROUP, '0640')
         self.files.append(new)
 
         if self.ca.is_configured():
             self.collect_files(paths.PKI_TOMCAT_ALIAS_DIR, NSS_SQL_FILES,
-                               'pkiuser', 'pkiuser', '0600')
+                               constants.PKI_USER, constants.PKI_GROUP, '0600')
 
         return FileCheck.check(self)
 
@@ -71,8 +71,12 @@ class IPAFileCheck(IPAPlugin, FileCheck):
         self.files = []
 
         if self.ca.is_configured():
-            self.files.append((paths.RA_AGENT_PEM, 'root', 'ipaapi', '0440'))
-            self.files.append((paths.RA_AGENT_KEY, 'root', 'ipaapi', '0440'))
+            self.files.append(
+                (paths.RA_AGENT_PEM, 'root', constants.IPAAPI_GROUP, '0440')
+            )
+            self.files.append(
+                (paths.RA_AGENT_KEY, 'root', constants.IPAAPI_GROUP, '0440')
+            )
 
         if krbinstance.is_pkinit_enabled():
             self.files.append((paths.KDC_CERT, 'root', 'root', '0644'))
@@ -124,38 +128,46 @@ class IPAFileCheck(IPAPlugin, FileCheck):
 
         inst = api.env.realm.replace('.', '-')
         self.files.append((paths.SLAPD_INSTANCE_ACCESS_LOG_TEMPLATE % inst,
-                           'dirsrv', 'dirsrv', '0600'))
+                           constants.DS_USER, constants.DS_GROUP, '0600'))
         self.files.append((paths.SLAPD_INSTANCE_ERROR_LOG_TEMPLATE % inst,
-                           'dirsrv', 'dirsrv', '0600'))
+                           constants.DS_USER, constants.DS_GROUP, '0600'))
 
         self.files.append((paths.VAR_LOG_HTTPD_ERROR, 'root', 'root', '0644'))
 
         for globpath in glob.glob("%s/debug*.log" % paths.TOMCAT_CA_DIR):
-            self.files.append((globpath, "pkiuser", "pkiuser", "0644"))
+            self.files.append(
+                (globpath, constants.PKI_USER, constants.PKI_GROUP, "0644")
+            )
 
         for globpath in glob.glob(
             "%s/ca_audit*" % paths.TOMCAT_SIGNEDAUDIT_DIR
         ):
-            self.files.append((globpath, 'pkiuser', 'pkiuser', '0640'))
+            self.files.append(
+                (globpath, constants.PKI_USER, constants.PKI_GROUP, '0640')
+            )
 
         for filename in ('selftests.log', 'system', 'transactions'):
             self.files.append((
                 os.path.join(paths.TOMCAT_CA_DIR, filename),
-                'pkiuser', 'pkiuser', '0640'
+                constants.PKI_USER, constants.PKI_GROUP, '0640'
             ))
 
         for globpath in glob.glob("%s/debug*.log" % paths.TOMCAT_KRA_DIR):
-            self.files.append((globpath, "pkiuser", "pkiuser", "0644"))
+            self.files.append(
+                (globpath, constants.PKI_USER, constants.PKI_GROUP, "0644")
+            )
 
         for globpath in glob.glob(
             "%s/ca_audit*" % paths.TOMCAT_KRA_SIGNEDAUDIT_DIR
         ):
-            self.files.append((globpath, 'pkiuser', 'pkiuser', '0640'))
+            self.files.append(
+                (globpath, constants.PKI_USER, constants.PKI_GROUP, '0640')
+            )
 
         for filename in ('selftests.log', 'system', 'transactions'):
             self.files.append((
                 os.path.join(paths.TOMCAT_KRA_DIR, filename),
-                'pkiuser', 'pkiuser', '0640'
+                constants.PKI_USER, constants.PKI_GROUP, '0640'
             ))
 
         return FileCheck.check(self)
