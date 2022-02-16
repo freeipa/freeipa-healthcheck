@@ -372,13 +372,23 @@ class RunChecks:
         if rval is not None:
             return rval
 
+        # The pki checks are noisy if a CA is not configured so we
+        # want to suppress that for IPA.
+        #
+        # There are 3 possible states:
+        # 1. IPA is configured with a CA
+        # 2. IPA is configured without a CA
+        # 3. IPA is not configured
+        #
         # If we have IPA configured without a CA then we want to skip
-        # the pkihealthcheck plugins otherwise they will generated a
-        # lot of false positives. The IPA plugins are loaded first so
-        # which should set ca_configured in its registry to True or
-        # False. We will skip the pkihealthcheck plugins only if
-        # ca_configured is False which means that it was set by IPA.
-        ca_configured = False
+        # the pkihealthcheck plugins
+        #
+        # The IPA registry will set ca_configured in its registry to True
+        # or False. We will skip the pkihealthcheck plugins only if
+        # ca_configured is False which means that it was set by IPA. So
+        # we initialize ca_configured to None so that the pki checks
+        # will always be executed with pki-healthcheck.
+        ca_configured = None
         for name, registry in find_registries(self.entry_points).items():
             try:
                 registry.initialize(framework, config, options)
