@@ -98,14 +98,13 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
         # For each SRV record that IPA thinks it should have, do a DNS
         # lookup of it and ensure that DNS has the same set of values
         # that IPA thinks it should.
-        for srv in srv_rec:
+        for srv, hosts in srv_rec.items():
             logger.debug("Search DNS for SRV record of %s", srv)
             try:
                 answers = query_srv(srv)
             except DNSException as e:
                 logger.debug("DNS record not found: %s", e.__class__.__name__)
                 answers = []
-            hosts = srv_rec[srv]
             for answer in answers:
                 logger.debug("DNS record found: %s", answer)
                 try:
@@ -124,10 +123,9 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
                     msg='Expected SRV record missing',
                     key=self.srv_to_name(srv, host))
 
-        for uri in uri_rec:
+        for uri, hosts in uri_rec.items():
             logger.debug("Search DNS for URI record of %s", uri)
             answers = query_uri(uri)
-            hosts = uri_rec[uri]
             for answer in answers:
                 logger.debug("DNS record found: %s", answer)
                 try:
@@ -153,7 +151,7 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
                     key=self.uri_to_name(uri, host)
                 )
 
-        for txt in txt_rec:
+        for txt, realms in txt_rec.items():
             logger.debug("Search DNS for TXT record of %s", txt)
             try:
                 answers = resolve(txt, rdatatype.TXT)
@@ -161,7 +159,6 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
                 logger.debug("DNS record not found: %s", e.__class__.__name__)
                 answers = []
 
-            realms = txt_rec[txt]
             for answer in answers:
                 logger.debug("DNS record found: %s", answer)
                 realm = answer.to_text()

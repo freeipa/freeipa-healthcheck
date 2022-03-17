@@ -61,7 +61,7 @@ class FileSystemSpaceCheck(SystemPlugin):
 
     @duration
     def check(self):
-        for store in self._pathchecks:
+        for store, threshold in self._pathchecks.items():
             try:
                 percent_free = self.get_fs_free_space_percentage(store)
             except FileNotFoundError:
@@ -95,7 +95,6 @@ class FileSystemSpaceCheck(SystemPlugin):
                     threshold=self.min_free_percent
                 )
             free_space = self.get_fs_free_space(store)
-            threshold = self._pathchecks[store]
             if free_space < threshold:
                 yield Result(
                     self, constants.ERROR,
