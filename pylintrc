@@ -62,7 +62,6 @@ disable=
     bad-builtin,
     bad-indentation,
     broad-except,
-    consider-using-dict-items,
     dangerous-default-value,
     eval-used,
     exec-used,
