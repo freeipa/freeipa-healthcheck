@@ -739,13 +739,15 @@ class IPADogtagCertsMatchCheck(IPAPlugin):
 
         def match_ldap_nss_certs_by_subject(plugin, ldap, db, dn,
                                             expected_nicks_subjects):
-            entries = ldap.get_entries(dn)
             all_ok = True
             for nick, subject in expected_nicks_subjects.items():
+                entries = ldap.get_entries(
+                    dn,
+                    filter=f'subjectname={subject}'
+                )
                 cert = db.get_cert_from_db(nick)
                 ok = any(
                     cert in entry["userCertificate"]
-                    and subject == entry["subjectName"][0]
                     for entry in entries
                     if "userCertificate" in entry
                 )
@@ -774,26 +776,28 @@ class IPADogtagCertsMatchCheck(IPAPlugin):
                                                       db, dn, 'CACertificate',
                                                       casigning_nick)
 
+        config = api.Command.config_show()
+        subject_base = config['result']['ipacertificatesubjectbase'][0]
         expected_nicks_subjects = {
             'ocspSigningCert cert-pki-ca':
-                'CN=OCSP Subsystem,O=%s' % api.env.realm,
+                f'CN=OCSP Subsystem,{subject_base}',
             'subsystemCert cert-pki-ca':
-                'CN=CA Subsystem,O=%s' % api.env.realm,
+                f'CN=CA Subsystem,{subject_base}',
             'auditSigningCert cert-pki-ca':
-                'CN=CA Audit,O=%s' % api.env.realm,
+                f'CN=CA Audit,{subject_base}',
             'Server-Cert cert-pki-ca':
-                'CN=%s,O=%s' % (api.env.host, api.env.realm),
+                f'CN={api.env.host},{subject_base}',
         }
 
         kra = krainstance.KRAInstance(api.env.realm)
         if kra.is_installed():
             kra_expected_nicks_subjects = {
                 'transportCert cert-pki-kra':
-                    'CN=KRA Transport Certificate,O=%s' % api.env.realm,
+                    f'CN=KRA Transport Certificate,{subject_base}',
                 'storageCert cert-pki-kra':
-                    'CN=KRA Storage Certificate,O=%s' % api.env.realm,
+                    f'CN=KRA Storage Certificate,{subject_base}',
                 'auditSigningCert cert-pki-kra':
-                    'CN=KRA Audit,O=%s' % api.env.realm,
+                    f'CN=KRA Audit,{subject_base}',
             }
             expected_nicks_subjects.update(kra_expected_nicks_subjects)
 

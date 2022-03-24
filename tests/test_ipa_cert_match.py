@@ -44,8 +44,15 @@ class mock_ldap:
     def get_entries(self, base_dn, scope=SCOPE_SUBTREE, filter=None,
                     attrs_list=None, get_effective_rights=False, **kwargs):
         if self.results is None:
-            raise errors.NotFound(reason='test')
-        return self.results.values()
+            raise errors.NotFound(reason='None')
+        if filter:
+            (attr, value) = filter.split('=', maxsplit=1)
+            for result in self.results.values():
+                if result.get(attr)[0] == value:
+                    return [result]
+            raise errors.NotFound(reason='Not found %s' % filter)
+
+        return self.results
 
 
 class mock_ldap_conn:
@@ -82,6 +89,10 @@ class TestIPACertMatch(BaseTest):
         Mock(return_value=mock_ldap_conn())
     }
 
+    trust = {
+        ('%s IPA CA' % m_api.env.realm): 'u,u,u'
+    }
+
     @patch('ipalib.x509.load_certificate_list_from_file')
     @patch('ipaserver.install.certs.CertDB')
     def test_certs_match_ok(self, mock_certdb, mock_load_cert):
@@ -92,11 +103,8 @@ class TestIPACertMatch(BaseTest):
                                    'cn=certificates,cn=ipa,cn=etc',
                                     m_api.env.basedn),
                                 CACertificate=[IPACertificate()])
-        trust = {
-            ('%s IPA CA' % m_api.env.realm): 'u,u,u'
-        }
 
-        mock_certdb.return_value = mock_CertDB(trust)
+        mock_certdb.return_value = mock_CertDB(self.trust)
         mock_load_cert.return_value = [IPACertificate()]
 
         framework = object()
@@ -121,11 +129,8 @@ class TestIPACertMatch(BaseTest):
                                    'cn=certificates,cn=ipa,cn=etc',
                                     m_api.env.basedn),
                                 CACertificate=[IPACertificate()])
-        trust = {
-            ('%s IPA CA' % m_api.env.realm): 'u,u,u'
-        }
 
-        mock_certdb.return_value = mock_CertDB(trust)
+        mock_certdb.return_value = mock_CertDB(self.trust)
         mock_load_cert.return_value = [IPACertificate(serial_number=2)]
 
         framework = object()
@@ -155,15 +160,54 @@ class TestIPACertMatch(BaseTest):
         assert len(self.results) == 0
 
 
+default_subject_base = [{
+    'result':
+        {
+            'ipacertificatesubjectbase': [f'O={m_api.env.realm}'],
+        },
+}]
+
+custom_subject_base = [{
+    'result':
+        {
+            'ipacertificatesubjectbase': ['OU=Eng,O=ACME'],
+        },
+}]
+
+
 class TestIPADogtagCertMatch(BaseTest):
     patches = {
         'ipaserver.install.krainstance.KRAInstance':
         Mock(return_value=KRAInstance()),
     }
+    trust = {
+        'ocspSigningCert cert-pki-ca': 'u,u,u',
+        'caSigningCert cert-pki-ca': 'u,u,u',
+        'subsystemCert cert-pki-ca': 'u,u,u',
+        'auditSigningCert cert-pki-ca': 'u,u,Pu',
+        'Server-Cert cert-pki-ca': 'u,u,u',
+        'transportCert cert-pki-kra': 'u,u,u',
+        'storageCert cert-pki-kra': 'u,u,u',
+        'auditSigningCert cert-pki-kra': 'u,u,Pu',
+    }
+
+    def get_dogtag_subjects(self, hostname, base):
+        subject_base = base[0]['result']['ipacertificatesubjectbase'][0]
+        return (
+            f'CN=OCSP Subsystem,{subject_base}',
+            f'CN=CA Subsystem,{subject_base}',
+            f'CN=CA Audit,{subject_base}',
+            f'CN=%s,{subject_base}',
+            f'CN=KRA Transport Certificate,{subject_base}',
+            f'CN=KRA Storage Certificate,{subject_base}',
+            f'CN=KRA Audit,{subject_base}',
+            f'CN={hostname},{subject_base}',
+        )
 
     @patch('ipaserver.install.certs.CertDB')
     def test_certs_match_ok(self, mock_certdb):
         """ Ensure match check is ok"""
+        m_api.Command.config_show.side_effect = default_subject_base
         fake_conn = LDAPClient('ldap://localhost', no_schema=True)
         pkidbentry = LDAPEntry(fake_conn,
                                DN('uid=pkidbuser,ou=people,o=ipaca'),
@@ -177,25 +221,9 @@ class TestIPADogtagCertMatch(BaseTest):
                                 userCertificate=[IPACertificate()],
                                 subjectName=['test'])
         ldap_entries = [pkidbentry, casignentry]
-        trust = {
-            'ocspSigningCert cert-pki-ca': 'u,u,u',
-            'caSigningCert cert-pki-ca': 'u,u,u',
-            'subsystemCert cert-pki-ca': 'u,u,u',
-            'auditSigningCert cert-pki-ca': 'u,u,Pu',
-            'Server-Cert cert-pki-ca': 'u,u,u',
-            'transportCert cert-pki-kra': 'u,u,u',
-            'storageCert cert-pki-kra': 'u,u,u',
-            'auditSigningCert cert-pki-kra': 'u,u,Pu',
-        }
 
-        dogtag_entries_subjects = (
-            'CN=OCSP Subsystem,O=%s' % m_api.env.realm,
-            'CN=CA Subsystem,O=%s' % m_api.env.realm,
-            'CN=CA Audit,O=%s' % m_api.env.realm,
-            'CN=%s,O=%s' % (m_api.env.host, m_api.env.realm),
-            'CN=KRA Transport Certificate,O=%s' % m_api.env.realm,
-            'CN=KRA Storage Certificate,O=%s' % m_api.env.realm,
-            'CN=KRA Audit,O=%s' % m_api.env.realm,
+        dogtag_entries_subjects = self.get_dogtag_subjects(
+            m_api.env.host, default_subject_base
         )
 
         for i, subject in enumerate(dogtag_entries_subjects):
@@ -206,7 +234,7 @@ class TestIPADogtagCertMatch(BaseTest):
                               subjectName=[subject])
             ldap_entries.append(entry)
 
-        mock_certdb.return_value = mock_CertDB(trust)
+        mock_certdb.return_value = mock_CertDB(self.trust)
 
         framework = object()
         registry.initialize(framework, config.Config())
@@ -223,6 +251,7 @@ class TestIPADogtagCertMatch(BaseTest):
     @patch('ipaserver.install.certs.CertDB')
     def test_certs_mismatch(self, mock_certdb):
         """ Ensure mismatches are detected"""
+        m_api.Command.config_show.side_effect = default_subject_base
         fake_conn = LDAPClient('ldap://localhost', no_schema=True)
         pkidbentry = LDAPEntry(fake_conn,
                                DN('uid=pkidbuser,ou=people,o=ipaca'),
@@ -238,25 +267,9 @@ class TestIPADogtagCertMatch(BaseTest):
                                 userCertificate=[IPACertificate()],
                                 subjectName=['test'])
         ldap_entries = [pkidbentry, casignentry]
-        trust = {
-            'ocspSigningCert cert-pki-ca': 'u,u,u',
-            'caSigningCert cert-pki-ca': 'u,u,u',
-            'subsystemCert cert-pki-ca': 'u,u,u',
-            'auditSigningCert cert-pki-ca': 'u,u,Pu',
-            'Server-Cert cert-pki-ca': 'u,u,u',
-            'transportCert cert-pki-kra': 'u,u,u',
-            'storageCert cert-pki-kra': 'u,u,u',
-            'auditSigningCert cert-pki-kra': 'u,u,Pu',
-        }
 
-        dogtag_entries_subjects = (
-            'CN=OCSP Subsystem,O=%s' % m_api.env.realm,
-            'CN=CA Subsystem,O=%s' % m_api.env.realm,
-            'CN=CA Audit,O=%s' % m_api.env.realm,
-            'CN=%s,O=%s' % (m_api.env.host, m_api.env.realm),
-            'CN=KRA Transport Certificate,O=%s' % m_api.env.realm,
-            'CN=KRA Storage Certificate,O=%s' % m_api.env.realm,
-            'CN=KRA Audit,O=%s' % m_api.env.realm,
+        dogtag_entries_subjects = self.get_dogtag_subjects(
+            m_api.env.host, default_subject_base
         )
 
         for i, subject in enumerate(dogtag_entries_subjects):
@@ -267,7 +280,7 @@ class TestIPADogtagCertMatch(BaseTest):
                               subjectName=[subject])
             ldap_entries.append(entry)
 
-        mock_certdb.return_value = mock_CertDB(trust)
+        mock_certdb.return_value = mock_CertDB(self.trust)
 
         framework = object()
         registry.initialize(framework, config.Config())
@@ -280,3 +293,92 @@ class TestIPADogtagCertMatch(BaseTest):
         assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPADogtagCertsMatchCheck'
+
+    @patch('ipaserver.install.certs.CertDB')
+    def test_certs_match_ok_subject(self, mock_certdb):
+        """ Ensure match check is ok"""
+        m_api.Command.config_show.side_effect = custom_subject_base
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        pkidbentry = LDAPEntry(fake_conn,
+                               DN('uid=pkidbuser,ou=people,o=ipaca'),
+                               userCertificate=[IPACertificate()],
+                               subjectName=['test'])
+        casignentry = LDAPEntry(fake_conn,
+                                DN('cn=%s IPA CA' % m_api.env.realm,
+                                   'cn=certificates,cn=ipa,cn=etc',
+                                    m_api.env.basedn),
+                                CACertificate=[IPACertificate()],
+                                userCertificate=[IPACertificate()],
+                                subjectName=['test'])
+        ldap_entries = [pkidbentry, casignentry]
+
+        dogtag_entries_subjects = self.get_dogtag_subjects(
+            m_api.env.host, custom_subject_base
+        )
+
+        for i, subject in enumerate(dogtag_entries_subjects):
+            entry = LDAPEntry(fake_conn,
+                              DN('cn=%i,ou=certificateRepository' % i,
+                                 'ou=ca,o=ipaca'),
+                              userCertificate=[IPACertificate()],
+                              subjectName=[subject])
+            ldap_entries.append(entry)
+
+        mock_certdb.return_value = mock_CertDB(self.trust)
+
+        framework = object()
+        registry.initialize(framework, config.Config())
+        f = IPADogtagCertsMatchCheck(registry)
+        f.conn = mock_ldap(ldap_entries)
+        self.results = capture_results(f)
+
+        assert len(self.results) == 3
+        for result in self.results.results:
+            assert result.result == constants.SUCCESS
+            assert result.source == 'ipahealthcheck.ipa.certs'
+            assert result.check == 'IPADogtagCertsMatchCheck'
+
+    @patch('ipaserver.install.certs.CertDB')
+    def test_certs_mismatch_subject(self, mock_certdb):
+        """ Ensure mismatches are detected"""
+        m_api.Command.config_show.side_effect = custom_subject_base
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        pkidbentry = LDAPEntry(fake_conn,
+                               DN('uid=pkidbuser,ou=people,o=ipaca'),
+                               userCertificate=[IPACertificate(
+                                   serial_number=2
+                               )],
+                               subjectName=['test'])
+        casignentry = LDAPEntry(fake_conn,
+                                DN('cn=%s IPA CA' % m_api.env.realm,
+                                   'cn=certificates,cn=ipa,cn=etc',
+                                    m_api.env.basedn),
+                                CACertificate=[IPACertificate()],
+                                userCertificate=[IPACertificate()],
+                                subjectName=['test'])
+        ldap_entries = [pkidbentry, casignentry]
+
+        dogtag_entries_subjects = self.get_dogtag_subjects(
+            m_api.env.host, custom_subject_base
+        )
+
+        for i, subject in enumerate(dogtag_entries_subjects):
+            entry = LDAPEntry(fake_conn,
+                              DN('cn=%i,ou=certificateRepository' % i,
+                                 'ou=ca,o=ipaca'),
+                              userCertificate=[IPACertificate()],
+                              subjectName=[subject])
+            ldap_entries.append(entry)
+
+        mock_certdb.return_value = mock_CertDB(self.trust)
+
+        framework = object()
+        registry.initialize(framework, config.Config())
+        f = IPADogtagCertsMatchCheck(registry)
+        f.conn = mock_ldap(ldap_entries)
+        self.results = capture_results(f)
+
+        assert len(self.results) == 3
+        result = self.results.results[0]
+        assert result.result == constants.ERROR
+        assert result.source == 'ipahealthcheck.ipa.certs'
