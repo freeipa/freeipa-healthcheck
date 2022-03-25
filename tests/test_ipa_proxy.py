@@ -214,7 +214,6 @@ class TestIPAProxySecretCheck(BaseTest):
 
         self.results = capture_results(f)
 
-        print(self.results.results)
         assert len(self.results) == 2
 
         result = self.results.results[0]
