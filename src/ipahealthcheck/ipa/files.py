@@ -123,7 +123,8 @@ class IPAFileCheck(IPAPlugin, FileCheck):
         self.files.append((paths.IPA_CUSTODIA_AUDIT_LOG,
                           'root', 'root', '0644'))
 
-        self.files.append((paths.KADMIND_LOG, 'root', 'root', '0600'))
+        self.files.append((paths.KADMIND_LOG, 'root', 'root',
+                          ('0600', '0640')))
         self.files.append((paths.KRB5KDC_LOG, 'root', 'root', '0640'))
 
         inst = api.env.realm.replace('.', '-')

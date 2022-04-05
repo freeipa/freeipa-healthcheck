@@ -16,7 +16,7 @@ class FileCheck:
        files is a tuple of tuples. Each tuple consists of:
            (path, expected_perm, expected_owner, expected_group)
 
-       perm is in the form of a POSIX ACL: e.g. 0440, 0770.
+       perm is a POSIX ACL as either a string or tuple: e.g. 0440, (0770,).
        owner and group are names or a tuple of names, not uid/gid.
 
        If owner and/or group are tuples then all names are checked.
@@ -33,6 +33,8 @@ class FileCheck:
                 owner = tuple((owner,))
             if not isinstance(group, tuple):
                 group = tuple((group,))
+            if not isinstance(mode, tuple):
+                mode = tuple((mode,))
             if not os.path.exists(path):
                 for type in ('mode', 'owner', 'group'):
                     key = '%s_%s' % (path.replace('/', '_'), type)
@@ -43,19 +45,32 @@ class FileCheck:
             stat = os.stat(path)
             fmode = str(oct(stat.st_mode)[-4:])
             key = '%s_mode' % path.replace('/', '_')
-            if mode != fmode:
-                if mode < fmode:
+            if fmode not in mode:
+                if len(mode) == 1:
+                    modes = mode[0]
+                else:
+                    modes = 'one of {}'.format(','.join(mode))
+                if all(m < fmode for m in mode):
                     yield Result(self, constants.WARNING, key=key,
-                                 path=path, type='mode', expected=mode,
+                                 path=path, type='mode', expected=modes,
                                  got=fmode,
                                  msg='Permissions of %s are too permissive: '
-                                 '%s and should be %s' % (path, fmode, mode))
-                if mode > fmode:
+                                 '%s and should be %s' %
+                                 (path, fmode, modes))
+                elif all(m > fmode for m in mode):
                     yield Result(self, constants.ERROR, key=key,
-                                 path=path, type='mode', expected=mode,
+                                 path=path, type='mode', expected=modes,
                                  got=fmode,
                                  msg='Permissions of %s are too restrictive: '
-                                 '%s and should be %s' % (path, fmode, mode))
+                                 '%s and should be %s' %
+                                 (path, fmode, modes))
+                else:
+                    yield Result(self, constants.ERROR, key=key,
+                                 path=path, type='mode', expected=modes,
+                                 got=fmode,
+                                 msg='Permissions of %s are unexpected: '
+                                 '%s and should be %s' %
+                                 (path, fmode, modes))
             else:
                 yield Result(self, constants.SUCCESS, key=key,
                              type='mode', path=path)
