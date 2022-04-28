@@ -320,7 +320,7 @@ class RunChecks:
     def run_healthcheck(self):
         framework = object()
         plugins = []
-        output = constants.DEFAULT_OUTPUT
+        output = None
 
         logger.setLevel(logging.WARNING)
 
@@ -413,6 +413,9 @@ class RunChecks:
             if out.__name__.lower() == options.output_type:
                 output = out(options)
                 break
+        if output is None:
+            print(f"Unknown output-type '{options.output_type}'")
+            return 1
 
         if options.list_sources:
             return list_sources(plugins)
