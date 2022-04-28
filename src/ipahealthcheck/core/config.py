@@ -109,7 +109,8 @@ def read_config(config_file):
         )
         return config
 
-    parser = ConfigParser(dict_type=DuplicateOrderedDict, strict=False)
+    parser = ConfigParser(dict_type=DuplicateOrderedDict, strict=False,
+                          delimiters='=')
     try:
         parser.read(config_file)
     except ParsingError as e:
@@ -125,7 +126,14 @@ def read_config(config_file):
 
     for (key, value) in items:
         if not key.startswith('excludes_'):
-            config[key] = value
+            if len(value) == 0 or value is None:
+                logging.error(
+                    "Empty value for %s in %s [%s]",
+                    key, config_file, CONFIG_SECTION
+                )
+                return None
+            else:
+                config[key] = value
 
     if parser.has_section(EXCLUDE_SECTION):
         items = parser.items(EXCLUDE_SECTION)
