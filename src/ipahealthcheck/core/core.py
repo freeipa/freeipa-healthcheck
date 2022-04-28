@@ -346,12 +346,6 @@ class RunChecks:
         if rval is not None:
             return rval
 
-        if options.verbose:
-            logger.setLevel(logging.INFO)
-
-        if options.debug:
-            logger.setLevel(logging.DEBUG)
-
         if options.config is not None:
             config = read_config(options.config)
         else:
@@ -365,6 +359,12 @@ class RunChecks:
         config.merge(vars(options))
         self.options = config
         options = config
+
+        if options.verbose:
+            logger.setLevel(logging.INFO)
+
+        if options.debug:
+            logger.setLevel(logging.DEBUG)
 
         # pylint: disable=assignment-from-none
         rval = self.pre_check()
