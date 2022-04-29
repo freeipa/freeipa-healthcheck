@@ -111,7 +111,7 @@ class JSON(Output):
 
     def __init__(self, options):
         super().__init__(options)
-        self.indent = int(options.indent)
+        self.indent = options.indent
 
     def generate(self, data):
         output = json.dumps(data, indent=self.indent)

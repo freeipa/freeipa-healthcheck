@@ -40,6 +40,6 @@ def test_options_merge(mock_parse, mock_run, mock_service):
 
         # verify two valus that have defaults with our overriden values
         assert run.options.output_type == 'human'
-        assert run.options.indent == '5'
+        assert run.options.indent == 5
     finally:
         os.remove(config_path)

@@ -6,7 +6,7 @@ import tempfile
 
 import pytest
 
-from ipahealthcheck.core.config import read_config
+from ipahealthcheck.core.config import read_config, convert_string
 
 
 def test_config_no_section():
@@ -59,3 +59,17 @@ def test_config_recursion():
         config._Config__d['_Config__d']
     except KeyError:
         pass
+
+
+def test_convert_string():
+    for value in ("s", "string", "BiggerString"):
+        assert convert_string(value) == value
+
+    for value in ("True", "true", True):
+        assert convert_string(value) is True
+
+    for value in ("False", "false", False):
+        assert convert_string(value) is False
+
+    for value in ("10", "99999", 807):
+        assert convert_string(value) == int(value)
