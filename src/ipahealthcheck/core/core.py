@@ -439,7 +439,7 @@ class RunChecks:
                                                      options.check)
             results.extend(run_plugins(plugins, available,
                                        options.source, options.check, config,
-                                       int(config.timeout)))
+                                       config.timeout))
 
         if options.source and len(results.results) == 0:
             for plugin in plugins:

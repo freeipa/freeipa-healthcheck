@@ -93,6 +93,27 @@ class Config:
             self.__d[key] = d[key]
 
 
+def convert_string(value):
+    """
+    Reading options from the configuration file will leave them as
+    strings. This breaks boolean values so attempt to convert them.
+    """
+    if not isinstance(value, str):
+        return value
+
+    if value.lower() in (
+        "true",
+        "false",
+    ):
+        return value.lower() == 'true'
+    else:
+        try:
+            value = int(value)
+        except ValueError:
+            pass
+    return value
+
+
 def read_config(config_file):
     """
     Simple configuration file reader
@@ -133,7 +154,24 @@ def read_config(config_file):
                 )
                 return None
             else:
-                config[key] = value
+                # Try to do some basic validation. This is unfortunately
+                # hardcoded.
+                if key in ('all', 'debug', 'failures_only', 'verbose'):
+                    if value.lower() not in ('true', 'false'):
+                        logging.error(
+                            "%s is not a valid boolean in %s [%s]",
+                            key, config_file, CONFIG_SECTION
+                        )
+                        return None
+                elif key in ('indent', 'timeout'):
+                    if not isinstance(convert_string(value), int):
+                        logging.error(
+                            "%s is not a valid integer in %s [%s]",
+                            key, config_file, CONFIG_SECTION
+                        )
+                        return None
+                # Some rough type translation from strings
+                config[key] = convert_string(value)
 
     if parser.has_section(EXCLUDE_SECTION):
         items = parser.items(EXCLUDE_SECTION)
