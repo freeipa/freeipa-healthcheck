@@ -43,3 +43,30 @@ def test_options_merge(mock_parse, mock_run, mock_service):
         assert run.options.indent == 5
     finally:
         os.remove(config_path)
+
+
+@patch('ipahealthcheck.core.core.run_service_plugins')
+@patch('ipahealthcheck.core.core.run_plugins')
+@patch('ipahealthcheck.core.core.parse_options')
+def test_cfg_file_debug_option(mock_parse, mock_run, mock_service):
+    """
+    Test if the debug option is respected in the configuration file
+
+    Related: https://bugzilla.redhat.com/show_bug.cgi?id=2079861
+    """
+    mock_service.return_value = (Results(), [])
+    mock_run.return_value = Results()
+    mock_parse.return_value = options
+    fd, config_path = tempfile.mkstemp()
+    os.close(fd)
+    with open(config_path, "w") as fd:
+        fd.write('[default]\n')
+        fd.write('debug=True\n')
+
+    try:
+        run = RunChecks([], config_path)
+        run.run_healthcheck()
+
+        assert run.options.debug
+    finally:
+        os.remove(config_path)
