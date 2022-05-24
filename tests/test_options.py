@@ -3,8 +3,10 @@
 #
 
 import argparse
+import io
 import os
 import tempfile
+from contextlib import redirect_stdout
 from unittest.mock import patch
 
 from ipahealthcheck.core.core import RunChecks
@@ -68,5 +70,37 @@ def test_cfg_file_debug_option(mock_parse, mock_run, mock_service):
         run.run_healthcheck()
 
         assert run.options.debug
+    finally:
+        os.remove(config_path)
+
+
+@patch('ipahealthcheck.core.core.run_service_plugins')
+@patch('ipahealthcheck.core.core.run_plugins')
+@patch('ipahealthcheck.core.core.parse_options')
+def test_incorrect_output_type_cfg_file(mock_parse, mock_run, mock_service):
+    """
+    Test the error message is user-friendly if the incorrect output type is
+    provided in cfg file
+
+    Related: https://bugzilla.redhat.com/show_bug.cgi?id=2079698
+    """
+    mock_service.return_value = (Results(), [])
+    mock_run.return_value = Results()
+    mock_parse.return_value = options
+    fd, config_path = tempfile.mkstemp()
+    os.close(fd)
+    with open(config_path, "w") as fd:
+        fd.write('[default]\n')
+        fd.write('output_type=42\n')
+
+    try:
+        run = RunChecks([], config_path)
+
+        f = io.StringIO()
+        with redirect_stdout(f):
+            run.run_healthcheck()
+
+        assert "Unknown output-type" in f.getvalue()
+
     finally:
         os.remove(config_path)
