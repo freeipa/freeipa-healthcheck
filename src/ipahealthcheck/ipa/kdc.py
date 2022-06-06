@@ -40,11 +40,16 @@ class KDCWorkersCheck(IPAPlugin):
                 args_read = True
                 sline = sline.split('=', maxsplit=1)[1]
                 if sline.find("-w") == -1:
-                    yield Result(self, constants.WARNING, key=key,
-                                 sysconfig=SYSCONFIG,
-                                 msg='No KDC workers defined in '
-                                 '{sysconfig}')
-                    return
+                    if cpus == 1:
+                        # -w is not configured when cpus == 1
+                        yield Result(self, constants.SUCCESS, key=key)
+                        return
+                    else:
+                        yield Result(self, constants.WARNING, key=key,
+                                     sysconfig=SYSCONFIG,
+                                     msg='No KDC workers defined in '
+                                     '{sysconfig}')
+                        return
 
                 # Making an assumption that this line is not misconfigured
                 # otherwise the KDC wouldn't start at all.

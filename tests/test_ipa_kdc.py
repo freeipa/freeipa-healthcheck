@@ -14,7 +14,7 @@ from ipahealthcheck.ipa.kdc import KDCWorkersCheck
 class TestKDCWorkers(BaseTest):
     @patch('ipahealthcheck.ipa.kdc.get_contents')
     @patch('os.sysconf')
-    def test_no_workers(self, mock_sysconf, mock_sysconfig):
+    def test_no_workers_noargs(self, mock_sysconf, mock_sysconfig):
         mock_sysconf.return_value = 1
         mock_sysconfig.return_value = ""
         framework = object()
@@ -32,6 +32,46 @@ class TestKDCWorkers(BaseTest):
         assert result.kw.get('key') == 'workers'
         assert result.kw.get('sysconfig') == '/etc/sysconfig/krb5kdc'
         assert result.kw.get('msg') == 'KRB5KDC_ARGS is not set in {sysconfig}'
+
+    @patch('ipahealthcheck.ipa.kdc.get_contents')
+    @patch('os.sysconf')
+    def test_no_workers_empty_noargs(self, mock_sysconf, mock_sysconfig):
+        mock_sysconf.return_value = 1
+        mock_sysconfig.return_value = ("KRB5KDC_ARGS=",)
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = KDCWorkersCheck(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.kdc'
+        assert result.check == 'KDCWorkersCheck'
+        assert result.kw.get('key') == 'workers'
+
+    @patch('ipahealthcheck.ipa.kdc.get_contents')
+    @patch('os.sysconf')
+    def test_with_workers_empty_noargs(self, mock_sysconf, mock_sysconfig):
+        mock_sysconf.return_value = 2
+        mock_sysconfig.return_value = ("KRB5KDC_ARGS=",)
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = KDCWorkersCheck(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.WARNING
+        assert result.source == 'ipahealthcheck.ipa.kdc'
+        assert result.check == 'KDCWorkersCheck'
+        assert result.kw.get('key') == 'workers'
+        assert result.kw.get('sysconfig') == '/etc/sysconfig/krb5kdc'
+        assert result.kw.get('msg') == 'No KDC workers defined in {sysconfig}'
 
     @patch('ipahealthcheck.ipa.kdc.get_contents')
     @patch('os.sysconf')
