@@ -171,6 +171,12 @@ class IPAFileCheck(IPAPlugin, FileCheck):
                 constants.PKI_USER, constants.PKI_GROUP, '0640'
             ))
 
+        self.files.append((paths.IPA_CCACHES,
+                           constants.IPAAPI_USER, constants.IPAAPI_GROUP,
+                           '6770'))
+        self.files.append((paths.IPA_RENEWAL_LOCK, 'root', 'root', '0600'))
+        self.files.append((paths.SVC_LIST_FILE, 'root', 'root', '0644'))
+
         return FileCheck.check(self)
 
 
