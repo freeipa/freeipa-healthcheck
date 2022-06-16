@@ -129,6 +129,74 @@ def trustdomain_find():
     ]
 
 
+def idrange_find_adrange_type():
+    """
+    Return a set of idranges of type "Active Directory domain range"
+    """
+
+    return {
+            "result": [
+                {
+                    "cn": ["AD.EXAMPLE_id_range"],
+                    "ipabaseid": ["1664000000"],
+                    "ipabaserid": ["0"],
+                    "ipaidrangesize": ["200000"],
+                    "ipanttrusteddomainsid": ["S-1-5-21-abc"],
+                    "iparangetype": ["Active Directory domain range"],
+                    "iparangetyperaw": ["ipa-ad-trust"]
+                },
+                {
+                    "cn": ["CHILD.AD.EXAMPLE_id_range"],
+                    "ipabaseid": ["538600000"],
+                    "ipabaserid": ["0"],
+                    "ipaidrangesize": ["200000"],
+                    "ipanttrusteddomainsid": [
+                        "S-1-5-21-38045160-610119595-3099869984"
+                    ],
+                    "iparangetype": ["Active Directory domain range"],
+                    "iparangetyperaw": ["ipa-ad-trust"]
+                },
+                {
+                    "cn": ["IPA.EXAMPLE_id_range"],
+                    "ipabaseid": ["447400000"],
+                    "ipabaserid": ["1000"],
+                    "ipaidrangesize": ["200000"],
+                    "iparangetype": ["local domain range"],
+                    "iparangetyperaw": ["ipa-local"],
+                    "ipasecondarybaserid": ["100000000"]
+                }]
+        }
+
+
+def idrange_find_adrange_posix():
+    """
+    Return a set of idranges of type
+    "Active Directory trust range with POSIX attributes"
+    """
+
+    return {
+        "result": [
+            {
+                "cn": ["AD.EXAMPLE_id_range"],
+                "ipabaseid": ["1664000000"],
+                "ipaidrangesize": ["200000"],
+                "ipanttrusteddomainsid": ["S-1-5-21-abc"],
+                "iparangetype": [
+                    "Active Directory trust range with POSIX attributes"],
+                "iparangetyperaw": ["ipa-ad-trust-posix"]
+            },
+            {
+                "cn": ["IPA.EXAMPLE_id_range"],
+                "ipabaseid": ["447400000"],
+                "ipabaserid": ["1000"],
+                "ipaidrangesize": ["200000"],
+                "iparangetype": ["local domain range"],
+                "iparangetyperaw": ["ipa-local"],
+                "ipasecondarybaserid": ["100000000"]
+            }]
+        }
+
+
 class SSSDDomain:
     def __init__(self, return_ipa_server_mode=True, provider='ipa'):
         self.return_ipa_server_mode = return_ipa_server_mode
@@ -454,7 +522,8 @@ class TestTrustCatalog(BaseTest):
 
     @patch('pysss_nss_idmap.getnamebysid')
     @patch('ipapython.ipautil.run')
-    def test_trust_catalog_ok(self, mock_run, mock_getnamebysid):
+    def test_trust_catalog_adrange(self, mock_run, mock_getnamebysid):
+        """The associated ID ranges are Active Directory domain range"""
         # id Administrator@ad.example
         dsresult = namedtuple('run', ['returncode', 'error_log'])
         dsresult.returncode = 0
@@ -478,6 +547,11 @@ class TestTrustCatalog(BaseTest):
         # get_trust_domains()
         m_api.Command.trust_find.side_effect = trust_find()
         m_api.Command.trustdomain_find.side_effect = trustdomain_find()
+        m_api.Command.idrange_find.side_effect = [
+            idrange_find_adrange_type(),
+            idrange_find_adrange_type(),
+            idrange_find_adrange_type()
+        ]
 
         framework = object()
         registry.initialize(framework, config.Config)
@@ -549,6 +623,144 @@ class TestTrustCatalog(BaseTest):
         assert result.check == 'IPATrustCatalogCheck'
         assert result.kw.get('key') == 'AD Domain Controller'
         assert result.kw.get('domain') == 'child.example'
+
+    @patch('pysss_nss_idmap.getnamebysid')
+    @patch('ipapython.ipautil.run')
+    def test_trust_catalog_posix(self, mock_run, mock_getnamebysid):
+        """AD POSIX ranges"""
+        # id Administrator@ad.example
+        dsresult = namedtuple('run', ['returncode', 'error_log'])
+        dsresult.returncode = 0
+        dsresult.error_log = ''
+        dsresult.output = 'Active servers:\nAD Global Catalog: ' \
+            'root-dc.ad.vm\nAD Domain Controller: root-dc.ad.vm\n' \
+            'IPA: master.ipa.vm\n\n'
+        ds2result = namedtuple('run', ['returncode', 'error_log'])
+        ds2result.returncode = 0
+        ds2result.error_log = ''
+        ds2result.output = 'Active servers:\nAD Global Catalog: ' \
+            'root-dc.ad.vm\nAD Domain Controller: root-dc.ad.vm\n' \
+
+        mock_run.side_effect = [dsresult, dsresult, ds2result]
+        mock_getnamebysid.side_effect = [
+           {'S-1-5-21-abc-500': {'name': 'admin@ad.example', 'type': 3}},
+           {'S-1-5-21-ghi-500': {'name': 'admin@child.ad.example', 'type': 3}},
+           {'S-1-5-21-def-500': {'name': 'admin@child.example', 'type': 3}}
+        ]
+
+        # get_trust_domains()
+        m_api.Command.trust_find.side_effect = trust_find()
+        m_api.Command.trustdomain_find.side_effect = trustdomain_find()
+        m_api.Command.idrange_find.side_effect = [
+            idrange_find_adrange_posix(),
+            idrange_find_adrange_posix(),
+            idrange_find_adrange_posix()
+        ]
+
+        framework = object()
+        registry.initialize(framework, config.Config)
+        registry.trust_agent = True
+        f = IPATrustCatalogCheck(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 3
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'S-1-5-21-abc'
+        assert result.kw.get('domain') == 'ad.example'
+        assert result.kw.get('type') == 'ipa-ad-trust-posix'
+
+        result = self.results.results[1]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'S-1-5-22-def'
+        assert result.kw.get('domain') == 'child.ad.example'
+        assert result.kw.get('type') == 'ipa-ad-trust-posix'
+
+        result = self.results.results[2]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'S-1-5-21-ghi'
+        assert result.kw.get('domain') == 'child.example'
+        assert result.kw.get('type') == 'ipa-ad-trust-posix'
+
+    @patch('pysss_nss_idmap.getnamebysid')
+    @patch('ipapython.ipautil.run')
+    def test_trust_catalog_posix_missing(self, mock_run, mock_getnamebysid):
+        """AD POSIX ranges"""
+        # id Administrator@ad.example
+        dsresult = namedtuple('run', ['returncode', 'error_log'])
+        dsresult.returncode = 0
+        dsresult.error_log = ''
+        dsresult.output = 'Active servers:\nAD Global Catalog: ' \
+            'root-dc.ad.vm\nAD Domain Controller: root-dc.ad.vm\n' \
+            'IPA: master.ipa.vm\n\n'
+        ds2result = namedtuple('run', ['returncode', 'error_log'])
+        ds2result.returncode = 0
+        ds2result.error_log = ''
+        ds2result.output = 'Active servers:\nAD Global Catalog: ' \
+            'root-dc.ad.vm\nAD Domain Controller: root-dc.ad.vm\n' \
+
+        mock_run.side_effect = [dsresult, dsresult, ds2result]
+        mock_getnamebysid.side_effect = [
+           {'S-1-5-21-abc-500': {'name': 'admin@ad.example', 'type': 3}},
+           {'S-1-5-21-ghi-500': {'name': 'admin@child.ad.example', 'type': 3}},
+           {'S-1-5-21-def-500': {'name': 'admin@child.example', 'type': 3}}
+        ]
+
+        # get_trust_domains()
+        m_api.Command.trust_find.side_effect = trust_find()
+        m_api.Command.trustdomain_find.side_effect = trustdomain_find()
+        m_api.Command.idrange_find.side_effect = [
+            idrange_find_adrange_posix(),
+            {'result': []},
+            {'result': []}
+        ]
+
+        framework = object()
+        registry.initialize(framework, config.Config)
+        registry.trust_agent = True
+        f = IPATrustCatalogCheck(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 3
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'S-1-5-21-abc'
+        assert result.kw.get('domain') == 'ad.example'
+        assert result.kw.get('type') == 'ipa-ad-trust-posix'
+
+        result = self.results.results[1]
+        assert result.result == constants.WARNING
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'S-1-5-22-def'
+        assert result.kw.get('domain') == 'child.ad.example'
+        assert (
+            result.kw.get('msg')
+            == 'Domain {domain} does not have an idrange'
+        )
+
+        result = self.results.results[2]
+        assert result.result == constants.WARNING
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPATrustCatalogCheck'
+        assert result.kw.get('key') == 'S-1-5-21-ghi'
+        assert result.kw.get('domain') == 'child.example'
+        assert (
+            result.kw.get('msg')
+            == 'Domain {domain} does not have an idrange'
+        )
 
 
 class Testsidgen(BaseTest):
