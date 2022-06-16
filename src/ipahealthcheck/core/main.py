@@ -2,7 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
-from os import environ
+import os
 import sys
 
 from ipahealthcheck.core import constants
@@ -43,8 +43,10 @@ class IPAChecks(RunChecks):
 
 
 def main():
-    environ["KRB5_CLIENT_KTNAME"] = "/etc/krb5.keytab"
-    environ["KRB5CCNAME"] = "MEMORY:"
+    if not os.getegid() == 0:
+        sys.exit("\nYou must be root to run this script.\n")
+    os.environ["KRB5_CLIENT_KTNAME"] = "/etc/krb5.keytab"
+    os.environ["KRB5CCNAME"] = "MEMORY:"
 
     ipachecks = IPAChecks(['ipahealthcheck.registry',
                            'pkihealthcheck.registry'],

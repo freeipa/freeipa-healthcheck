@@ -7,6 +7,9 @@ import os
 from ipapython.ipautil import run
 import pytest
 
+if not os.getegid() == 0:
+    pytest.skip("must be run as root", allow_module_level=True)
+
 
 def test_version():
     """
