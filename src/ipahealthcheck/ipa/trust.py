@@ -183,6 +183,7 @@ class IPATrustDomainsCheck(IPAPlugin):
             except Exception as e:
                 yield Result(self, constants.WARNING,
                              key='domain-status',
+                             domain=domain,
                              error=str(e),
                              msg='Execution of {key} failed: {error}')
                 continue
@@ -262,6 +263,10 @@ class IPATrustCatalogCheck(IPAPlugin):
     This should populate the 'AD Global catalog' and 'AD Domain Controller'
     fields in 'sssctl domain-status' output (means SSSD actually talks to AD
     DCs)
+
+    If the associated idrange type is ipa-ad-trust-posix then the
+    check will be skipped because we can't predict what the UID of the
+    Administrator account will be.
     """
     @duration
     def check(self):
@@ -280,20 +285,41 @@ class IPATrustCatalogCheck(IPAPlugin):
 
         for trust_domain in trust_domains:
             sid = trust_domain.get('domainsid')
+            domain = trust_domain['domain']
+            idrange = api.Command.idrange_find(sid)
+            if len(idrange['result']) == 0:
+                yield Result(self, constants.WARNING,
+                             key=sid,
+                             domain=domain,
+                             msg='Domain {domain} does not have an idrange')
+                continue
+
+            if 'ipa-ad-trust-posix' in idrange['result'][0]['iparangetyperaw']:
+                yield Result(self, constants.SUCCESS,
+                             key=sid,
+                             domain=domain,
+                             type='ipa-ad-trust-posix')
+                logger.debug("Domain %s is a POSIX range, skip the lookup",
+                             domain)
+                continue
+
             try:
                 id = pysss_nss_idmap.getnamebysid(sid + '-500')
             except Exception as e:
                 yield Result(self, constants.ERROR,
-                             key=sid,
+                             key=id,
+                             domain=domain,
                              error=str(e),
-                             msg='Look up of{key} failed: {error}')
+                             msg='Look up of ID {key} for {domain} failed: '
+                                 '{error}')
                 continue
 
             if not id:
                 yield Result(self, constants.WARNING,
-                             key=sid,
+                             key=id,
+                             domain=trust_domain['domain'],
                              error='returned nothing',
-                             msg='Look up of {key} {error}')
+                             msg='Look up of ID {key} for {domain} {error}')
             else:
                 yield Result(self, constants.SUCCESS,
                              key='Domain Security Identifier',
