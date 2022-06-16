@@ -2,6 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+from argparse import ArgumentTypeError
 from datetime import datetime
 import json
 import sys
@@ -104,8 +105,14 @@ class Output:
 class JSON(Output):
     """Output information in JSON format"""
 
+    def indent_type(self, length):
+        length = int(length)
+        if length < 0 or length > 100:
+            raise ArgumentTypeError("Must be in range 0-100")
+        return length
+
     options = (
-        ('--indent', dict(dest='indent', type=int, default=2,
+        ('--indent', dict(dest='indent', type=indent_type, default=2,
          help='Indention level of JSON output')),
     )
 
