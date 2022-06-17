@@ -219,6 +219,30 @@ class TestNSSAgent(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.certs'
         assert result.check == 'IPARAAgent'
 
+    def test_nss_agent_mixed_case_cert(self):
+        attrs = dict(
+            description=['2;1;cn=ISSUER;cn=RA AGENT'],
+            usercertificate=[self.cert],
+        )
+        fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+        ldapentry = LDAPEntry(fake_conn, DN('uid=ipara,ou=people,o=ipaca'))
+        for attr, values in attrs.items():
+            ldapentry[attr] = values
+
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPARAAgent(registry)
+
+        f.conn = mock_ldap([ldapentry])
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.certs'
+        assert result.check == 'IPARAAgent'
+
 
 class TestKRAAgent(BaseTest):
     cert = IPACertificate()
