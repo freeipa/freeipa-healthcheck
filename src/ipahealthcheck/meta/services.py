@@ -13,27 +13,61 @@ try:
 except ImportError:
     from ipaserver.install.installutils import realm_to_serverid
 
-from ipalib import api
+from ipalib import api, errors
 from ipaplatform import services
-from ipaserver.install import bindinstance
-from ipaserver.install import cainstance
+from ipapython.dn import DN
+from ipaserver.install import service
 
 logger = logging.getLogger()
 
 
 class IPAServiceCheck(ServiceCheck):
-    @duration
-    def check(self, instance=''):
+    def get_service_name(self, role):
+        """Roles define broad services. Translate a role name into
+           an individual service name.
+        """
+        conn = api.Backend.ldap2
+        if not api.Backend.ldap2.isconnected():
+            api.Backend.ldap2.connect()
+        dn = DN(
+            ("cn", role), ("cn", api.env.host),
+            ("cn", "masters"), ("cn", "ipa"), ("cn", "etc"),
+            api.env.basedn
+        )
         try:
-            # services named with a hyphen cannot be addressed
-            # as knownservices.name
-            # so use knownservices['name'] instead
-            self.service = services.knownservices[self.service_name]
-        except KeyError:
-            logger.debug(
-                "Service '%s' is unknown to ipaplatform, skipping check",
-                self.service_name
-            )
+            entry = conn.get_entry(dn, ['cn'])
+        except errors.NotFound:
+            logger.debug("server %s does not run role %s",
+                         api.env.host, role)
+        else:
+            svc = entry.single_value['cn']
+            if svc in service.SERVICE_LIST:
+                return service.SERVICE_LIST[svc].systemd_name
+            else:
+                logger.debug("role %s defines service %s but it isn't in"
+                             "service.SERVICE_LIST", role, svc)
+        return None
+
+    @duration
+    def check(self, instance='', check_enabled=False):
+        if self.service_name in services.knownservices:
+            try:
+                # services named with a hyphen cannot be addressed
+                # as knownservices.name
+                # so use knownservices['name'] instead
+                self.service = services.knownservices[self.service_name]
+            except KeyError:
+                logger.debug(
+                    "Service '%s' is unknown to ipaplatform, skipping check",
+                    self.service_name
+                )
+                return ()
+        else:
+            # Fall back to manually creating the service. This relies
+            # on the service actually existing.
+            self.service = services.service(self.service_name, api)
+
+        if check_enabled and not self.service.is_enabled(instance):
             return ()
 
         status = self.service.is_running(instance)
@@ -85,19 +119,10 @@ class httpd(IPAServiceCheck):
 @registry
 class ipa_custodia(IPAServiceCheck):
     def check(self, instance=''):
-        self.service_name = 'ipa-custodia'
+        self.service_name = self.get_service_name('KEYS')
 
-        return super().check()
-
-
-@registry
-class ipa_dnskeysyncd(IPAServiceCheck):
-    requires = ('dirsrv',)
-
-    def check(self, instance=''):
-        self.service_name = 'ipa-dnskeysyncd'
-
-        if not bindinstance.named_conf_exists():
+        if self.service_name is None:
+            # No service name means it is not configured
             return ()
 
         return super().check()
@@ -114,7 +139,11 @@ class ipa_otpd(IPAServiceCheck):
 @registry
 class kadmin(IPAServiceCheck):
     def check(self, instance=''):
-        self.service_name = 'kadmin'
+        self.service_name = self.get_service_name('KPASSWD')
+
+        if self.service_name is None:
+            # No service name means it is not configured
+            return ()
 
         return super().check()
 
@@ -122,7 +151,11 @@ class kadmin(IPAServiceCheck):
 @registry
 class krb5kdc(IPAServiceCheck):
     def check(self, instance=''):
-        self.service_name = 'krb5kdc'
+        self.service_name = self.get_service_name('KDC')
+
+        if self.service_name is None:
+            # No service name means it is not configured
+            return ()
 
         return super().check()
 
@@ -130,9 +163,46 @@ class krb5kdc(IPAServiceCheck):
 @registry
 class named(IPAServiceCheck):
     def check(self, instance=''):
-        self.service_name = 'named'
+        self.service_name = self.get_service_name('DNS')
 
-        if not bindinstance.named_conf_exists():
+        if self.service_name is None:
+            # No service name means it is not configured
+            return ()
+
+        return super().check()
+
+
+@registry
+class ods_enforcerd(IPAServiceCheck):
+    def check(self, instance=''):
+        self.service_name = self.get_service_name('DNSSEC')
+
+        if self.service_name is None:
+            # No service name means it is not configured
+            return ()
+
+        return super().check()
+
+
+@registry
+class ipa_ods_exporter(IPAServiceCheck):
+    def check(self, instance=''):
+        self.service_name = self.get_service_name('DNSKeyExporter')
+
+        if self.service_name is None:
+            # No service name means it is not configured
+            return ()
+
+        return super().check()
+
+
+@registry
+class ipa_dnskeysyncd(IPAServiceCheck):
+    def check(self, instance=''):
+        self.service_name = self.get_service_name('DNSKeySync')
+
+        if self.service_name is None:
+            # No service name means it is not configured
             return ()
 
         return super().check()
@@ -141,10 +211,10 @@ class named(IPAServiceCheck):
 @registry
 class pki_tomcatd(IPAServiceCheck):
     def check(self, instance=''):
-        self.service_name = 'pki_tomcatd'
+        self.service_name = self.get_service_name('CA')
 
-        ca = cainstance.CAInstance(api.env.realm, host_name=api.env.host)
-        if not ca.is_configured():
+        if self.service_name is None:
+            # No service name means it is not configured
             return ()
 
         return super().check()
@@ -154,5 +224,37 @@ class pki_tomcatd(IPAServiceCheck):
 class sssd(IPAServiceCheck):
     def check(self, instance=''):
         self.service_name = 'sssd'
+
+        return super().check()
+
+
+@registry
+class chronyd(IPAServiceCheck):
+    def check(self, instance=''):
+        self.service_name = 'chronyd'
+
+        return super().check(check_enabled=True)
+
+
+@registry
+class smb(IPAServiceCheck):
+    def check(self, instance=''):
+        self.service_name = self.get_service_name('ADTRUST')
+
+        if self.service_name is None:
+            # No service name means it is not configured
+            return ()
+
+        return super().check()
+
+
+@registry
+class winbind(IPAServiceCheck):
+    def check(self, instance=''):
+        self.service_name = self.get_service_name('EXTID')
+
+        if self.service_name is None:
+            # No service name means it is not configured
+            return ()
 
         return super().check()
