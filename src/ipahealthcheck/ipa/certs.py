@@ -1021,7 +1021,16 @@ def check_agent(plugin, base_dn, agent_type):
             return
         ra_desc = raw_desc[0]
         ra_certs = entry.get('usercertificate')
-        if ra_desc != description:
+        (_version, exp_serial, exp_issuer, exp_subject) = \
+            ra_desc.split(';')
+        matched = all(
+            [
+                str(serial_number) == exp_serial,
+                DN(issuer) == DN(exp_issuer),
+                DN(subject) == DN(exp_subject),
+            ]
+        )
+        if not matched:
             yield Result(plugin, constants.ERROR,
                          key='description_mismatch',
                          expected=description,
