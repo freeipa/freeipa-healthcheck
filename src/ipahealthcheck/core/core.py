@@ -7,8 +7,9 @@ import json
 import logging
 import pkg_resources
 import signal
-import warnings
+import sys
 import traceback
+import warnings
 
 from datetime import datetime
 
@@ -244,8 +245,7 @@ def parse_options(parser):
 
     # Validation
     if options.check and not options.source:
-        print("--source is required when --check is used")
-        return 1
+        raise ValueError("--source is required when --check is used")
 
     return options
 
@@ -328,7 +328,10 @@ class RunChecks:
                             self.default_output)
         add_output_options(self.parser, self.output_registry)
         self.add_options()
-        options = parse_options(self.parser)
+        try:
+            options = parse_options(self.parser)
+        except ValueError as e:
+            sys.exit(str(e))
 
         if options.version:
             for registry in self.entry_points:
