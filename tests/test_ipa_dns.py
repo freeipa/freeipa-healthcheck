@@ -12,6 +12,7 @@ from dns import (
     version,
 )
 from dns.resolver import Answer
+from dns.exception import DNSException
 
 from base import BaseTest
 from util import capture_results, m_api
@@ -44,6 +45,12 @@ except ImportError:
     resolve_rrsets_import = 'ipaserver.dns_data_management.resolve_rrsets'
 else:
     resolve_rrsets_import = 'ipaserver.install.installutils.resolve_rrsets_nss'
+
+# Global for test_dnsrecords_missing_ca()
+no_ca_count = 0
+
+# Global for test_dnsrecords_extra_ca()
+extra_ca_count = 0
 
 
 def add_srv_records(qname, port_map, priority=0, weight=100):
@@ -229,6 +236,41 @@ def fake_query_one_txt(qname, rdtype=rdatatype.A, rdclass=rdataclass.IN,
     return fake_query(qname, rdtype, rdclass, count, fake_txt=True)
 
 
+def fake_query_one_no_ca(qname, rdtype=rdatatype.A,
+                         rdclass=rdataclass.IN, count=1):
+    """This is the singular side for resolve(). Since I use the
+       side_effect as a callable I need to maintain my own state
+       so I can still take in arguments from the check.
+
+       The idea here is to start raising exceptions when the
+       CA servers are resolved in the system records such that
+       a CA is droppped.
+    """
+    global no_ca_count
+    no_ca_count += 1
+    if no_ca_count == 3:
+        # This drops the AAAA ipa-ca record
+        raise DNSException()
+    return fake_query(qname, rdtype, rdclass, count=1)
+
+
+def fake_query_one_extra_ca(qname, rdtype=rdatatype.A,
+                            rdclass=rdataclass.IN, count=1):
+    """This is the singular side for resolve(). Since I use the
+       side_effect as a callable I need to maintain my own state
+       so I can still take in arguments from the check.
+
+       This adds an extra record during the ipa-ca AAAA
+       lookup.
+    """
+    global extra_ca_count
+    extra_ca_count += 1
+    if extra_ca_count == 3:
+        return fake_query(qname, rdtype, rdclass, count=2)
+    else:
+        return fake_query(qname, rdtype, rdclass, count=1)
+
+
 def get_results_by_severity(results, severity):
     """Return the results with a matching severity"""
     new_results = []
@@ -285,9 +327,9 @@ class TestDNSSystemRecords(BaseTest):
         self.results = capture_results(f)
 
         if has_uri_support:
-            expected = 14
+            expected = 13
         else:
-            expected = 10
+            expected = 9
         assert len(self.results) == expected
 
         for result in self.results.results:
@@ -343,9 +385,9 @@ class TestDNSSystemRecords(BaseTest):
         self.results = capture_results(f)
 
         if has_uri_support:
-            expected = 27
+            expected = 24
         else:
-            expected = 19
+            expected = 16
         assert len(self.results) == expected
 
         for result in self.results.results:
@@ -412,9 +454,9 @@ class TestDNSSystemRecords(BaseTest):
         self.results = capture_results(f)
 
         if has_uri_support:
-            expected = 40
+            expected = 35
         else:
-            expected = 28
+            expected = 23
         assert len(self.results) == expected
 
         for result in self.results.results:
@@ -479,9 +521,9 @@ class TestDNSSystemRecords(BaseTest):
         self.results = capture_results(f)
 
         if has_uri_support:
-            expected = 36
+            expected = 35
         else:
-            expected = 24
+            expected = 23
         assert len(self.results) == expected
 
         for result in self.results.results:
@@ -551,18 +593,18 @@ class TestDNSSystemRecords(BaseTest):
         self.results = capture_results(f)
 
         if has_uri_support:
-            expected = 40
+            expected = 35
         else:
-            expected = 28
+            expected = 23
         assert len(self.results) == expected
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
         if has_uri_support:
-            assert len(ok) == 33
+            assert len(ok) == 28
             assert len(warn) == 7
         else:
-            assert len(ok) == 21
+            assert len(ok) == 16
             assert len(warn) == 7
 
         for result in warn:
@@ -631,19 +673,19 @@ class TestDNSSystemRecords(BaseTest):
         self.results = capture_results(f)
 
         if has_uri_support:
-            expected = 40
+            expected = 35
         else:
-            expected = 28
+            expected = 23
         assert len(self.results) == expected
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
         if has_uri_support:
-            assert len(ok) == 38
-            assert len(warn) == 2
+            assert len(ok) == 35
+            assert len(warn) == 0
         else:
-            assert len(ok) == 26
-            assert len(warn) == 2
+            assert len(ok) == 23
+            assert len(warn) == 0
 
         for result in warn:
             assert re.match(
@@ -719,18 +761,18 @@ class TestDNSSystemRecords(BaseTest):
         self.results = capture_results(f)
 
         if has_uri_support:
-            expected = 47
+            expected = 42
         else:
-            expected = 35
+            expected = 30
         assert len(self.results) == expected
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
         if has_uri_support:
-            assert len(ok) == 40
+            assert len(ok) == 35
             assert len(warn) == 7
         else:
-            assert len(ok) == 28
+            assert len(ok) == 23
             assert len(warn) == 7
 
         for result in warn:
@@ -769,18 +811,18 @@ class TestDNSSystemRecords(BaseTest):
         self.results = capture_results(f)
 
         if has_uri_support:
-            expected = 14
+            expected = 13
         else:
-            expected = 10
+            expected = 9
         assert len(self.results) == expected
 
         ok = get_results_by_severity(self.results.results, constants.SUCCESS)
         warn = get_results_by_severity(self.results.results, constants.WARNING)
         if has_uri_support:
-            assert len(ok) == 13
+            assert len(ok) == 12
             assert len(warn) == 1
         else:
-            assert len(ok) == 9
+            assert len(ok) == 8
             assert len(warn) == 1
 
         result = warn[0]
@@ -819,12 +861,116 @@ class TestDNSSystemRecords(BaseTest):
         self.results = capture_results(f)
 
         if has_uri_support:
-            expected = 20
+            expected = 19
         else:
-            expected = 16
+            expected = 15
         assert len(self.results) == expected
 
         for result in self.results.results:
             assert result.result == constants.SUCCESS
             assert result.source == 'ipahealthcheck.ipa.idns'
             assert result.check == 'IPADNSSystemRecordsCheck'
+
+    @patch(resolve_rrsets_import)
+    @patch('ipapython.dnsutil.query_srv')
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_missing_ca(self, mock_query, mock_query_uri,
+                                   mock_query_srv, mock_rrset):
+        """Missing AAAA record in ipa-ca"""
+        mock_query.side_effect = fake_query_one_no_ca
+        mock_query_srv.side_effect = query_srv([m_api.env.host])
+        mock_query_uri.side_effect = query_uri([m_api.env.host])
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA,))
+        ]
+
+        m_api.Command.server_find.side_effect = [{
+            'result': [
+                {
+                    'cn': [m_api.env.host],
+                    'enabled_role_servrole': [
+                        'CA server',
+                        'IPA master'
+                    ],
+                },
+            ]
+        }]
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPADNSSystemRecordsCheck(registry)
+
+        self.results = capture_results(f)
+
+        if has_uri_support:
+            expected = 13
+        else:
+            expected = 8
+        assert len(self.results) == expected
+
+        ok = get_results_by_severity(self.results.results, constants.SUCCESS)
+        warn = get_results_by_severity(self.results.results, constants.WARNING)
+        if has_uri_support:
+            assert len(ok) == 12
+            assert len(warn) == 1
+        else:
+            assert len(ok) == 8
+            assert len(warn) == 1
+
+        result = warn[0]
+        assert result.kw.get('msg') == (
+            'expected ipa-ca to contain {ipaddr} for {server}'
+        )
+        assert result.kw.get('ipaddr') == '2001:db8:1::1'
+
+    @patch(resolve_rrsets_import)
+    @patch('ipapython.dnsutil.query_srv')
+    @patch('ipahealthcheck.ipa.idns.query_uri')
+    @patch('ipahealthcheck.ipa.idns.resolve')
+    def test_dnsrecords_extra_ca(self, mock_query, mock_query_uri,
+                                 mock_query_srv, mock_rrset):
+        """Extra AAAA record in ipa-ca"""
+        mock_query.side_effect = fake_query_one_extra_ca
+        mock_query_srv.side_effect = query_srv([m_api.env.host])
+        mock_query_uri.side_effect = query_uri([m_api.env.host])
+        mock_rrset.side_effect = [
+            resolve_rrsets(m_api.env.host, (rdatatype.A, rdatatype.AAAA,))
+        ]
+
+        m_api.Command.server_find.side_effect = [{
+            'result': [
+                {
+                    'cn': [m_api.env.host],
+                    'enabled_role_servrole': [
+                        'CA server',
+                        'IPA master'
+                    ],
+                },
+            ]
+        }]
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPADNSSystemRecordsCheck(registry)
+
+        self.results = capture_results(f)
+
+        if has_uri_support:
+            expected = 13
+        else:
+            expected = 8
+        assert len(self.results) == expected
+
+        ok = get_results_by_severity(self.results.results, constants.SUCCESS)
+        warn = get_results_by_severity(self.results.results, constants.WARNING)
+        if has_uri_support:
+            assert len(ok) == 12
+            assert len(warn) == 1
+        else:
+            assert len(ok) == 8
+            assert len(warn) == 1
+
+        result = warn[0]
+        assert result.kw.get('msg') == (
+            'Unexpected ipa-ca address {ipaddr}'
+        )
+        assert result.kw.get('ipaddr') == '2001:db8:1::2'

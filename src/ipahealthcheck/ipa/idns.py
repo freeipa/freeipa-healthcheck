@@ -171,72 +171,72 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
                                  key=realm,
                                  msg='expected realm missing')
 
-        if a_rec:
-            # Look up the ipa-ca records
-            qname = "ipa-ca." + api.env.domain + "."
-            logger.debug("Search DNS for A record of %s", qname)
+        # Verify that all of the ipa-ca record IPs match those of
+        # servers with a CA role. Report any missing or unexpected.
+        qname = "ipa-ca." + api.env.domain + "."
+        ipa_ca_records = []
+        for dtype in (rdatatype.A, rdatatype.AAAA):
+            logger.debug("Search DNS for %s records of %s", dtype.name, qname)
             try:
-                answers = resolve(qname, rdatatype.A)
+                answers = resolve(qname, dtype)
             except DNSException as e:
                 logger.debug("DNS record not found: %s", e.__class__.__name__)
                 answers = []
-
             for answer in answers:
-                logger.debug("DNS record found: %s", answer)
-                ipaddr = answer.to_text()
-                try:
-                    yield Result(self, constants.SUCCESS,
-                                 key=ipaddr)
-                except ValueError:
-                    yield Result(self, constants.WARNING,
-                                 key=ipaddr,
-                                 msg='expected ipa-ca IPv4 address missing')
+                ipa_ca_records.append(answer.to_text())
 
-            ca_count = 0
-            for server in system_records.servers_data:
-                master = system_records.servers_data.get(server)
-                if 'CA server' in master.get('roles'):
-                    ca_count += 1
+        # Get the set of servers with the 'CA server' role
+        ca_servers = {}
+        for server in system_records.servers_data:
+            host = system_records.servers_data.get(server)
+            if 'CA server' in host.get('roles'):
+                for dtype in (rdatatype.A, rdatatype.AAAA):
+                    try:
+                        a = resolve(server + '.', dtype)
+                    except DNSException:
+                        pass
+                    else:
+                        for answer in a:
+                            if server in ca_servers:
+                                ca_servers[server].append(answer.to_text())
+                            else:
+                                ca_servers[server] = [answer.to_text()]
 
-            if len(answers) != ca_count:
-                yield Result(
-                    self, constants.WARNING,
-                    key='ca_count_a_rec',
-                    msg='Got {count} ipa-ca A records, expected {expected}',
-                    count=len(answers),
-                    expected=ca_count)
+        all_ca_ipaddr = []
+        for server, ipaddrs in ca_servers.items():
+            for ipaddr in ipaddrs:
+                all_ca_ipaddr.append(ipaddr)
 
-        if aaaa_rec:
-            # Look up the ipa-ca records
-            qname = "ipa-ca." + api.env.domain + "."
-            logger.debug("Search DNS for AAAA record of %s", qname)
-            try:
-                answers = resolve(qname, rdatatype.AAAA)
-            except DNSException as e:
-                logger.debug("DNS record not found: %s", e.__class__.__name__)
-                answers = []
+        # Loop through the ipa-ca records to determine if any are not
+        # in the collection of all the reported CA server IPs.
+        errors = 0
+        for ipaddr in ipa_ca_records:
+            if ipaddr not in all_ca_ipaddr:
+                errors += 1
+                yield Result(self, constants.WARNING,
+                             key='ipa_ca_non_server_%s' % ipaddr,
+                             ipaddr=ipaddr,
+                             msg='Unexpected ipa-ca address {ipaddr}')
 
-            for answer in answers:
-                logger.debug("DNS record found: %s", answer)
-                ipaddr = answer.to_text()
-                try:
-                    yield Result(self, constants.SUCCESS,
-                                 key=ipaddr)
-                except ValueError:
-                    yield Result(self, constants.WARNING,
-                                 key=ipaddr,
-                                 msg='expected ipa-ca IPv6 address missing')
+        # Remove any IP addresses we found for ipa-ca from the set of
+        # IP addresses for all the IPA servers. Any remaining ones
+        # are not in the ipa-ca A/AAAA record. We're only looking at
+        # the DNS advertised servers so hidden ones should not be
+        # here.
+        for server, ipaddrs in ca_servers.items():
+            for ipaddr in ipa_ca_records:
+                if ipaddr in ipaddrs:
+                    ipaddrs.remove(ipaddr)
 
-            ca_count = 0
-            for server in system_records.servers_data:
-                master = system_records.servers_data.get(server)
-                if 'CA server' in master.get('roles'):
-                    ca_count += 1
+        for server, ipaddrs in ca_servers.items():
+            if ipaddrs:
+                errors += 1
+                yield Result(self, constants.WARNING,
+                             key='ipa_ca_missing_%s' % server,
+                             server=server,
+                             ipaddr=', '.join(ipaddrs),
+                             msg='expected ipa-ca to contain {ipaddr} for '
+                                 '{server}')
 
-            if len(answers) != ca_count:
-                yield Result(
-                    self, constants.WARNING,
-                    key='ca_count_aaaa_rec',
-                    msg='Got {count} ipa-ca AAAA records, expected {expected}',
-                    count=len(answers),
-                    expected=ca_count)
+        if errors == 0:
+            yield Result(self, constants.SUCCESS, key='ipa_ca_check')
