@@ -33,4 +33,4 @@ def test_Registry():
 
     # Test registration
     names = [plugin.__class__.__name__ for plugin in r.get_plugins()]
-    assert(names == ['plugin1', 'plugin2'])
+    assert (names == ['plugin1', 'plugin2'])
