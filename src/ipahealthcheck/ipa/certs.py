@@ -181,8 +181,8 @@ def expected_token(token_name, certmonger_token):
     """The value is stored in two places, do some sanity checking"""
     if token_name != str(certmonger_token):
         logger.debug(
-            f"The IPA token {token_name} doesn't match the certmonger "
-            f"token {certmonger_token}."
+            "The IPA token %s doesn't match the certmonger token "
+            "%s.", token_name, certmonger_token
         )
         return False
 
@@ -342,12 +342,14 @@ class IPACertfileExpirationCheck(IPAPlugin):
                                                    token)
 
                 try:
-                    db = certdb.NSSDatabase(
-                        dbdir, token=token,
-                        pwd_file=pwd_file.name if pwd_file else None)
-                except TypeError:
-                    # Fall back to older API
-                    db = certdb.NSSDatabase(dbdir)
+                    if 'pwd_file' in signature(certdb.NSSDatabase).parameters:
+                        # pylint: disable=unexpected-keyword-arg
+                        db = certdb.NSSDatabase(
+                            dbdir, token=token,
+                            pwd_file=pwd_file.name if pwd_file else None)
+                    else:
+                        # Fall back to older API
+                        db = certdb.NSSDatabase(dbdir)
                 except Exception as e:
                     yield Result(self, constants.ERROR,
                                  key=id,
@@ -622,6 +624,7 @@ class IPACertNSSTrust(IPAPlugin):
             pwd_file = get_token_password_file(self.ca.hsm_enabled,
                                                token)
 
+            # pylint: disable=unexpected-keyword-arg
             db = certdb.NSSDatabase(
                 paths.PKI_TOMCAT_ALIAS_DIR, token=token,
                 pwd_file=pwd_file.name if pwd_file else None)
@@ -849,6 +852,7 @@ class IPADogtagCertsMatchCheck(IPAPlugin):
         pwd_file = get_token_password_file(self.ca.hsm_enabled,
                                            self.ca.token_name)
         if 'pwd_file' in signature(certs.CertDB).parameters:
+            # pylint: disable=unexpected-keyword-arg
             db = certs.CertDB(api.env.realm, paths.PKI_TOMCAT_ALIAS_DIR,
                               pwd_file=pwd_file.name if pwd_file else None)
         else:
@@ -1246,13 +1250,15 @@ class IPACertRevocation(IPAPlugin):
                     token = None
                 dbdir = request.get('cert-database')
                 try:
-                    db = certdb.NSSDatabase(
-                        dbdir, token=token,
-                        pwd_file=pwd_file.name if pwd_file else None
-                    )
-                except TypeError:
-                    # fall back to older API that doesn't support tokens
-                    db = certdb.NSSDatabase(dbdir)
+                    if 'pwd_file' in signature(certdb.NSSDatabase).parameters:
+                        # pylint: disable=unexpected-keyword-arg
+                        db = certdb.NSSDatabase(
+                            dbdir, token=token,
+                            pwd_file=pwd_file.name if pwd_file else None
+                        )
+                    else:
+                        # Fall back to older API that doesn't support tokens
+                        db = certdb.NSSDatabase(dbdir)
                 except Exception as e:
                     yield Result(self, constants.ERROR,
                                  key=id,
