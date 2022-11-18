@@ -20,6 +20,15 @@ class mock_CertDB:
         return [(nickname, self.trust[nickname]) for nickname in self.trust]
 
 
+class mock_NSSDatabase:
+    def __init__(self, nssdir, token=None, pwd_file=None, trust=None):
+        self.trust = trust
+        self.token = token
+
+    def list_certs(self):
+        return [(nickname, self.trust[nickname]) for nickname in self.trust]
+
+
 def my_unparse_trust_flags(trust_flags):
     return trust_flags
 
@@ -29,16 +38,15 @@ def my_unparse_trust_flags(trust_flags):
 
 class TestNSSDBTrust(BaseTest):
     patches = {
-        'ipaserver.install.cainstance.CAInstance':
-        Mock(return_value=CAInstance()),
         'ipaserver.install.krainstance.KRAInstance':
         Mock(return_value=KRAInstance(False)),
         'ipapython.certdb.unparse_trust_flags':
         Mock(side_effect=my_unparse_trust_flags),
     }
 
-    @patch('ipaserver.install.certs.CertDB')
-    def test_trust_default_ok(self, mock_certdb):
+    @patch('ipapython.certdb.NSSDatabase')
+    @patch('ipaserver.install.cainstance.CAInstance')
+    def test_trust_default_ok(self, mock_ca, mock_certdb):
         """Test what should be the standard case"""
         trust = {
             'ocspSigningCert cert-pki-ca': 'u,u,u',
@@ -46,7 +54,8 @@ class TestNSSDBTrust(BaseTest):
             'auditSigningCert cert-pki-ca': 'u,u,Pu',
             'Server-Cert cert-pki-ca': 'u,u,u'
         }
-        mock_certdb.return_value = mock_CertDB(trust)
+        mock_certdb.return_value = mock_NSSDatabase('nssdb', trust=trust)
+        mock_ca.return_value = CAInstance()
 
         framework = object()
         registry.initialize(framework, config.Config)
@@ -62,8 +71,9 @@ class TestNSSDBTrust(BaseTest):
             assert result.check == 'IPACertNSSTrust'
             assert 'cert-pki-ca' in result.kw.get('key')
 
-    @patch('ipaserver.install.certs.CertDB')
-    def test_trust_ocsp_missing(self, mock_certdb):
+    @patch('ipapython.certdb.NSSDatabase')
+    @patch('ipaserver.install.cainstance.CAInstance')
+    def test_trust_ocsp_missing(self, mock_ca, mock_certdb):
         """Test a missing certificate"""
         trust = {
             'subsystemCert cert-pki-ca': 'u,u,u',
@@ -71,7 +81,8 @@ class TestNSSDBTrust(BaseTest):
             'Server-Cert cert-pki-ca': 'u,u,u'
         }
 
-        mock_certdb.return_value = mock_CertDB(trust)
+        mock_certdb.return_value = mock_NSSDatabase('nssdb', trust=trust)
+        mock_ca.return_value = CAInstance()
 
         framework = object()
         registry.initialize(framework, config.Config)
@@ -100,8 +111,9 @@ class TestNSSDBTrust(BaseTest):
 
         assert len(self.results) == 4
 
-    @patch('ipaserver.install.certs.CertDB')
-    def test_trust_bad(self, mock_certdb):
+    @patch('ipapython.certdb.NSSDatabase')
+    @patch('ipaserver.install.cainstance.CAInstance')
+    def test_trust_bad(self, mock_ca, mock_certdb):
         """Test multiple unexpected trust flags"""
         trust = {
             'ocspSigningCert cert-pki-ca': 'u,u,u',
@@ -109,8 +121,8 @@ class TestNSSDBTrust(BaseTest):
             'auditSigningCert cert-pki-ca': 'u,u,Pu',
             'Server-Cert cert-pki-ca': 'X,u,u'
         }
-
-        mock_certdb.return_value = mock_CertDB(trust)
+        mock_certdb.return_value = mock_NSSDatabase('nssdb', trust=trust)
+        mock_ca.return_value = CAInstance()
 
         framework = object()
         registry.initialize(framework, config.Config)
@@ -151,3 +163,76 @@ class TestNSSDBTrust(BaseTest):
         self.results = capture_results(f)
 
         assert len(self.results) == 0
+
+    @patch('ipahealthcheck.ipa.certs.get_token_password')
+    @patch('ipapython.certdb.NSSDatabase')
+    @patch('ipaserver.install.cainstance.CAInstance')
+    def test_trust_token_ok(self, mock_ca, mock_certdb, mock_password):
+        """Test what should be the standard token case"""
+        trust = {
+            'hsm:ocspSigningCert cert-pki-ca': 'u,u,u',
+            'hsm:subsystemCert cert-pki-ca': 'u,u,u',
+            'hsm:auditSigningCert cert-pki-ca': 'u,u,Pu',
+            'Server-Cert cert-pki-ca': 'u,u,u'
+        }
+        mock_certdb.return_value = mock_NSSDatabase('nssdb', token='hsm',
+                                                    trust=trust)
+        mock_ca.return_value = CAInstance(enabled=True, hsm_enabled=True,
+                                          token='hsm')
+        mock_password.return_value = 'Secret123'
+
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPACertNSSTrust(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 4
+
+        for result in self.results.results:
+            assert result.result == constants.SUCCESS
+            assert result.source == 'ipahealthcheck.ipa.certs'
+            assert result.check == 'IPACertNSSTrust'
+            assert 'cert-pki-ca' in result.kw.get('key')
+
+    @patch('ipahealthcheck.ipa.certs.get_token_password')
+    @patch('ipapython.certdb.NSSDatabase')
+    @patch('ipaserver.install.cainstance.CAInstance')
+    def test_trust_token_bad(self, mock_ca, mock_certdb, mock_password):
+        """Test multiple unexpected trust flags"""
+        trust = {
+            'hsm:ocspSigningCert cert-pki-ca': 'u,u,u',
+            'hsm:subsystemCert cert-pki-ca': 'X,u,u',
+            'hsm:auditSigningCert cert-pki-ca': 'u,u,Pu',
+            'Server-Cert cert-pki-ca': 'X,u,u'
+        }
+
+        mock_certdb.return_value = mock_NSSDatabase('nssdb', token='hsm',
+                                                    trust=trust)
+        mock_ca.return_value = CAInstance(enabled=True, hsm_enabled=True,
+                                          token='hsm')
+        mock_password.return_value = 'Secret123'
+
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPACertNSSTrust(registry)
+
+        self.results = capture_results(f)
+
+        result = self.results.results[1]
+
+        assert result.result == constants.ERROR
+        assert result.source == 'ipahealthcheck.ipa.certs'
+        assert result.check == 'IPACertNSSTrust'
+        assert result.kw.get('key') == 'hsm:subsystemCert cert-pki-ca'
+        assert result.kw.get('got') == 'X,u,u'
+        assert result.kw.get('expected') == 'u,u,u'
+
+        result = self.results.results[3]
+
+        assert result.result == constants.ERROR
+        assert result.source == 'ipahealthcheck.ipa.certs'
+        assert result.check == 'IPACertNSSTrust'
+        assert result.kw.get('key') == 'Server-Cert cert-pki-ca'
+        assert result.kw.get('got') == 'X,u,u'
+        assert result.kw.get('expected') == 'u,u,u'

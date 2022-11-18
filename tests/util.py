@@ -46,13 +46,32 @@ def capture_results(f):
     return results
 
 
-class CAInstance:
+class DogtagInstance:
+    def __init__(self, hsm_enabled=False, token_name=None):
+        self.hsmenabled = hsm_enabled
+        self.tokenname = token_name
+
+    @property
+    def hsm_enabled(self):
+        """Is HSM support enabled?"""
+        return self.hsmenabled
+
+    @property
+    def token_name(self):
+        """HSM token name"""
+        return self.tokenname
+
+
+class CAInstance(DogtagInstance):
     """A bare-bones CAinistance override
 
        This is needed to control whether the underlying master is
        CAless or CAful.
     """
-    def __init__(self, enabled=True, crlgen=True):
+    def __init__(self, enabled=True, crlgen=True, hsm_enabled=False,
+                 token=None):
+        super(CAInstance, self).__init__(hsm_enabled=hsm_enabled,
+                                         token_name=token)
         self.enabled = enabled
         self.crlgen = crlgen
 
@@ -63,7 +82,7 @@ class CAInstance:
         return self.crlgen
 
 
-class KRAInstance:
+class KRAInstance(DogtagInstance):
     """A bare-bones KRAinistance override
 
        This is needed to control whether the underlying master is
