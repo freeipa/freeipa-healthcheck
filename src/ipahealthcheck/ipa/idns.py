@@ -193,14 +193,29 @@ class IPADNSSystemRecordsCheck(IPAPlugin):
                 for dtype in (rdatatype.A, rdatatype.AAAA):
                     try:
                         a = resolve(server + '.', dtype)
-                    except DNSException:
-                        pass
+                    except DNSException as e:
+                        logger.debug("DNS lookup of %s failed: %s",
+                                     server, e)
+                        if server not in ca_servers:
+                            ca_servers[server] = ['']
                     else:
                         for answer in a:
                             if server in ca_servers:
                                 ca_servers[server].append(answer.to_text())
                             else:
                                 ca_servers[server] = [answer.to_text()]
+
+        # If no DNS records for ipa-ca were found at all short circuit
+        # looping through the CA and IP-addr list since the latter will
+        # be empty by definition and just report them all missing.
+        if len(ca_servers) > 0 and len(ipa_ca_records) == 0:
+            for server in ca_servers:
+                yield Result(self, constants.WARNING,
+                             key='ipa_ca_missing_%s' % server,
+                             server=server,
+                             msg='missing IP address for ipa-ca server '
+                                 '{server}')
+            return
 
         all_ca_ipaddr = []
         for server, ipaddrs in ca_servers.items():
