@@ -12,10 +12,8 @@ from ipahealthcheck.core import constants
 from ipalib import api, errors, x509
 from ipaplatform.paths import paths
 from ipaserver.install import certs
-from ipaserver.install import ca
 from ipaserver.install import krainstance
 from ipapython.directivesetter import get_directive
-from ipapython.dn import DN
 from cryptography.hazmat.primitives.serialization import Encoding
 
 logger = logging.getLogger()
@@ -95,6 +93,10 @@ class DogtagCertsConfigCheck(DogtagPlugin):
 class DogtagCertsConnectivityCheck(DogtagPlugin):
     """
     Test basic connectivity by using cert-show to fetch a cert
+
+    The RA agent certificate is used because if a CA is configured we
+    know this certificate should exist. Use its serial number to do
+    the lookup.
     """
     requires = ('dirsrv',)
 
@@ -104,59 +106,38 @@ class DogtagCertsConnectivityCheck(DogtagPlugin):
             logger.debug('CA is not configured, skipping connectivity check')
             return
 
-        config = api.Command.config_show()
-
-        subject_base = config['result']['ipacertificatesubjectbase'][0]
-        ipa_subject = ca.lookup_ca_subject(api, subject_base)
         try:
-            certs = x509.load_certificate_list_from_file(paths.IPA_CA_CRT)
+            cert = x509.load_certificate_from_file(paths.RA_AGENT_PEM)
         except Exception as e:
             yield Result(self, constants.ERROR,
-                         key='ipa_ca_crt_file_missing',
-                         path=paths.IPA_CA_CRT,
+                         key='ipa_ra_crt_file_missing',
+                         path=paths.RA_AGENT_PEM,
                          error=str(e),
-                         msg='The IPA CA cert file {path} could not be '
+                         msg='The IPA RA cert file {path} could not be '
                              'opened: {error}')
             return
 
-        found = False
-        for cert in certs:
-            if DN(cert.subject) == ipa_subject:
-                found = True
-                break
-
-        if not found:
-            yield Result(self, constants.ERROR,
-                         key='ipa_ca_cert_not_found',
-                         subject=str(ipa_subject),
-                         path=paths.IPA_CA_CRT,
-                         msg='The CA certificate with subject {subject} '
-                             'was not found in {path}')
-            return
-        # Load the IPA CA certificate to obtain its serial number. This
-        # was traditionally 1 prior to random serial number support.
-        # There is nothing special about cert 1. Even if there is no cert
-        # serial number 1 but the connection is ok it is considered passing.
+        # We used to use serial #1 but with RSNv3 it can be anything.
         try:
             api.Command.cert_show(cert.serial_number, all=True)
         except errors.CertificateOperationError as e:
             if 'not found' in str(e):
                 yield Result(self, constants.ERROR,
-                             key='cert_show_1',
+                             key='cert_show_ra',
                              error=str(e),
                              serial=str(cert.serial_number),
                              msg='Serial number not found: {error}')
             else:
                 yield Result(self, constants.ERROR,
-                             key='cert_show_1',
+                             key='cert_show_ra',
                              error=str(e),
                              serial=str(cert.serial_number),
                              msg='Request for certificate failed: {error}')
         except Exception as e:
             yield Result(self, constants.ERROR,
-                         key='cert_show_1',
+                         key='cert_show_ra',
                              error=str(e),
                          serial=str(cert.serial_number),
-                         msg='Request for certificate failed: {error')
+                         msg='Request for certificate failed: {error}')
         else:
             yield Result(self, constants.SUCCESS)
