@@ -2,6 +2,7 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+from argparse import ArgumentTypeError
 from datetime import datetime
 import json
 import sys
@@ -14,6 +15,26 @@ class OutputRegistry(Registry):
 
 
 output_registry = OutputRegistry()
+
+
+class Int:
+    def __init__(self, minimum=0, maximum=100):
+        self.minimum = minimum
+        self.maximum = maximum
+
+    def __call__(self, arg):
+        try:
+            value = int(arg)
+        except ValueError:
+            raise ArgumentTypeError("'%s' is not an integer" % arg)
+
+        if (value < self.minimum) or (value > self.maximum):
+            raise ArgumentTypeError(
+                "'%s' is not in the range %s-%s"
+                % (value, self.minimum, self.maximum)
+            )
+
+        return value
 
 
 class Output:
@@ -105,7 +126,7 @@ class JSON(Output):
     """Output information in JSON format"""
 
     options = (
-        ('--indent', dict(dest='indent', type=int, default=2,
+        ('--indent', dict(dest='indent', type=Int(0, 32), default=2,
          help='Indention level of JSON output')),
     )
 
