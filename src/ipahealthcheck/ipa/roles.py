@@ -10,6 +10,7 @@ from ipahealthcheck.core.plugin import duration
 from ipahealthcheck.core import constants
 
 from ipalib import api
+from ipaserver.install import krainstance
 
 logger = logging.getLogger()
 
@@ -64,3 +65,49 @@ class IPARenewalMasterCheck(IPAPlugin):
             yield Result(self, constants.SUCCESS,
                          key='renewal_master',
                          master=server == api.env.host)
+
+
+@registry
+class IPARenewalMasterHasKRACheck(IPAPlugin):
+    """
+    Determine if this master is the CA renewal master and has a KRA installed.
+
+    If this is the CA renewal master and there is a KRA in the topology
+    but not here then the KRA certificates will not be renewed.
+    """
+    requires = ('dirsrv',)
+
+    @duration
+    def check(self):
+        try:
+            result = api.Command.config_show()
+        except Exception as e:
+            yield Result(self, constants.ERROR,
+                         key='kra_renewal_master',
+                         msg='Request for configuration failed, %s' % e)
+            return
+
+        renewal = result['result'].get('ca_renewal_master_server', None)
+        if renewal != api.env.host:
+            # Not the renewal server, nothing to do
+            logger.debug("Not the renewal server")
+            return
+
+        kra = krainstance.KRAInstance(api.env.realm)
+        if kra.is_installed():
+            yield Result(self, constants.SUCCESS,
+                         key='kra_renewal_master')
+            return
+
+        if result['result'].get('kra_server_server'):
+            yield Result(self, constants.CRITICAL,
+                         key='kra_renewal_master',
+                         msg="There are KRA(s) in the topology but "
+                         "not on the renewal server. "
+                         "The KRA service certificates will not be "
+                         "renewed.")
+            return
+
+        # it should never hit here but what the heck.
+        yield Result(self, constants.SUCCESS,
+                     key='kra_renewal_master')

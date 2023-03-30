@@ -4,13 +4,14 @@
 
 from base import BaseTest
 from unittest.mock import patch
-from util import capture_results, CAInstance
+from util import capture_results, CAInstance, KRAInstance
 from util import m_api
 
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.roles import (IPACRLManagerCheck,
-                                      IPARenewalMasterCheck)
+                                      IPARenewalMasterCheck,
+                                      IPARenewalMasterHasKRACheck)
 
 
 class TestCRLManagerRole(BaseTest):
@@ -62,6 +63,7 @@ class TestCRLManagerRole(BaseTest):
 
 
 class TestRenewalMaster(BaseTest):
+
     def test_renewal_master_not_set(self):
         framework = object()
         registry.initialize(framework, config.Config)
@@ -123,3 +125,101 @@ class TestRenewalMaster(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.roles'
         assert result.check == 'IPARenewalMasterCheck'
         assert result.kw.get('master') is True
+
+    @patch('ipaserver.install.krainstance.KRAInstance')
+    def test_is_renewal_master_with_kra(self, mock_kra):
+        """Server is the renewal master and has a KRA configured"""
+        framework = object()
+        mock_kra.return_value = KRAInstance(True)
+
+        registry.initialize(framework, config.Config)
+
+        m_api.Command.config_show.side_effect = [{
+            'result': {
+                'ca_renewal_master_server': 'server.ipa.example',
+                'kra_server_server': 'server.ipa.example'
+            }
+        }]
+
+        f = IPARenewalMasterHasKRACheck(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.roles'
+        assert result.check == 'IPARenewalMasterHasKRACheck'
+
+    @patch('ipaserver.install.krainstance.KRAInstance')
+    def test_is_renewal_master_with_no_kra(self, mock_kra):
+        """Server is the renewal master and does not have KRA configured"""
+        framework = object()
+        mock_kra.return_value = KRAInstance(False)
+
+        registry.initialize(framework, config.Config)
+
+        m_api.Command.config_show.side_effect = [{
+            'result': {
+                'ca_renewal_master_server': 'server.ipa.example',
+                'kra_server_server': 'replica.ipa.example'
+            }
+        }]
+
+        f = IPARenewalMasterHasKRACheck(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.CRITICAL
+        assert result.source == 'ipahealthcheck.ipa.roles'
+        assert result.check == 'IPARenewalMasterHasKRACheck'
+
+    @patch('ipaserver.install.krainstance.KRAInstance')
+    def test_is_renewal_master_with_no_kras(self, mock_kra):
+        """Server is the renewal master no KRAs are configured"""
+        framework = object()
+        mock_kra.return_value = KRAInstance(False)
+
+        registry.initialize(framework, config.Config)
+
+        m_api.Command.config_show.side_effect = [{
+            'result': {
+                'ca_renewal_master_server': 'server.ipa.example'
+            }
+        }]
+
+        f = IPARenewalMasterHasKRACheck(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.roles'
+        assert result.check == 'IPARenewalMasterHasKRACheck'
+
+    @patch('ipaserver.install.krainstance.KRAInstance')
+    def test_not_renewal_master_kra_check(self, mock_kra):
+        """Server is not the renewal master no KRA check needed"""
+        framework = object()
+        mock_kra.return_value = KRAInstance(False)
+
+        registry.initialize(framework, config.Config)
+
+        m_api.Command.config_show.side_effect = [{
+            'result': {
+                'ca_renewal_master_server': 'replica.ipa.example'
+            }
+        }]
+
+        f = IPARenewalMasterHasKRACheck(registry)
+
+        self.results = capture_results(f)
+
+        # No result is returned if not the renewal server
+        assert len(self.results) == 0
