@@ -1418,3 +1418,22 @@ class IPACAChainExpirationCheck(IPAPlugin):
                              path=paths.IPA_CA_CRT,
                              key=subject,
                              days=(dt - now).days)
+
+
+@registry
+class CertmongerStuckCheck(IPAPlugin):
+    """Check for certonger requests in the stuck state
+    """
+
+    @duration
+    def check(self):
+        requests = certmonger._get_requests({'stuck': True})
+        for request in requests:
+            id = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF, 'nickname')
+            yield Result(self, constants.WARNING,
+                         key=id,
+                         msg='certmonger request {key} is in the '
+                         'stuck state')
+
+        if len(requests) == 0:
+            yield Result(self, constants.SUCCESS, key='no_stuck')
