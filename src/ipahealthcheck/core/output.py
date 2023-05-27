@@ -174,6 +174,43 @@ class Human(Output):
 class Prometheus(Output):
     """Render results as Prometheus text metric exposition format"""
 
+    class Renderer:
+        """Line-based Metrics Exposition Format renderer"""
+
+        def __init__(self, metric_prefix=""):
+            self.metric_prefix = metric_prefix
+            self.output = []
+
+        def add_info(self, metric_name, metric_type=None, help=None):
+            if help is not None:
+                line = '# HELP %s_%s %s' % (
+                    self.metric_prefix, metric_name, help,
+                )
+                self.output.append(line)
+
+            if metric_type is not None:
+                line = '# TYPE %s_%s %s' % (
+                    self.metric_prefix, metric_name, metric_type,
+                )
+                self.output.append(line)
+
+        def add_data(self, metric_name, value, format='%.1f', **labels):
+            lbls = ','.join(
+                '{}="{}"'.format(key, value) for key, value in labels.items()
+            )
+            fmt = '%s_%s{%s} ' + format
+            line = fmt % (self.metric_prefix, metric_name, lbls, value)
+
+            self.output.append(line)
+
+        def reset(self):
+            self.output = []
+
+        def render(self):
+            self.output.append('')
+
+            return '\n'.join(self.output)
+
     options = (
         ('--metric-prefix', dict(dest='metric_prefix', default='ipa',
          help='Metric name prefix')),
@@ -213,55 +250,49 @@ class Prometheus(Output):
                                                    '%Y%m%d%H%M%SZ')
                     crt[kw['key']] = expiration.timestamp()
 
-        metrics = []
+        metrics = Prometheus.Renderer(self.metric_prefix)
         self.generate_check_metrics(metrics, chk)
         self.generate_service_metrics(metrics, svc)
         self.generate_certificate_metrics(metrics, crt)
 
-        metrics.append('')
-        return "\n".join(metrics)
+        return metrics.render()
 
     def generate_check_metrics(self, out, data):
         if not data:
             return
 
         metric_name = 'healthcheck'
-        out.append('HELP %s_%s %s' %
-                   (self.metric_prefix, metric_name,
-                    'Number of healthchecks with a certain result'))
-        out.append('TYPE %s_%s gauge' %
-                   (self.metric_prefix, metric_name))
+        out.add_info(
+            metric_name, 'gauge',
+            'Number of healthchecks with a certain result',
+        )
         for check, quantity in data.items():
-            out.append('%s_%s{result="%s"} %.1f' %
-                       (self.metric_prefix, metric_name,
-                        check, quantity))
+            out.add_data(metric_name, quantity, '%.1f', result=check)
 
     def generate_service_metrics(self, out, data):
         if not data:
             return
 
         metric_name = 'service_state'
-        out.append('HELP %s_%s %s' %
-                   (self.metric_prefix, metric_name,
-                    'State of the services monitored by IPA healthcheck'))
-        out.append('TYPE %s_%s gauge' %
-                   (self.metric_prefix, metric_name))
+        out.add_info(
+            metric_name, 'gauge',
+            'State of the services monitored by IPA healthcheck',
+        )
         for service, state in data.items():
-            out.append('%s_%s{service="%s"} %.1f' %
-                       (self.metric_prefix, metric_name,
-                        service, state))
+            out.add_data(metric_name, state, '%.1f', service=service)
 
     def generate_certificate_metrics(self, out, data):
         if not data:
             return
 
         metric_name = 'cert_expiration'
-        out.append('HELP %s_%s %s' %
-                   (self.metric_prefix, metric_name,
-                    'Expiration date of certificates in warning/error state'))
-        out.append('TYPE %s_%s gauge' %
-                   (self.metric_prefix, metric_name))
+        out.add_info(
+            metric_name,
+            'gauge',
+            'Expiration date of certificates in warning/error state',
+        )
         for certificate, timestamp in data.items():
-            out.append('%s_%s{certificate_request_id="%s"} %.9e' %
-                       (self.metric_prefix, metric_name,
-                        certificate, timestamp))
+            out.add_data(
+                metric_name, timestamp, '%.9e',
+                certificate_request_id=certificate,
+            )

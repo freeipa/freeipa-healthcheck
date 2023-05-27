@@ -1,0 +1,4 @@
+# HELP test_healthcheck Number of healthchecks with a certain result
+# TYPE test_healthcheck gauge
+test_healthcheck{result="SUCCESS"} 1.0
+
