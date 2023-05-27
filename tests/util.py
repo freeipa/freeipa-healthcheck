@@ -6,6 +6,7 @@ from ipahealthcheck.core.plugin import Results
 from unittest.mock import patch, Mock
 import ipalib
 from ipapython.dn import DN
+from os import path
 
 
 class ExceptionNotRaised(Exception):
@@ -151,3 +152,24 @@ def no_exceptions(results):
     """Given Results ensure that an except was not raised"""
     for result in results.results:
         assert 'exception' not in result.kw
+
+
+def assert_fixture(output, *segments):
+    fixture_root = path.dirname(__file__)
+    fixture_path = [fixture_root, 'fixtures']
+    fixture_name = path.join(*segments)
+    fixture_path.append(fixture_name)
+    fixture_file = path.join(*fixture_path)
+    subject = output.split("\n")
+    position = 0
+    with open(fixture_file) as fixture:
+        for line in fixture:
+            assert position < len(subject)
+
+            want = line.rstrip()
+            got = subject[position]
+            position += 1
+            context = 'Mismatch in %s@%d: %s' % (fixture_name, position, got)
+            assert got == want, context
+
+    assert position == len(subject)
