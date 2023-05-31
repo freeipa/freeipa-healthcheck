@@ -52,7 +52,7 @@ jobs:
                 python3-pip \
                 python3-pytest \
                 ; \
-            python3 -m pip install --user --ignore-installed 'pylint ~= 2.12.2' ; \
+            python3 -m pip install --user --ignore-installed 'pylint ~= 2.15.5' ; \
             cd /root/src; \
             tox -vv -elint; \
             "
