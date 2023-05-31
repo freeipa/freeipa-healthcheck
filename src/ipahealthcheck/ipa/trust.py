@@ -307,7 +307,7 @@ class IPATrustCatalogCheck(IPAPlugin):
                 id = pysss_nss_idmap.getnamebysid(sid + '-500')
             except Exception as e:
                 yield Result(self, constants.ERROR,
-                             key=id,
+                             key='getnamebysid',
                              domain=domain,
                              error=str(e),
                              msg='Look up of ID {key} for {domain} failed: '

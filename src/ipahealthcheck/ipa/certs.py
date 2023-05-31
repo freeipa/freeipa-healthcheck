@@ -343,7 +343,6 @@ class IPACertfileExpirationCheck(IPAPlugin):
 
                 try:
                     if 'pwd_file' in signature(certdb.NSSDatabase).parameters:
-                        # pylint: disable=unexpected-keyword-arg
                         db = certdb.NSSDatabase(
                             dbdir, token=token,
                             pwd_file=pwd_file.name if pwd_file else None)
@@ -624,7 +623,6 @@ class IPACertNSSTrust(IPAPlugin):
             pwd_file = get_token_password_file(self.ca.hsm_enabled,
                                                token)
 
-            # pylint: disable=unexpected-keyword-arg
             db = certdb.NSSDatabase(
                 paths.PKI_TOMCAT_ALIAS_DIR, token=token,
                 pwd_file=pwd_file.name if pwd_file else None)
@@ -987,7 +985,7 @@ class IPANSSChainValidation(IPAPlugin):
                         key=key,
                         dbdir=dbdir,
                         nickname=nickname,
-                        reason=response.output_error,
+                        reason=str(e),
                         msg='Validation of {nickname} in {dbdir} failed: '
                             '{reason}')
                 else:
@@ -1251,7 +1249,6 @@ class IPACertRevocation(IPAPlugin):
                 dbdir = request.get('cert-database')
                 try:
                     if 'pwd_file' in signature(certdb.NSSDatabase).parameters:
-                        # pylint: disable=unexpected-keyword-arg
                         db = certdb.NSSDatabase(
                             dbdir, token=token,
                             pwd_file=pwd_file.name if pwd_file else None
