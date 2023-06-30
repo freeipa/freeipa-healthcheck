@@ -197,3 +197,41 @@ def test_files_not_found(mock_exists):
         for result in my_results.results:
             assert result.result == constants.SUCCESS
             assert result.kw.get('msg') == 'File does not exist'
+
+
+@patch('os.stat')
+@patch('pwd.getpwnam')
+@patch('pwd.getpwuid')
+def test_files_owner_not_found(mock_pwuid, mock_pwnam, mock_stat):
+    mock_pwuid.side_effect = KeyError('getpwnam(): name not found')
+    mock_pwnam.side_effect = KeyError('getpwuid(): uid not found')
+    mock_stat.return_value = make_stat()
+
+    f = FileCheck()
+    f.files = files
+
+    results = capture_results(f)
+
+    my_results = get_results(results, 'owner')
+    for result in my_results.results:
+        assert result.result == constants.WARNING
+        assert result.kw.get('got') == 'Unknown uid 0'
+
+
+@patch('os.stat')
+@patch('grp.getgrnam')
+@patch('grp.getgrgid')
+def test_files_group_not_found(mock_grgid, mock_grnam, mock_stat):
+    mock_grgid.side_effect = KeyError('getgrnam(): name not found')
+    mock_grnam.side_effect = KeyError('getgruid(): gid not found')
+    mock_stat.return_value = make_stat()
+
+    f = FileCheck()
+    f.files = files
+
+    results = capture_results(f)
+
+    my_results = get_results(results, 'group')
+    for result in my_results.results:
+        assert result.result == constants.WARNING
+        assert result.kw.get('got') == 'Unknown gid 0'

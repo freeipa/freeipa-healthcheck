@@ -3,11 +3,14 @@
 #
 
 import grp
+import logging
 import os
 import pwd
 
 from ipahealthcheck.core import constants
 from ipahealthcheck.core.plugin import Result, duration
+
+logger = logging.getLogger()
 
 
 class FileCheck:
@@ -77,14 +80,25 @@ class FileCheck:
 
             found = False
             for o in owner:
-                fowner = pwd.getpwnam(o)
+                try:
+                    fowner = pwd.getpwnam(o)
+                except Exception as e:
+                    logging.debug('user lookup "%s" for "%s" failed: %s',
+                                  o, path, e)
+                    continue
                 if fowner.pw_uid == stat.st_uid:
                     found = True
                     break
 
             if not found:
-                actual = pwd.getpwuid(stat.st_uid)
                 key = '%s_owner' % path.replace('/', '_')
+                try:
+                    actual = pwd.getpwuid(stat.st_uid)
+                except Exception:
+                    yield Result(self, constants.WARNING, key=key,
+                                 path=path, type='owner', expected=owner,
+                                 got='Unknown uid %s' % stat.st_uid)
+                    continue
                 if len(owner) == 1:
                     msg = 'Ownership of %s is %s and should ' \
                           'be %s' % \
@@ -104,14 +118,25 @@ class FileCheck:
 
             found = False
             for g in group:
-                fgroup = grp.getgrnam(g)
+                try:
+                    fgroup = grp.getgrnam(g)
+                except Exception as e:
+                    logging.debug('group lookup "%s" for "%s" failed: %s',
+                                  g, path, e)
+                    continue
                 if fgroup.gr_gid == stat.st_gid:
                     found = True
                     break
 
             if not found:
                 key = '%s_group' % path.replace('/', '_')
-                actual = grp.getgrgid(stat.st_gid)
+                try:
+                    actual = grp.getgrgid(stat.st_gid)
+                except Exception:
+                    yield Result(self, constants.WARNING, key=key,
+                                 path=path, type='group', expected=group,
+                                 got='Unknown gid %s' % stat.st_gid)
+                    continue
                 if len(group) == 1:
                     msg = 'Group of %s is %s and should ' \
                           'be %s' % \
