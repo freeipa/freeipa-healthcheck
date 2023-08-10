@@ -15,7 +15,7 @@ from mock_certmonger import (
     CERT_EXPIRATION_DAYS,
 )
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 
 class IPACertificate:
@@ -40,7 +40,7 @@ class TestIPACertificateFile(BaseTest):
     def test_certfile_expiration(self, mock_load_cert):
         set_requests(remove=1)
 
-        cert = IPACertificate(not_valid_after=datetime.utcnow() +
+        cert = IPACertificate(not_valid_after=datetime.now(tz=UTC) +
                               timedelta(days=CERT_EXPIRATION_DAYS))
         mock_load_cert.return_value = cert
 
@@ -63,7 +63,7 @@ class TestIPACertificateFile(BaseTest):
     def test_certfile_expiration_warning(self, mock_load_cert):
         set_requests(remove=1)
 
-        cert = IPACertificate(not_valid_after=datetime.utcnow() +
+        cert = IPACertificate(not_valid_after=datetime.now(tz=UTC) +
                               timedelta(days=7))
         mock_load_cert.return_value = cert
 
@@ -87,7 +87,7 @@ class TestIPACertificateFile(BaseTest):
     def test_certfile_expiration_expired(self, mock_load_cert):
         set_requests(remove=1)
 
-        cert = IPACertificate(not_valid_after=datetime.utcnow() +
+        cert = IPACertificate(not_valid_after=datetime.now(tz=UTC) +
                               timedelta(days=-100))
         mock_load_cert.return_value = cert
 
