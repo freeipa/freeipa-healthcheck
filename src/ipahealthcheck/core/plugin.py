@@ -3,7 +3,7 @@
 #
 
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from functools import wraps
 
 from ipahealthcheck.core.constants import getLevelName, getLevel
@@ -13,10 +13,10 @@ def duration(f):
     """Compute the duration of execution"""
     @wraps(f)
     def wrapper(*args, **kwds):
-        start = datetime.utcnow()
+        start = datetime.now(tz=UTC)
         end = None
         for result in f(*args, **kwds):
-            end = datetime.utcnow()
+            end = datetime.now(tz=UTC)
             dur = end - start
             result.duration = '%6.6f' % dur.total_seconds()
             yield result
@@ -132,7 +132,7 @@ class Result:
                  start=None, duration=None, when=None, **kw):
         self.result = result
         self.kw = kw
-        self.when = when or generalized_time(datetime.utcnow())
+        self.when = when or generalized_time(datetime.now(UTC))
         self.duration = duration
         self.uuid = str(uuid.uuid4())
         if None not in (check, source):
@@ -144,7 +144,7 @@ class Result:
             self.check = plugin.__class__.__name__
             self.source = plugin.__class__.__module__
         if start is not None:
-            dur = datetime.utcnow() - start
+            dur = datetime.now(tz=UTC) - start
             self.duration = '%6.6f' % dur.total_seconds()
 
         assert getLevelName(result) is not None
