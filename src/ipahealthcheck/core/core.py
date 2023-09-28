@@ -11,7 +11,7 @@ import sys
 import traceback
 import warnings
 
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 from ipahealthcheck.core.config import read_config
 from ipahealthcheck.core.exceptions import TimeoutError
@@ -49,7 +49,7 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
         raise TimeoutError('Request timed out')
 
     # manually calculate duration when we create results of our own
-    start = datetime.now(tz=UTC)
+    start = datetime.now(tz=timezone.utc)
     signal.signal(signal.SIGALRM, signal_handler)
     signal.alarm(timeout)
     try:
