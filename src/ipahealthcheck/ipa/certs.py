@@ -3,7 +3,7 @@
 #
 from __future__ import division
 
-from datetime import datetime, timezone, timedelta, UTC
+from datetime import datetime, timezone, timedelta
 import itertools
 from inspect import signature
 import logging
@@ -378,9 +378,9 @@ class IPACertfileExpirationCheck(IPAPlugin):
                                  'storage type: {store}')
                 continue
 
-            now = datetime.now(tz=UTC)
+            now = datetime.now(tz=timezone.utc)
             # Older versions of IPA provide naive timestamps
-            notafter = cert.not_valid_after.replace(tzinfo=UTC)
+            notafter = cert.not_valid_after.replace(tzinfo=timezone.utc)
 
             if now > notafter:
                 yield Result(self, constants.ERROR,
