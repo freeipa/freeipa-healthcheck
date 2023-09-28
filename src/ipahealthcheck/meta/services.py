@@ -118,6 +118,8 @@ class httpd(IPAServiceCheck):
 
 @registry
 class ipa_custodia(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('KEYS')
 
@@ -138,6 +140,8 @@ class ipa_otpd(IPAServiceCheck):
 
 @registry
 class kadmin(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('KPASSWD')
 
@@ -150,6 +154,8 @@ class kadmin(IPAServiceCheck):
 
 @registry
 class krb5kdc(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('KDC')
 
@@ -162,6 +168,8 @@ class krb5kdc(IPAServiceCheck):
 
 @registry
 class named(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('DNS')
 
@@ -174,6 +182,8 @@ class named(IPAServiceCheck):
 
 @registry
 class ods_enforcerd(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('DNSSEC')
 
@@ -186,6 +196,8 @@ class ods_enforcerd(IPAServiceCheck):
 
 @registry
 class ipa_ods_exporter(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('DNSKeyExporter')
 
@@ -198,6 +210,8 @@ class ipa_ods_exporter(IPAServiceCheck):
 
 @registry
 class ipa_dnskeysyncd(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('DNSKeySync')
 
@@ -210,6 +224,8 @@ class ipa_dnskeysyncd(IPAServiceCheck):
 
 @registry
 class pki_tomcatd(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('CA')
 
@@ -238,6 +254,8 @@ class chronyd(IPAServiceCheck):
 
 @registry
 class smb(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('ADTRUST')
 
@@ -250,6 +268,8 @@ class smb(IPAServiceCheck):
 
 @registry
 class winbind(IPAServiceCheck):
+    requires = ('dirsrv',)
+
     def check(self, instance=''):
         self.service_name = self.get_service_name('EXTID')
 
