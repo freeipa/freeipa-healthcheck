@@ -179,7 +179,7 @@ def get_expected_requests(ca, ds, serverid):
 
 def expected_token(token_name, certmonger_token):
     """The value is stored in two places, do some sanity checking"""
-    if token_name != str(certmonger_token):
+    if token_name != certmonger_token:
         logger.debug(
             "The IPA token %s doesn't match the certmonger token "
             "%s.", token_name, certmonger_token
@@ -252,10 +252,10 @@ class IPACertmongerExpirationCheck(IPAPlugin):
             request = certmonger._cm_dbus_object(cm.bus, cm, req,
                                                  certmonger.DBUS_CM_REQUEST_IF,
                                                  certmonger.DBUS_CM_IF, True)
-            id = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
-                                     'nickname')
-            notafter = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
-                                           'not-valid-after')
+            id = str(request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                         'nickname'))
+            notafter = int(request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                               'not-valid-after'))
             if notafter == 0:
                 yield Result(self, constants.ERROR,
                              key=id,
@@ -310,11 +310,11 @@ class IPACertfileExpirationCheck(IPAPlugin):
             request = certmonger._cm_dbus_object(cm.bus, cm, req,
                                                  certmonger.DBUS_CM_REQUEST_IF,
                                                  certmonger.DBUS_CM_IF, True)
-            id = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
-                                     'nickname')
+            id = str(request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                         'nickname'))
 
-            store = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
-                                        'cert-storage')
+            store = str(request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                            'cert-storage'))
             if store == 'FILE':
                 certfile = str(request.prop_if.Get(
                                certmonger.DBUS_CM_REQUEST_IF, 'cert-file'))
@@ -329,8 +329,8 @@ class IPACertfileExpirationCheck(IPAPlugin):
                                      'file \'{certfile}\': {error}')
                     continue
             elif store == 'NSSDB':
-                token = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
-                                            'key-token')
+                token = str(request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                                'key-token'))
                 nickname = str(request.prop_if.Get(
                                certmonger.DBUS_CM_REQUEST_IF, 'key_nickname'))
                 if token and expected_token(self.ca.token_name, token):
@@ -435,9 +435,9 @@ class IPACertTracking(IPAPlugin):
             request = certmonger._cm_dbus_object(cm.bus, cm, req,
                                                  certmonger.DBUS_CM_REQUEST_IF,
                                                  certmonger.DBUS_CM_IF, True)
-            id = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
-                                     'nickname')
-            ids.append(str(id))
+            id = str(request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                         'nickname'))
+            ids.append(id)
 
         for request in requests:
             request_id = certmonger.get_request_id(request)
@@ -1427,7 +1427,8 @@ class CertmongerStuckCheck(IPAPlugin):
     def check(self):
         requests = certmonger._get_requests({'stuck': True})
         for request in requests:
-            id = request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF, 'nickname')
+            id = str(request.prop_if.Get(
+                     certmonger.DBUS_CM_REQUEST_IF, 'nickname'))
             yield Result(self, constants.WARNING,
                          key=id,
                          msg='certmonger request {key} is in the '
