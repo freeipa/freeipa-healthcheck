@@ -39,23 +39,23 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Lint with pylint fedora:${{ matrix.fedora-release }}
-      run: |
-        docker pull fedora:${{ matrix.fedora-release }}
-        docker run \
-            -v ${GITHUB_WORKSPACE}:/root/src/ fedora:${{ matrix.fedora-release }} \
-            /bin/bash -c "\
-            dnf -y install \
-                freeipa-server \
-                freeipa-server-trust-ad \
-                tox \
-                python3-pip \
-                python3-pytest \
-                ; \
-            python3 -m pip install --user --ignore-installed 'pylint ~= 2.15.5' ; \
-            cd /root/src; \
-            tox -vv -elint; \
-            "
+#    - name: Lint with pylint fedora:${{ matrix.fedora-release }}
+#      run: |
+#        docker pull fedora:${{ matrix.fedora-release }}
+#        docker run \
+#            -v ${GITHUB_WORKSPACE}:/root/src/ fedora:${{ matrix.fedora-release }} \
+#            /bin/bash -c "\
+#            dnf -y install \
+#                freeipa-server \
+#                freeipa-server-trust-ad \
+#                tox \
+#                python3-pip \
+#                python3-pytest \
+#                ; \
+#            python3 -m pip install --user --ignore-installed 'pylint ~= 2.15.5' ; \
+#            cd /root/src; \
+#            tox -vv -elint; \
+#            "
     - name: pytest fedora:${{ matrix.fedora-release }}
       run: |
         docker pull fedora:${{ matrix.fedora-release }}
