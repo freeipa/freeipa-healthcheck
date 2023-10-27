@@ -1348,8 +1348,7 @@ class IPACertRevocation(IPAPlugin):
 
             # Now we have the cert either way, check the recovation
             try:
-                result = api.Command.cert_show(cert.serial_number,
-                                               all=True)
+                result = api.Command.cert_show(cert.serial_number)
             except Exception as e:
                 yield Result(self, constants.ERROR,
                              key=id,
