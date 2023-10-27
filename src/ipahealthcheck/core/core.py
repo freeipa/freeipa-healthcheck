@@ -10,6 +10,7 @@ import signal
 import sys
 import traceback
 import warnings
+from ipalib import api
 
 from datetime import datetime, timezone
 
@@ -464,6 +465,7 @@ class RunChecks:
             return 1
 
         results = exclude_keys(config, results)
+        api.Backend.ldap2.disconnect()
 
         try:
             output.render(results)
