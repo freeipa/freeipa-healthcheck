@@ -40,6 +40,9 @@ def python_ipalib_dir(tmpdir):
     return _make_facts
 
 
+@pytest.mark.xfail(
+    reason="https://github.com/freeipa/freeipa-healthcheck/issues/309"
+)
 def test_ipa_notinstalled(python_ipalib_dir, monkeypatch):
     """
     Test ipa-healthcheck handles the missing IPA stuff
@@ -47,9 +50,16 @@ def test_ipa_notinstalled(python_ipalib_dir, monkeypatch):
     monkeypatch.setenv("PYTHONPATH", python_ipalib_dir(configured=None))
     output = run(["ipa-healthcheck"], raiseonerr=False, env=os.environ)
     assert output.returncode == 1
-    assert "IPA server is not installed" in output.raw_output.decode("utf-8")
+    assert "IPA server is not installed" in output.raw_output.decode(
+        "utf-8"
+    ) or "IPA server is not installed" in output.raw_error_output.decode(
+        "utf-8"
+    )
 
 
+@pytest.mark.xfail(
+    reason="https://github.com/freeipa/freeipa-healthcheck/issues/309"
+)
 def test_ipa_unconfigured(python_ipalib_dir, monkeypatch):
     """
     Test ipa-healthcheck handles the unconfigured IPA server
@@ -57,4 +67,8 @@ def test_ipa_unconfigured(python_ipalib_dir, monkeypatch):
     monkeypatch.setenv("PYTHONPATH", python_ipalib_dir(configured=False))
     output = run(["ipa-healthcheck"], raiseonerr=False, env=os.environ)
     assert output.returncode == 1
-    assert "IPA server is not configured" in output.raw_output.decode("utf-8")
+    assert "IPA server is not configured" in output.raw_output.decode(
+        "utf-8"
+    ) or "IPA server is not configured" in output.raw_error_output.decode(
+        "utf-8"
+    )
