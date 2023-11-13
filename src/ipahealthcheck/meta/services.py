@@ -25,10 +25,18 @@ class IPAServiceCheck(ServiceCheck):
     def get_service_name(self, role):
         """Roles define broad services. Translate a role name into
            an individual service name.
+
+           Returns a string on success, None if the service is not
+           configured or cannot be determined.
         """
         conn = api.Backend.ldap2
-        if not api.Backend.ldap2.isconnected():
-            api.Backend.ldap2.connect()
+        try:
+            if not api.Backend.ldap2.isconnected():
+                api.Backend.ldap2.connect()
+        except errors.NetworkError:
+            logger.debug("Service '%s' is not running", self.service_name)
+            return None
+
         dn = DN(
             ("cn", role), ("cn", api.env.host),
             ("cn", "masters"), ("cn", "ipa"), ("cn", "etc"),
