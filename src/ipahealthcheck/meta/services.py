@@ -203,20 +203,6 @@ class ods_enforcerd(IPAServiceCheck):
 
 
 @registry
-class ipa_ods_exporter(IPAServiceCheck):
-    requires = ('dirsrv',)
-
-    def check(self, instance=''):
-        self.service_name = self.get_service_name('DNSKeyExporter')
-
-        if self.service_name is None:
-            # No service name means it is not configured
-            return ()
-
-        return super().check()
-
-
-@registry
 class ipa_dnskeysyncd(IPAServiceCheck):
     requires = ('dirsrv',)
 
