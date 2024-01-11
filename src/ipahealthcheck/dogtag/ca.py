@@ -16,6 +16,8 @@ from ipaserver.install import krainstance
 from ipapython.directivesetter import get_directive
 from cryptography.hazmat.primitives.serialization import Encoding
 
+import pki.util
+
 logger = logging.getLogger()
 
 
@@ -28,6 +30,13 @@ class DogtagCertsConfigCheck(DogtagPlugin):
     def check(self):
         if not self.ca.is_configured():
             logger.debug("No CA configured, skipping dogtag config check")
+            return
+
+        pki_version = pki.util.Version(pki.specification_version())
+        if pki_version >= pki.util.Version("11.5.0"):
+            logger.debug(
+                "PKI 11.5.0 no longer stores certificats in CS.cfg"
+            )
             return
 
         kra = krainstance.KRAInstance(api.env.realm)
