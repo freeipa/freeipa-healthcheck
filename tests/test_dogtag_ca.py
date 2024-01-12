@@ -2,12 +2,16 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+import pki.util
 from util import capture_results, CAInstance, KRAInstance
 from base import BaseTest
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.dogtag.plugin import registry
 from ipahealthcheck.dogtag.ca import DogtagCertsConfigCheck
 from unittest.mock import Mock, patch
+import pytest
+
+pki_version = pki.util.Version(pki.specification_version())
 
 
 class mock_Cert:
@@ -43,6 +47,9 @@ class TestCACerts(BaseTest):
         Mock(return_value=KRAInstance()),
     }
 
+    @pytest.mark.skipif(
+        pki_version >= pki.util.Version("11.5.0"),
+        reason='Does not apply to PKI 11.5.0+')
     @patch('ipahealthcheck.dogtag.ca.get_directive')
     @patch('ipaserver.install.certs.CertDB')
     def test_ca_certs_ok(self, mock_certdb, mock_directive):
@@ -71,6 +78,9 @@ class TestCACerts(BaseTest):
             assert result.source == 'ipahealthcheck.dogtag.ca'
             assert result.check == 'DogtagCertsConfigCheck'
 
+    @pytest.mark.skipif(
+        pki_version >= pki.util.Version("11.5.0"),
+        reason='Does not apply to PKI 11.5.0+')
     @patch('ipahealthcheck.dogtag.ca.get_directive')
     @patch('ipaserver.install.certs.CertDB')
     def test_cert_missing_from_file(self, mock_certdb, mock_directive):
