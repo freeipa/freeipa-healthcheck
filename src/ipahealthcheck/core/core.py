@@ -114,7 +114,7 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
         else:
             logging.debug(
                 "Plugin %s complete after %s sec",
-                plugin_name, datetime.utcnow() - start
+                plugin_name, datetime.now(tz=timezone.utc) - start
             )
         signal.alarm(0)
 
