@@ -29,7 +29,7 @@ def test_timeout():
         def check(self):
             try:
                 time.sleep(5)
-            except:
+            except Exception:
                 pass
             return  # ugly syntax to let us yield no results
             yield
@@ -46,7 +46,11 @@ def test_timeout():
             try:
                 time.sleep(5)
             except Exception as e:
-                yield Result(self, constants.ERROR, key='test', msg='fail', exception=str(e))
+                yield Result(
+                    self, constants.ERROR,
+                    key='test', msg='fail',
+                    exception=str(e)
+                )
 
     class plugin_slow_raising_exception(Plugin):
         '''
@@ -58,7 +62,7 @@ def test_timeout():
         def check(self):
             try:
                 time.sleep(5)
-            except:
+            except Exception:
                 raise Exception("I didn't expect an exception to be thrown")
 
     class plugin_fast(Plugin):
@@ -80,28 +84,38 @@ def test_timeout():
 
     assert 7 == len(results.results)
 
-    assert results.results[0].kw.get('exception') == 'Health check test_plugins:plugin_slow_passing_exception_up cancelled after 1 sec'
+    assert results.results[0].kw.get('exception') == 'Health check' \
+        ' test_plugins:plugin_slow_passing_exception_up' \
+        ' cancelled after 1 sec'
     assert results.results[0].result == constants.ERROR
     assert not results.results[0].kw.get('traceback')
 
-    assert results.results[1].kw.get('exception') == 'Health check test_plugins:plugin_slow_catching_exception_and_ignoring cancelled after 1 sec'
+    assert results.results[1].kw.get('exception') == 'Health check' \
+        ' test_plugins:plugin_slow_catching_exception_and_ignoring' \
+        ' cancelled after 1 sec'
     assert results.results[1].result == constants.ERROR
     assert not results.results[1].kw.get('traceback')
 
-    assert results.results[2].kw.get('exception') == 'Health check test_plugins:plugin_slow_catching_exception_and_handling cancelled after 1 sec'
+    assert results.results[2].kw.get('exception') == 'Health check' \
+        ' test_plugins:plugin_slow_catching_exception_and_handling' \
+        ' cancelled after 1 sec'
     assert results.results[2].result == constants.ERROR
     assert results.results[2].kw.get('msg') == 'fail'
     assert not results.results[2].kw.get('traceback')
 
-    assert results.results[3].kw.get('exception')== 'Health check test_plugins:plugin_slow_catching_exception_and_handling cancelled after 1 sec'
+    assert results.results[3].kw.get('exception') == 'Health check' \
+        ' test_plugins:plugin_slow_catching_exception_and_handling' \
+        ' cancelled after 1 sec'
     assert results.results[3].result == constants.ERROR
     assert not results.results[3].kw.get('traceback')
 
-    assert results.results[4].kw.get('exception') == "I didn't expect an exception to be thrown"
+    assert results.results[4].kw.get('exception') == "I didn't expect an" \
+        " exception to be thrown"
     assert results.results[4].result == constants.CRITICAL
     assert results.results[4].kw.get('traceback')
 
-    assert results.results[5].kw.get('exception') == 'Health check test_plugins:plugin_slow_raising_exception cancelled after 1 sec'
+    assert results.results[5].kw.get('exception') == 'Health check' \
+        ' test_plugins:plugin_slow_raising_exception cancelled after 1 sec'
     assert results.results[5].result == constants.ERROR
     assert not results.results[5].kw.get('traceback')
 
