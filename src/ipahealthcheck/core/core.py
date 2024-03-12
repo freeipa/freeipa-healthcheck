@@ -47,17 +47,25 @@ def find_plugins(name, registry):
 def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
     plugin_name = F"{plugin.__class__.__module__}:{plugin.__class__.__name__}"
     timed_out = []
+
     def signal_handler(signum, frame):
         # Our exception will likely be caught by code called by the plugin,
         # which may not log the traceback, or may even catch the exception
         # itself! So while we throw the exception in order to interrupt the
         # plugin code, we also stash a copy of it so that we can log it after
         # the plugin returns.
-        timed_out.append(TimeoutError(f"Health check {plugin_name} cancelled after after {timeout} sec"))
+        timed_out.append(TimeoutError(
+            f"Health check {plugin_name} cancelled after after {timeout} sec"
+        ))
         logger.error("--- %s ---", timed_out[0])
         traceback.print_stack()
-        logger.error("--- The following messages were logged by the plugin after it was cancelled. They may not indicate the reason why the plugin took too long to run. ---")
+        logger.error(
+            "--- The following messages were logged by the plugin after it"
+            " was cancelled. They may not indicate the reason why the plugin"
+            " took too long to run. ---"
+        )
         raise timed_out[0]
+
     # manually calculate duration when we create results of our own
     start = datetime.now(tz=timezone.utc)
     signal.signal(signal.SIGALRM, signal_handler)
@@ -78,15 +86,22 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
         else:
             # We've got no way to know whether the plugin's own exception was
             # related to our TimeoutError; if it was then we will yield a
-            # result here based on the plugin's own exception, and _also_ later
-            # on in the finally block.
-            logger.log('Exception raised in health check %r: %s', plugin_name, e, level=constants.CRITICAL, exc_info=True)
+            # result here based on the plugin's own exception, and _also_
+            # later on in the finally block.
+            logger.log(
+                'Exception raised in health check %r: %s',
+                plugin_name, e, level=constants.CRITICAL, exc_info=True
+            )
             yield Result(plugin, constants.CRITICAL, exception=str(e),
                          traceback=traceback.format_exc(),
                          start=start)
     finally:
         if timed_out:
-            logger.error("--- Increasing the timeout in /etc/ipahealthcheck/ipahealthcheck.conf may allow this healthcheck to complete before the deadline. ---")
+            logger.error(
+                "--- Increasing the timeout in"
+                " /etc/ipahealthcheck/ipahealthcheck.conf may allow this"
+                " healthcheck to complete before the deadline. ---"
+            )
             # If the plugin already handled our TimeoutError properly (i.e,
             # logged it and raised its own exception with a sensible error
             # message) then there is no need to yield our own error result
@@ -97,7 +112,10 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
             yield Result(plugin, constants.ERROR, exception=str(timed_out[0]),
                          start=start)
         else:
-            logging.debug("Plugin %s complete after %s sec", plugin_name, datetime.utcnow() - start)
+            logging.debug(
+                "Plugin %s complete after %s sec",
+                plugin_name, datetime.utcnow() - start
+            )
         signal.alarm(0)
 
 
