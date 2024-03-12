@@ -55,7 +55,7 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
         # plugin code, we also stash a copy of it so that we can log it after
         # the plugin returns.
         timed_out.append(TimeoutError(
-            f"Health check {plugin_name} cancelled after after {timeout} sec"
+            f"Health check {plugin_name} cancelled after {timeout} sec"
         ))
         logger.error("--- %s ---", timed_out[0])
         traceback.print_stack()
@@ -77,7 +77,7 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
                 result = Result(plugin, constants.SUCCESS, start=start)
             yield result
     except Exception as e:
-        if e is TimeoutError:
+        if isinstance(e, TimeoutError):
             # The plugin code _may_ have raised our original TimeoutError
             # however we also have to deal with cases where it did not raise
             # anything! We do that in the finally block below; we don't
