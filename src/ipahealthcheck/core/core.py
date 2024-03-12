@@ -88,9 +88,9 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
             # related to our TimeoutError; if it was then we will yield a
             # result here based on the plugin's own exception, and _also_
             # later on in the finally block.
-            logger.log(
-                'Exception raised in health check %r: %s',
-                plugin_name, e, level=constants.CRITICAL, exc_info=True
+            logger.exception(
+                "Exception raised in health check %r",
+                plugin_name
             )
             yield Result(plugin, constants.CRITICAL, exception=str(e),
                          traceback=traceback.format_exc(),
