@@ -110,7 +110,7 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
             # case let's err on the side of caution and return an additional
             # result.
             yield Result(plugin, constants.ERROR, exception=str(timed_out[0]),
-                         start=start)
+                         key="healthcheck_timeout", start=start)
         else:
             logging.debug(
                 "Plugin %s complete after %s sec",
