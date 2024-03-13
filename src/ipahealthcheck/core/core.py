@@ -76,25 +76,25 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
                 # Treat no result as success, fudge start time
                 result = Result(plugin, constants.SUCCESS, start=start)
             yield result
+    except TimeoutError:
+        # The plugin code _may_ have raised our original TimeoutError however
+        # we also have to deal with cases where it did not raise anything! In
+        # the finally block below we handle such cases, and since we already
+        # stashed the TimeoutError that we raised in timed_out[0], we don't
+        # need to handle it here.
+        pass
     except Exception as e:
-        if isinstance(e, TimeoutError):
-            # The plugin code _may_ have raised our original TimeoutError
-            # however we also have to deal with cases where it did not raise
-            # anything! We do that in the finally block below; we don't
-            # therefore need to do anything here.
-            pass
-        else:
-            # We've got no way to know whether the plugin's own exception was
-            # related to our TimeoutError; if it was then we will yield a
-            # result here based on the plugin's own exception, and _also_
-            # later on in the finally block.
-            logger.exception(
-                "Exception raised in health check %r",
-                plugin_name
-            )
-            yield Result(plugin, constants.CRITICAL, exception=str(e),
-                         traceback=traceback.format_exc(),
-                         start=start)
+        # We've got no way to know whether the plugin's own exception was
+        # related to our TimeoutError; if it was then we will yield a
+        # result here based on the plugin's own exception, and _also_
+        # later on in the finally block.
+        logger.exception(
+            "Exception raised in health check %r",
+            plugin_name
+        )
+        yield Result(plugin, constants.CRITICAL, exception=str(e),
+                     traceback=traceback.format_exc(),
+                     start=start)
     finally:
         if timed_out:
             logger.error(
