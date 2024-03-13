@@ -193,7 +193,7 @@ def run_service_plugins(plugins, source, check):
                 )
                 continue
 
-        logger.debug('Calling check %s', plugin)
+        logger.debug('--- Calling check %s ---', plugin)
         for result in plugin.check():
             # always run the service checks so dependencies work
             if result is not None and result.result == constants.SUCCESS:
@@ -228,7 +228,7 @@ def run_plugins(plugins, available, source, check,
         if not source_or_check_matches(plugin, source, check):
             continue
 
-        logger.debug("Calling check %s", plugin)
+        logger.debug("--- Calling check %s ---", plugin)
         if not set(plugin.requires).issubset(available):
             logger.debug('Skipping %s:%s because %s service(s) not running',
                          plugin.__class__.__module__,
