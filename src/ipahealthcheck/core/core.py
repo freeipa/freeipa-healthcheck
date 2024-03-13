@@ -46,7 +46,7 @@ def find_plugins(name, registry):
 
 def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
     plugin_name = F"{plugin.__class__.__module__}:{plugin.__class__.__name__}"
-    timed_out = []
+    timed_out = {}
 
     def signal_handler(signum, frame):
         # Our exception will likely be caught by code called by the plugin,
@@ -54,17 +54,18 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
         # itself! So while we throw the exception in order to interrupt the
         # plugin code, we also stash a copy of it so that we can log it after
         # the plugin returns.
-        timed_out.append(TimeoutError(
+        timed_out["exception"] = TimeoutError(
             f"Health check {plugin_name} cancelled after {timeout} sec"
-        ))
-        logger.error("--- %s ---", timed_out[0])
+        )
+        logger.error("--- %s ---", timed_out["exception"])
         traceback.print_stack()
+        timed_out["stack"] = traceback.format_stack()
         logger.error(
             "--- The following messages were logged by the plugin after it"
             " was cancelled. They may not indicate the reason why the plugin"
             " took too long to run. ---"
         )
-        raise timed_out[0]
+        raise timed_out["exception"]
 
     # manually calculate duration when we create results of our own
     start = datetime.now(tz=timezone.utc)
@@ -110,8 +111,10 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
             # case let's err on the side of caution and return an additional
             # result.
             # TODO: suggest that timeouts are CRITICAL?
-            yield Result(plugin, constants.ERROR, exception=str(timed_out[0]),
-                         key="healthcheck_timeout", start=start)
+            yield Result(plugin, constants.ERROR,
+                         exception=str(timed_out["exception"]),
+                         key="healthcheck_timeout", start=start,
+                         traceback=timed_out["stack"])
         else:
             logging.debug(
                 "Plugin %s complete after %s sec",
