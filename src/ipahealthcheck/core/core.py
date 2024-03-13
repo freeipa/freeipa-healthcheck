@@ -109,7 +109,7 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
             # caught our TimeoutError and logged something misleading; in that
             # case let's err on the side of caution and return an additional
             # result.
-            # TODO: suggest that timeouts are CRITICAL
+            # TODO: suggest that timeouts are CRITICAL?
             yield Result(plugin, constants.ERROR, exception=str(timed_out[0]),
                          key="healthcheck_timeout", start=start)
         else:
