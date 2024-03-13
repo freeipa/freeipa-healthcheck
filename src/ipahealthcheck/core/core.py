@@ -55,13 +55,13 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
         # plugin code, we also stash a copy of it so that we can log it after
         # the plugin returns.
         timed_out["exception"] = TimeoutError(
-            f"Health check {plugin_name} cancelled after {timeout} sec"
+            f"Check {plugin_name} cancelled after {timeout} sec"
         )
         logger.error("--- %s ---", timed_out["exception"])
         traceback.print_stack()
         timed_out["stack"] = traceback.format_stack()
         logger.error(
-            "--- The following messages were logged by the plugin after it"
+            "--- The following messages were logged by the check after it"
             " was cancelled. They may not indicate the reason why the plugin"
             " took too long to run. ---"
         )
@@ -71,6 +71,7 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
     start = datetime.now(tz=timezone.utc)
     signal.signal(signal.SIGALRM, signal_handler)
     signal.alarm(timeout)
+
     try:
         for result in plugin.check():
             if result is None:
@@ -90,7 +91,7 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
         # result here based on the plugin's own exception, and _also_
         # later on in the finally block.
         logger.exception(
-            "Exception raised in health check %r",
+            "Exception raised in check %r",
             plugin_name
         )
         yield Result(plugin, constants.CRITICAL, exception=str(e),
@@ -117,7 +118,7 @@ def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
                          traceback=timed_out["stack"])
         else:
             logging.debug(
-                "Plugin %s complete after %s sec",
+                "--- Check %s complete after %s sec ---",
                 plugin_name, datetime.now(tz=timezone.utc) - start
             )
         signal.alarm(0)

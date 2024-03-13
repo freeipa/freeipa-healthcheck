@@ -84,26 +84,26 @@ def test_timeout():
 
     assert 7 == len(results.results)
 
-    assert results.results[0].kw.get('exception') == 'Health check' \
+    assert results.results[0].kw.get('exception') == 'Check' \
         ' test_plugins:plugin_slow_passing_exception_up' \
         ' cancelled after 1 sec'
     assert results.results[0].result == constants.ERROR
     assert results.results[0].kw.get('key') == 'healthcheck_timeout'
 
-    assert results.results[1].kw.get('exception') == 'Health check' \
+    assert results.results[1].kw.get('exception') == 'Check' \
         ' test_plugins:plugin_slow_catching_exception_and_ignoring' \
         ' cancelled after 1 sec'
     assert results.results[1].result == constants.ERROR
     assert results.results[1].kw.get('key') == 'healthcheck_timeout'
 
-    assert results.results[2].kw.get('exception') == 'Health check' \
+    assert results.results[2].kw.get('exception') == 'Check' \
         ' test_plugins:plugin_slow_catching_exception_and_handling' \
         ' cancelled after 1 sec'
     assert results.results[2].result == constants.ERROR
     assert results.results[2].kw.get('msg') == 'fail'
     assert results.results[2].kw.get('key') == 'test'
 
-    assert results.results[3].kw.get('exception') == 'Health check' \
+    assert results.results[3].kw.get('exception') == 'Check' \
         ' test_plugins:plugin_slow_catching_exception_and_handling' \
         ' cancelled after 1 sec'
     assert results.results[3].result == constants.ERROR
@@ -114,7 +114,7 @@ def test_timeout():
     assert results.results[4].result == constants.CRITICAL
     assert not results.results[4].kw.get('key')
 
-    assert results.results[5].kw.get('exception') == 'Health check' \
+    assert results.results[5].kw.get('exception') == 'Check' \
         ' test_plugins:plugin_slow_raising_exception cancelled after 1 sec'
     assert results.results[5].result == constants.ERROR
     assert results.results[5].kw.get('key') == 'healthcheck_timeout'
