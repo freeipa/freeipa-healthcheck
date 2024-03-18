@@ -3,6 +3,7 @@
 #
 
 import logging
+import os
 
 from ipahealthcheck.dogtag.plugin import DogtagPlugin, registry
 from ipahealthcheck.core.plugin import Result
@@ -30,6 +31,15 @@ class DogtagCertsConfigCheck(DogtagPlugin):
     def check(self):
         if not self.ca.is_configured():
             logger.debug("No CA configured, skipping dogtag config check")
+            return
+
+        if not os.path.exists(paths.CA_CS_CFG_PATH):
+            yield Result(
+                self, constants.CRITICAL,
+                key=f'{paths.CA_CS_CFG_PATH}_missing',
+                configfile=paths.CA_CS_CFG_PATH,
+                msg=f'Configuration file {paths.CA_CS_CFG_PATH} is missing'
+            )
             return
 
         pki_version = pki.util.Version(pki.specification_version())

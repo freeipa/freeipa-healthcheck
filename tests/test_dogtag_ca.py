@@ -50,9 +50,10 @@ class TestCACerts(BaseTest):
     @pytest.mark.skipif(
         pki_version >= pki.util.Version("11.5.0"),
         reason='Does not apply to PKI 11.5.0+')
+    @patch('os.path.exists')
     @patch('ipahealthcheck.dogtag.ca.get_directive')
     @patch('ipaserver.install.certs.CertDB')
-    def test_ca_certs_ok(self, mock_certdb, mock_directive):
+    def test_ca_certs_ok(self, mock_certdb, mock_directive, mock_exists):
         """Test what should be the standard case"""
         trust = {
             'ocspSigningCert cert-pki-ca': 'u,u,u',
@@ -62,6 +63,7 @@ class TestCACerts(BaseTest):
             'caSigningCert cert-pki-ca': 'CT,C,C',
             'transportCert cert-pki-kra': 'u,u,u',
         }
+        mock_exists.return_value = True
         mock_certdb.return_value = mock_CertDB(trust)
         mock_directive.side_effect = [name for name, nsstrust in trust.items()]
 
@@ -81,9 +83,11 @@ class TestCACerts(BaseTest):
     @pytest.mark.skipif(
         pki_version >= pki.util.Version("11.5.0"),
         reason='Does not apply to PKI 11.5.0+')
+    @patch('os.path.exists')
     @patch('ipahealthcheck.dogtag.ca.get_directive')
     @patch('ipaserver.install.certs.CertDB')
-    def test_cert_missing_from_file(self, mock_certdb, mock_directive):
+    def test_cert_missing_from_file(self, mock_certdb, mock_directive,
+                                    mock_exists):
         """Test a missing certificate.
 
            Note that if it is missing from the database then this check
@@ -103,6 +107,7 @@ class TestCACerts(BaseTest):
         location = nicknames.index('auditSigningCert cert-pki-ca')
         nicknames[location] = 'NOT auditSigningCert cert-pki-ca'
 
+        mock_exists.return_value = True
         mock_certdb.return_value = mock_CertDB(trust)
         mock_directive.side_effect = nicknames
 
