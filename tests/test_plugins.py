@@ -63,7 +63,9 @@ def test_timeout():
             try:
                 time.sleep(5)
             except Exception as e:
-                raise Exception("I didn't expect an exception to be thrown") from e
+                raise Exception(
+                    "I didn't expect an exception to be thrown") from e
+                )
 
     class plugin_fast(Plugin):
         def check(self):
