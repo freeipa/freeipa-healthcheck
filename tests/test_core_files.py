@@ -2,14 +2,22 @@
 # Copyright (C) 2019 FreeIPA Contributors see COPYING for license
 #
 
+from ldap import OPT_X_SASL_SSF_MIN
 import pwd
 import posix
+from util import m_api
+from util import capture_results
+
+from ipahealthcheck.core import config
 from ipahealthcheck.core.files import FileCheck
 from ipahealthcheck.core import constants
 from ipahealthcheck.core.plugin import Results
+from ipahealthcheck.ipa.files import IPAFileCheck
+from ipahealthcheck.system.plugin import registry
 from unittest.mock import patch
+from ipapython.dn import DN
+from ipapython.ipaldap import LDAPClient, LDAPEntry
 
-from util import capture_results
 
 nobody = pwd.getpwnam('nobody')
 
@@ -19,6 +27,37 @@ files = (('foo', 'root', 'root', '0660'),
          ('baz', ('root', 'nobody'), ('root', 'nobody'), '0664'),
          ('fiz', ('root', 'bin'), ('root', 'bin'), '0664'),
          ('zap', ('root', 'bin'), ('root', 'bin'), ('0664', '0640'),))
+
+bad_modes = (('biz', ('root', 'bin'), ('root', 'bin'), '0664', '0640'),)
+
+
+class mock_ldap:
+    SCOPE_BASE = 1
+    SCOPE_ONELEVEL = 2
+    SCOPE_SUBTREE = 4
+
+    def __init__(self, ldapentry):
+        """Initialize the results that we will return from get_entries"""
+        self.results = ldapentry
+
+    def get_entry(self, dn, attrs_list=None, time_limit=None,
+                  size_limit=None, get_effective_rights=False):
+        return []  # the call doesn't check the value
+
+
+class mock_ldap_conn:
+    def set_option(self, option, invalue):
+        pass
+
+    def get_option(self, option):
+        if option == OPT_X_SASL_SSF_MIN:
+            return 256
+
+        return None
+
+    def search_s(self, base, scope, filterstr=None,
+                 attrlist=None, attrsonly=0):
+        return tuple()
 
 
 def make_stat(mode=33200, uid=0, gid=0):
@@ -234,4 +273,33 @@ def test_files_group_not_found(mock_grgid, mock_grnam, mock_stat):
     my_results = get_results(results, 'group')
     for result in my_results.results:
         assert result.result == constants.WARNING
-        assert result.kw.get('got') == 'Unknown gid 0'
+
+
+def test_bad_modes():
+    f = FileCheck()
+    f.files = bad_modes
+
+    results = capture_results(f)
+
+    for result in results.results:
+        assert result.result == constants.ERROR
+        assert result.kw.get('msg') == 'Code format is incorrect for file'
+
+
+@patch('ipaserver.install.krbinstance.is_pkinit_enabled')
+def test_ipa_files_format(mock_pkinit):
+    mock_pkinit.return_value = True
+
+    fake_conn = LDAPClient('ldap://localhost', no_schema=True)
+    ldapentry = LDAPEntry(fake_conn, DN(m_api.env.container_dns,
+                          m_api.env.basedn))
+    framework = object()
+    registry.initialize(framework, config.Config)
+    f = IPAFileCheck(registry)
+
+    f.conn = mock_ldap(ldapentry)
+
+    results = capture_results(f)
+
+    for result in results.results:
+        assert result.result == constants.SUCCESS

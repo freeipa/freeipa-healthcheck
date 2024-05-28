@@ -141,6 +141,7 @@ m_api.env.container_host = DN(('cn', 'computers'), ('cn', 'accounts'))
 m_api.env.container_sysaccounts = DN(('cn', 'sysaccounts'), ('cn', 'etc'))
 m_api.env.container_service = DN(('cn', 'services'), ('cn', 'accounts'))
 m_api.env.container_masters = DN(('cn', 'masters'))
+m_api.env.container_dns = DN(('cn', 'dns'))
 m_api.Backend = Mock()
 m_api.Command = Mock()
 m_api.Command.ping.return_value = {

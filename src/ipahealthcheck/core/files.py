@@ -31,7 +31,17 @@ class FileCheck:
 
     @duration
     def check(self):
-        for (path, owner, group, mode) in self.files:
+        # first validate that the list of files to check is in the correct
+        # format
+        process_files = []
+        for file in self.files:
+            if len(file) == 4:
+                process_files.append(file)
+            else:
+                yield Result(self, constants.ERROR, key=file,
+                             msg='Code format is incorrect for file')
+
+        for (path, owner, group, mode) in process_files:
             if not isinstance(owner, tuple):
                 owner = tuple((owner,))
             if not isinstance(group, tuple):
