@@ -121,7 +121,7 @@ class IPAFileCheck(IPAPlugin, FileCheck):
                 self.files.append((filename, 'root', 'root', '0600'))
 
         self.files.append((paths.IPA_CUSTODIA_AUDIT_LOG,
-                          'root', 'root', '0644', '0640'))
+                          'root', 'root', ('0644', '0640')))
 
         self.files.append((paths.KADMIND_LOG, 'root', 'root',
                           ('0600', '0640')))
@@ -134,12 +134,12 @@ class IPAFileCheck(IPAPlugin, FileCheck):
                            constants.DS_USER, constants.DS_GROUP, '0600'))
 
         self.files.append((paths.VAR_LOG_HTTPD_ERROR, 'root', 'root',
-                           '0644', '0640'))
+                           ('0644', '0640')))
 
         for globpath in glob.glob("%s/debug*.log" % paths.TOMCAT_CA_DIR):
             self.files.append(
                 (globpath, constants.PKI_USER, constants.PKI_GROUP,
-                 "0644", "0640")
+                 ("0644", "0640"))
             )
 
         for globpath in glob.glob(
