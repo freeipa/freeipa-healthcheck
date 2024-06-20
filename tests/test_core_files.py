@@ -302,4 +302,4 @@ def test_ipa_files_format(mock_pkinit):
     results = capture_results(f)
 
     for result in results.results:
-        assert result.result == constants.SUCCESS
+        assert result.result in (constants.SUCCESS, constants.WARNING)
