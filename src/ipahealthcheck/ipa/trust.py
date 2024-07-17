@@ -684,3 +684,23 @@ class IPATrustPackageCheck(IPAPlugin):
                          key='adtrustpackage',
                          msg='trust-ad sub-package is not installed. '
                          'Administration will be limited.')
+
+
+@registry
+class IPAauthzdatapacCheck(IPAPlugin):
+    """
+    Verify that the MS-PAC generation is not disabled
+    """
+    @duration
+    def check(self):
+        ipaconfig = api.Command.config_show(raw=True)
+        krbauthzdata = ipaconfig['result'].get('ipakrbauthzdata', tuple())
+        authzdata = 'MS-PAC'
+        if authzdata not in krbauthzdata:
+            yield Result(self, constants.ERROR,
+                         key=authzdata,
+                         error='access to IPA API will not work',
+                         msg='MS-PAC generation is not enabled '
+                         'in IPA configuration {key}: {error}')
+        else:
+            yield Result(self, constants.SUCCESS, key='MS-PAC')
