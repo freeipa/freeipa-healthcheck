@@ -23,7 +23,8 @@ from ipahealthcheck.ipa.trust import (IPATrustAgentCheck,
                                       IPATrustControllerGroupSIDCheck,
                                       IPATrustControllerAdminSIDCheck,
                                       IPATrustControllerConfCheck,
-                                      IPATrustPackageCheck)
+                                      IPATrustPackageCheck,
+                                      IPAauthzdatapacCheck)
 
 from ipalib import errors
 from ipapython.dn import DN
@@ -1287,3 +1288,44 @@ class TestPackageCheck(BaseTest):
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPATrustPackageCheck'
         sys.modules['ipaserver.install'] = save
+
+
+class TestConfiguration(BaseTest):
+
+    def test_ipakrbauthzdata_positive(self):
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPAauthzdatapacCheck(registry)
+
+        m_api.Command.config_show.side_effect = [{
+            'result': {
+                'ipakrbauthzdata': ['MS-PAC', 'nfs:NONE', ]
+            }
+        }]
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPAauthzdatapacCheck'
+
+    def test_ipakrbauthzdata_negative(self):
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPAauthzdatapacCheck(registry)
+
+        m_api.Command.config_show.side_effect = [{
+            'result': {
+                'ipakrbauthzdata': ['nfs:NONE', ]
+            }
+        }]
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.ERROR
+        assert result.source == 'ipahealthcheck.ipa.trust'
+        assert result.check == 'IPAauthzdatapacCheck'
