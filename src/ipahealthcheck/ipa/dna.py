@@ -29,7 +29,14 @@ class IPADNARangeCheck(IPAPlugin):
 
     @duration
     def check(self):
-        agmt = replication.ReplicationManager(api.env.realm, api.env.host)
+        try:
+            agmt = replication.ReplicationManager(api.env.realm, api.env.host)
+        except Exception as e:
+            yield Result(self, constants.ERROR,
+                         key='agreement_creation_error_dna',
+                         error=str(e),
+                         msg='Connection to replica failed {error}')
+            logging.debug('Establishing agreement failed %s', e)
 
         (range_start, range_max) = agmt.get_DNA_range(api.env.host)
         (next_start, next_max) = agmt.get_DNA_next_range(api.env.host)
