@@ -1074,6 +1074,7 @@ class IPAOpenSSLChainValidation(IPAPlugin):
                 '-verbose',
                 '-show_chain',
                 '-CAfile', paths.IPA_CA_CRT,
+                '-no-CAfile', '-no-CApath', '-no-CAstore',
                 file]
 
         return ipautil.run(args, raiseonerr=False)
