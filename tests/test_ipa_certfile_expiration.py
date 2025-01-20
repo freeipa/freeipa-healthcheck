@@ -23,7 +23,7 @@ class IPACertificate:
         self.subject = 'CN=RA AGENT'
         self.issuer = 'CN=ISSUER'
         self.serial_number = serial_number
-        self.not_valid_after = not_valid_after
+        self.not_valid_after_utc = not_valid_after
 
 
 class TestIPACertificateFile(BaseTest):

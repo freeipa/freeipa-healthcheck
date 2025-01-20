@@ -428,7 +428,7 @@ class IPACertfileExpirationCheck(IPAPlugin):
 
             now = datetime.now(tz=timezone.utc)
             # Older versions of IPA provide naive timestamps
-            notafter = cert.not_valid_after.replace(tzinfo=timezone.utc)
+            notafter = cert.not_valid_after_utc
 
             if now > notafter:
                 yield Result(self, constants.ERROR,
@@ -1447,7 +1447,7 @@ class IPACAChainExpirationCheck(IPAPlugin):
         for cert in ca_certs:
             subject = DN(cert.subject)
             subject = str(subject).replace('\\;', '\\3b')
-            dt = cert.not_valid_after.replace(tzinfo=timezone.utc)
+            dt = cert.not_valid_after_utc
             if dt < now:
                 logger.debug("%s is expired", subject)
                 yield Result(self, constants.CRITICAL,

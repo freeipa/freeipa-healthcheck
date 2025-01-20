@@ -100,7 +100,7 @@ class FakeIPACertificate:
         return self.subj
 
     @property
-    def not_valid_after(self):
+    def not_valid_after_utc(self):
         return self.not_after
 
 
