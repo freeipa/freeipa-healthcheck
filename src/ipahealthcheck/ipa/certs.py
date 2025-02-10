@@ -454,6 +454,87 @@ class IPACertfileExpirationCheck(IPAPlugin):
 
 
 @registry
+class IPAUserProvidedExpirationCheck(IPAPlugin):
+    """
+    If we detect user-provided certificates then check to see if
+    they are expiring soon.
+
+    This only applies to the HTTP, DS and KRB certificates.
+    """
+    def validate_cert(self, id, cert, certfile=None, nssdb=None,
+                      nickname=None):
+        now = datetime.now(tz=timezone.utc)
+        notafter = cert.not_valid_after_utc
+
+        if certfile:
+            location = certfile
+        if nssdb:
+            location = "{}:{}".format(nssdb, nickname)
+
+        if now > notafter:
+            logger.debug("expired")
+            yield Result(self, constants.ERROR,
+                         key=id,
+                         location=location,
+                         expiration_date=generalized_time(notafter),
+                         msg='Request id {key} expired on '
+                             '{expiration_date}')
+            return
+
+        delta = notafter - now
+        diff = int(delta.total_seconds() / DAY)
+        if diff < int(self.config.cert_expiration_days):
+            logger.debug("expiring soon")
+            yield Result(self, constants.WARNING,
+                         key=id,
+                         location=location,
+                         expiration_date=generalized_time(notafter),
+                         days=diff,
+                         msg='Request id {key} expires in {days} '
+                             'days. You need to manually renew this '
+                             'certificate.')
+            return
+
+        yield Result(self, constants.SUCCESS, location=location, key=id)
+
+    @duration
+    def check(self):
+        for id, certfile in (
+            ("HTTP", paths.HTTPD_CERT_FILE),
+            ("KDC", paths.KDC_CERT)
+        ):
+            try:
+                cert = x509.load_certificate_from_file(certfile)
+            except Exception as e:
+                yield Result(self, constants.ERROR,
+                             key=id,
+                             certfile=certfile,
+                             error=str(e),
+                             msg='Request id {key}: Unable to open cert '
+                                 'file \'{certfile}\': {error}')
+                continue
+            issued = is_ipa_issued_cert(api, cert)
+            if issued is None:
+                logger.debug('Unable to determine if \'%s\' was issued by IPA '
+                             'because no LDAP connection, assuming yes.')
+                continue
+            elif issued is True:
+                logging.debug("Issued by IPA, skipping")
+                continue
+            yield from self.validate_cert(id, cert, certfile=certfile)
+
+        ds_db_dirname = dsinstance.config_dirname(self.serverid)
+        ds_db = certs.CertDB(api.env.realm, nssdir=ds_db_dirname)
+        nickname = self.ds.get_server_cert_nickname(self.serverid)
+        cert = ds_db.get_cert_from_db(nickname)
+        if is_ipa_issued_cert(api, cert):
+            logging.debug("Issued by IPA, skipping")
+            return
+        yield from self.validate_cert("LDAP", cert, nssdb=ds_db_dirname,
+                                      nickname=nickname)
+
+
+@registry
 class IPACertTracking(IPAPlugin):
     """Compare the certificates tracked by certmonger to those that
        are configured by default.
