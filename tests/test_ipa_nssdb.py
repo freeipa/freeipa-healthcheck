@@ -9,28 +9,7 @@ from ipahealthcheck.ipa.plugin import registry
 from ipahealthcheck.ipa.certs import IPACertNSSTrust
 from ipaplatform.paths import paths
 from unittest.mock import Mock, patch
-
-
-class mock_CertDB:
-    def __init__(self, trust):
-        """A dict of nickname + NSSdb trust flags"""
-        self.trust = trust
-
-    def list_certs(self):
-        return [(nickname, self.trust[nickname]) for nickname in self.trust]
-
-
-class mock_NSSDatabase:
-    def __init__(self, nssdir, token=None, pwd_file=None, trust=None):
-        self.trust = trust
-        self.token = token
-
-    def list_certs(self):
-        return [(nickname, self.trust[nickname]) for nickname in self.trust]
-
-
-def my_unparse_trust_flags(trust_flags):
-    return trust_flags
+from common import mock_NSSDatabase, my_unparse_trust_flags
 
 
 # These tests make some assumptions about the order in which the
