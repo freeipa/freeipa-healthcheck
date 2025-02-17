@@ -10,11 +10,10 @@ from util import capture_results
 from ipahealthcheck.core import config, constants
 from ipahealthcheck.meta.plugin import registry
 from ipahealthcheck.meta.core import MetaCheck
-from ipapython import ipautil
 from ipaplatform.paths import paths
 
-if 'FIPS_MODE_SETUP' not in dir(paths):
-    paths.FIPS_MODE_SETUP = '/usr/bin/fips-mode-setup'
+if 'PROC_FIPS_ENABLED' not in dir(paths):
+    paths.PROC_FIPS_ENABLED = '/proc/sys/crypto/fips_enabled'
 
 
 def gen_result(returncode, output='', error=''):
@@ -36,7 +35,7 @@ def gen_result(returncode, output='', error=''):
 
 class TestMetaFIPS(BaseTest):
     @patch('os.path.exists')
-    def test_fips_no_fips_mode_setup(self, mock_exists):
+    def test_fips_no_fips_enabled(self, mock_exists):
         mock_exists.return_value = False
 
         framework = object()
@@ -51,15 +50,16 @@ class TestMetaFIPS(BaseTest):
         assert result.result == constants.SUCCESS
         assert result.source == 'ipahealthcheck.meta.core'
         assert result.check == 'MetaCheck'
-        assert result.kw.get('fips') == 'missing %s' % paths.FIPS_MODE_SETUP
+        assert result.kw.get('fips') == 'missing %s' % paths.PROC_FIPS_ENABLED
 
     @patch('os.path.exists')
+    @patch('pathlib.Path.read_text')
     @patch('ipapython.ipautil.run')
-    def test_fips_disabled(self, mock_run, mock_exists):
+    def test_fips_disabled(self, mock_run, mock_result, mock_exists):
         mock_exists.return_value = True
+        mock_result.return_value = '0'
 
         mock_run.side_effect = [
-            gen_result(2),
             gen_result(0, output='ACME is disabled'),
         ]
 
@@ -78,12 +78,13 @@ class TestMetaFIPS(BaseTest):
         assert result.kw.get('fips') == 'disabled'
 
     @patch('os.path.exists')
+    @patch('pathlib.Path.read_text')
     @patch('ipapython.ipautil.run')
-    def test_fips_enabled(self, mock_run, mock_exists):
+    def test_fips_enabled(self, mock_run, mock_result, mock_exists):
         mock_exists.return_value = True
+        mock_result.return_value = '1'
 
         mock_run.side_effect = [
-            gen_result(0),
             gen_result(0, output='ACME is disabled'),
         ]
 
@@ -102,36 +103,13 @@ class TestMetaFIPS(BaseTest):
         assert result.kw.get('fips') == 'enabled'
 
     @patch('os.path.exists')
+    @patch('pathlib.Path.read_text')
     @patch('ipapython.ipautil.run')
-    def test_fips_inconsistent(self, mock_run, mock_exists):
+    def test_fips_unknown(self, mock_run, mock_result, mock_exists):
         mock_exists.return_value = True
+        mock_result.return_value = '2'
 
         mock_run.side_effect = [
-            gen_result(1),
-            gen_result(0, output='ACME is disabled'),
-        ]
-
-        framework = object()
-        registry.initialize(framework, config.Config())
-        f = MetaCheck(registry)
-
-        self.results = capture_results(f)
-
-        assert len(self.results) == 1
-
-        result = self.results.results[0]
-        assert result.result == constants.SUCCESS
-        assert result.source == 'ipahealthcheck.meta.core'
-        assert result.check == 'MetaCheck'
-        assert result.kw.get('fips') == 'inconsistent'
-
-    @patch('os.path.exists')
-    @patch('ipapython.ipautil.run')
-    def test_fips_unknown(self, mock_run, mock_exists):
-        mock_exists.return_value = True
-
-        mock_run.side_effect = [
-            gen_result(103),
             gen_result(0, output='ACME is disabled'),
         ]
 
@@ -150,14 +128,41 @@ class TestMetaFIPS(BaseTest):
         assert result.kw.get('fips') == 'unknown'
 
     @patch('os.path.exists')
+    @patch('pathlib.Path.read_text')
     @patch('ipapython.ipautil.run')
-    def test_fips_failed(self, mock_run, mock_exists):
+    def test_fips_non_numeric(self, mock_run, mock_result, mock_exists):
         mock_exists.return_value = True
+        mock_result.return_value = 'test'
 
         mock_run.side_effect = [
-            ipautil.CalledProcessError(
-                1, 'fips-mode-setup', output='execution failed'
-            ),
+            gen_result(0, output='ACME is disabled'),
+        ]
+
+        framework = object()
+        registry.initialize(framework, config.Config())
+        f = MetaCheck(registry)
+
+        self.results = capture_results(f)
+
+        assert len(self.results) == 1
+
+        result = self.results.results[0]
+        assert result.result == constants.ERROR
+        assert result.source == 'ipahealthcheck.meta.core'
+        assert result.check == 'MetaCheck'
+        assert result.kw.get('fips') == 'failed to check'
+
+    @patch('os.path.exists')
+    @patch('pathlib.Path.read_text')
+    @patch('ipapython.ipautil.run')
+    def test_fips_failed(self, mock_run, mock_result, mock_exists):
+        mock_exists.return_value = True
+
+        mock_result.side_effect = [
+            gen_result(constants.ERROR, output="failed to check"),
+        ]
+
+        mock_run.side_effect = [
             gen_result(0, output='ACME is disabled'),
         ]
 
@@ -197,12 +202,13 @@ class TestMetaACME(BaseTest):
             'missing %s' % '/usr/sbin/ipa-acme-manage'
 
     @patch('os.path.exists')
+    @patch('pathlib.Path.read_text')
     @patch('ipapython.ipautil.run')
-    def test_acme_disabled(self, mock_run, mock_exists):
+    def test_acme_disabled(self, mock_run, mock_result, mock_exists):
         mock_exists.return_value = True
+        mock_result.return_value = '1'
 
         mock_run.side_effect = [
-            gen_result(0),
             gen_result(0, output='ACME is disabled'),
         ]
 
@@ -221,12 +227,13 @@ class TestMetaACME(BaseTest):
         assert result.kw.get('acme') == 'disabled'
 
     @patch('os.path.exists')
+    @patch('pathlib.Path.read_text')
     @patch('ipapython.ipautil.run')
-    def test_acme_enabled(self, mock_run, mock_exists):
+    def test_acme_enabled(self, mock_run, mock_result, mock_exists):
         mock_exists.return_value = True
+        mock_result.return_value = '1'
 
         mock_run.side_effect = [
-            gen_result(0),
             gen_result(0, output='ACME is enabled'),
         ]
 
@@ -250,7 +257,6 @@ class TestMetaACME(BaseTest):
         mock_exists.return_value = True
 
         mock_run.side_effect = [
-            gen_result(0),
             gen_result(
                 0,
                 error="cannot connect to 'https://somewhere/acme/login"
