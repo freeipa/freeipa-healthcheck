@@ -252,9 +252,11 @@ class TestMetaACME(BaseTest):
         assert result.kw.get('acme') == 'enabled'
 
     @patch('os.path.exists')
+    @patch('pathlib.Path.read_text')
     @patch('ipapython.ipautil.run')
-    def test_acme_unknown(self, mock_run, mock_exists):
+    def test_acme_unknown(self, mock_run, mock_result, mock_exists):
         mock_exists.return_value = True
+        mock_result.return_value = '1'
 
         mock_run.side_effect = [
             gen_result(
