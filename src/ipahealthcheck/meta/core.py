@@ -5,6 +5,7 @@
 import logging
 import os
 import socket
+from pathlib import Path
 from ipahealthcheck.core import constants
 from ipahealthcheck.core.exceptions import TimeoutError
 from ipahealthcheck.core.plugin import Result, duration
@@ -13,8 +14,8 @@ from ipapython import ipautil
 from ipapython.version import VERSION, API_VERSION
 from ipaplatform.paths import paths
 
-if 'FIPS_MODE_SETUP' not in dir(paths):
-    paths.FIPS_MODE_SETUP = '/usr/bin/fips-mode-setup'
+if 'PROC_FIPS_ENABLED' not in dir(paths):
+    paths.PROC_FIPS_ENABLED = '/proc/sys/crypto/fips_enabled'
 
 logger = logging.getLogger()
 
@@ -25,31 +26,30 @@ class MetaCheck(Plugin):
     def check(self):
 
         rval = constants.SUCCESS
-        if not os.path.exists(paths.FIPS_MODE_SETUP):
-            fips = "missing {}".format(paths.FIPS_MODE_SETUP)
-            logger.debug('%s is not installed, skipping',
-                         paths.FIPS_MODE_SETUP)
+        if not os.path.exists(paths.PROC_FIPS_ENABLED):
+            fips = "missing {}".format(paths.PROC_FIPS_ENABLED)
+            logger.debug("Can't find %s, skipping" %
+                         paths.PROC_FIPS_ENABLED)
         else:
             try:
-                result = ipautil.run([paths.FIPS_MODE_SETUP,
-                                      '--is-enabled'],
-                                     capture_output=True,
-                                     raiseonerr=False,)
+                proc_fips_enable_path = Path(paths.PROC_FIPS_ENABLED)
+                result_text = proc_fips_enable_path.read_text()
+                result = int(result_text)
             except TimeoutError:
-                logger.debug('fips-mode-setup timed out')
+                logger.debug('Reading %s timed out' % paths.PROC_FIPS_ENABLED)
                 fips = "check timed out"
                 rval = constants.ERROR
             except Exception as e:
-                logger.debug('fips-mode-setup failed: %s', e)
+                logger.debug('Reading %s failed: %s' %
+                             (paths.PROC_FIPS_ENABLED, e))
                 fips = "failed to check"
                 rval = constants.ERROR
             else:
-                logger.debug(result.raw_output.decode('utf-8'))
-                if result.returncode == 0:
+                logger.debug("%s returns %i" %
+                             (paths.PROC_FIPS_ENABLED, result))
+                if result == 1:
                     fips = "enabled"
-                elif result.returncode == 1:
-                    fips = "inconsistent"
-                elif result.returncode == 2:
+                elif result == 0:
                     fips = "disabled"
                 else:
                     fips = "unknown"
