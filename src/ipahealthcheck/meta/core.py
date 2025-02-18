@@ -36,10 +36,6 @@ class MetaCheck(Plugin):
                 proc_fips_enable_path = Path(paths.PROC_FIPS_ENABLED)
                 result_text = proc_fips_enable_path.read_text()
                 result = int(result_text)
-            except TimeoutError:
-                logger.debug('Reading %s timed out' % paths.PROC_FIPS_ENABLED)
-                fips = "check timed out"
-                rval = constants.ERROR
             except Exception as e:
                 logger.debug('Reading %s failed: %s' %
                              (paths.PROC_FIPS_ENABLED, e))
