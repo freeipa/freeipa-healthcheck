@@ -28,8 +28,9 @@ class MetaCheck(Plugin):
         rval = constants.SUCCESS
         if not os.path.exists(paths.PROC_FIPS_ENABLED):
             fips = "missing {}".format(paths.PROC_FIPS_ENABLED)
-            logger.debug("Can't find %s, skipping" %
-                         paths.PROC_FIPS_ENABLED)
+            logger.warning("Can't find %s, skipping" %
+                           paths.PROC_FIPS_ENABLED)
+            rval = constants.WARNING
         else:
             try:
                 proc_fips_enable_path = Path(paths.PROC_FIPS_ENABLED)

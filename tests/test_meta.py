@@ -35,7 +35,7 @@ def gen_result(returncode, output='', error=''):
 
 class TestMetaFIPS(BaseTest):
     @patch('os.path.exists')
-    def test_fips_no_fips_enabled(self, mock_exists):
+    def test_fips_no_fips_available(self, mock_exists):
         mock_exists.return_value = False
 
         framework = object()
@@ -47,7 +47,7 @@ class TestMetaFIPS(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.result == constants.SUCCESS
+        assert result.result == constants.WARNING
         assert result.source == 'ipahealthcheck.meta.core'
         assert result.check == 'MetaCheck'
         assert result.kw.get('fips') == 'missing %s' % paths.PROC_FIPS_ENABLED
@@ -195,7 +195,7 @@ class TestMetaACME(BaseTest):
         assert len(self.results) == 1
 
         result = self.results.results[0]
-        assert result.result == constants.SUCCESS
+        assert result.result == constants.WARNING
         assert result.source == 'ipahealthcheck.meta.core'
         assert result.check == 'MetaCheck'
         assert result.kw.get('acme') == \
