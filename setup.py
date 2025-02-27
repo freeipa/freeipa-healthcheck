@@ -39,6 +39,7 @@ setup(
         # plugin modules for ipahealthcheck.ipa registry
         'ipahealthcheck.ipa': [
             'ipacerts = ipahealthcheck.ipa.certs',
+            'ipaconfig = ipahealthcheck.ipa.config',
             'ipadna = ipahealthcheck.ipa.dna',
             'ipadns = ipahealthcheck.ipa.idns',
             'ipafiles = ipahealthcheck.ipa.files',
