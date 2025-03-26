@@ -9,7 +9,7 @@ from util import m_api
 from util import capture_results
 
 from ipahealthcheck.core import config
-from ipahealthcheck.core.files import FileCheck
+from ipahealthcheck.core.files import EXPECTED_UMASK, FileCheck
 from ipahealthcheck.core import constants
 from ipahealthcheck.core.plugin import Results
 from ipahealthcheck.ipa.files import IPAFileCheck
@@ -303,3 +303,20 @@ def test_ipa_files_format(mock_pkinit):
 
     for result in results.results:
         assert result.result in (constants.SUCCESS, constants.WARNING)
+
+
+@patch('os.umask')
+def test_bad_umask(mock_umask):
+    mock_umask.return_value = 0o027
+
+    f = FileCheck()
+    f.files = files
+
+    results = capture_results(f)
+    my_results = get_results(results, 'umask')
+    assert my_results.results[0].result == constants.WARNING
+    assert my_results.results[0].kw.get('got') == oct(0o027)
+    assert my_results.results[0].kw.get('expected') == oct(EXPECTED_UMASK)
+    assert my_results.results[0].kw.get('type') == 'umask'
+    assert my_results.results[0].kw.get('msg') == \
+        'Unexpected umask 0o027 expected 0o022, skipping file permissions.'

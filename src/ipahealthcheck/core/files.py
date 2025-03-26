@@ -12,6 +12,19 @@ from ipahealthcheck.core.plugin import Result, duration
 
 logger = logging.getLogger()
 
+EXPECTED_UMASK = 0o022
+
+
+def current_umask():
+    """
+    Retrieves current umask by setting it temporarily
+
+    :returns: int umask
+    """
+    umask = os.umask(EXPECTED_UMASK)
+    os.umask(umask)
+    return umask
+
 
 class FileCheck:
     """Generic check to validate permission and ownership of files
@@ -41,6 +54,16 @@ class FileCheck:
                 yield Result(self, constants.ERROR, key=file,
                              msg='Code format is incorrect for file')
 
+        umask = current_umask()
+        correct_umask = umask == EXPECTED_UMASK
+        if not correct_umask:
+            yield Result(self, constants.WARNING, type='umask',
+                         expected=oct(EXPECTED_UMASK), got=oct(umask),
+                         msg='Unexpected umask %s expected %s, '
+                         'skipping file permissions.' %
+                         ('0o' + format(umask, 'o').zfill(3),
+                          '0o' + format(EXPECTED_UMASK, 'o').zfill(3)))
+
         for (path, owner, group, mode) in process_files:
             if not isinstance(owner, tuple):
                 owner = tuple((owner,))
@@ -58,7 +81,7 @@ class FileCheck:
             stat = os.stat(path)
             fmode = str(oct(stat.st_mode)[-4:])
             key = '%s_mode' % path.replace('/', '_')
-            if fmode not in mode:
+            if correct_umask and fmode not in mode:
                 if len(mode) == 1:
                     modes = mode[0]
                 else:
