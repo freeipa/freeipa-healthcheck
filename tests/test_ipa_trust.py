@@ -11,7 +11,8 @@ from util import capture_results
 from util import m_api
 
 from ipahealthcheck.core import config, constants
-from ipahealthcheck.ipa.plugin import registry
+from ipahealthcheck.core.plugin import Results
+from ipahealthcheck.ipa.plugin import registry, IPARegistry
 from ipahealthcheck.ipa.trust import (IPATrustAgentCheck,
                                       IPATrustDomainsCheck,
                                       IPADomainCheck,
@@ -1329,3 +1330,71 @@ class TestConfiguration(BaseTest):
         assert result.result == constants.ERROR
         assert result.source == 'ipahealthcheck.ipa.trust'
         assert result.check == 'IPAauthzdatapacCheck'
+
+
+class TestHasRole(BaseTest):
+    """Verify that the output of server-role-find which is used to
+       determine whether a host is a trust agent or controller
+      (or neither) isn't dependent upon the order the hosts are
+      returned.
+
+      Only trust agent is tested here but there is no difference
+      between an agent and a trust in the way they are stored in
+      a server role.
+    """
+    def test_role_last(self):
+        self.results = Results()
+        reg = IPARegistry()
+
+        roles = [
+            {
+                "role_servrole": "AD trust agent",
+                "server_server": "replica.ipa.example",
+                "status": "absent",
+            },
+            {
+                "role_servrole": "AD trust agent",
+                "server_server": "server.ipa.example",
+                "status": "enabled",
+            },
+        ]
+
+        assert reg.has_role(roles) is True
+
+    def test_role_first(self):
+        self.results = Results()
+        reg = IPARegistry()
+
+        roles = [
+            {
+                "role_servrole": "AD trust agent",
+                "server_server": "server.ipa.example",
+                "status": "enabled",
+            },
+            {
+                "role_servrole": "AD trust agent",
+                "server_server": "replica.ipa.example",
+                "status": "absent",
+            },
+        ]
+
+        assert reg.has_role(roles) is True
+
+    def test_no_role(self):
+        self.results = Results()
+        reg = IPARegistry()
+
+        roles = [
+            {
+                "role_servrole": "AD trust agent",
+                "server_server": "server.ipa.example",
+                "status": "absent",
+            },
+            {
+                "role_servrole": "AD trust agent",
+                "server_server": "replica.ipa.example",
+                "status": "enabled",
+            },
+        ]
+
+        assert reg.has_role(roles) is False
