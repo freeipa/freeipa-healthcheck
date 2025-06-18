@@ -35,6 +35,13 @@ class IPARegistry(Registry):
         self.trust_controller = False
         self.ca_configured = False
 
+    def has_role(self, roles):
+        for role in roles:
+            if role.get('server_server') == api.env.host:
+                if role.get('status') == 'enabled':
+                    return True
+        return False
+
     def initialize(self, framework, config, options=None):
         super().initialize(framework, config)
         # deferred import for mock
@@ -81,12 +88,8 @@ class IPARegistry(Registry):
                 component_services=['ADTRUST']
             ),
         )
-        role = roles[0].status(api)[0]
-        if role.get('status') == 'enabled':
-            self.trust_agent = True
-        role = roles[1].status(api)[0]
-        if role.get('status') == 'enabled':
-            self.trust_controller = True
+        self.trust_agent = self.has_role(roles[0].status(api))
+        self.trust_controller = self.has_role(roles[1].status(api))
 
 
 registry = IPARegistry()
