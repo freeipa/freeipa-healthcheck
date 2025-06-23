@@ -101,6 +101,8 @@ class IPAFileCheck(IPAPlugin, FileCheck):
                           ('root', 'systemd-resolve'), '0644'))
         self.files.append((paths.HOSTS, 'root', 'root', '0644'))
 
+        self.files.append((paths.OPENSSL_CERTS_DIR, 'root', 'root', '0755'))
+
         # IPA log files that may vary by installation. Only verify
         # those that exist
         for filename in (
