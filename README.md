@@ -618,6 +618,21 @@ Check that the certmonger CA configuration is correct. Evaluates dogtag-ipa-ca-r
       }
     }
 
+## ipahealthcheck.ipa.config
+
+### IPAkrbLastSuccessfulAuth
+Warn if logging krbLastSuccessfulAuth is enabled by removing
+'KDC:Disable Last Success' from the ipa config string. This is known
+to cause performance issues. No check is done whether the replication
+exclusion rule has been modified to allow replication of the attribute
+which will cause even more performance issues.
+
+### SSSDAllowedUids389Check
+Adding the 389/dirsrv user to the [pac] section of sssd.conf can cause
+timeouts and performance problems as SSSD will try to de-reference
+the value against LDAP. This can cause looping and failures in trust
+setups.
+
 ## ipahealthcheck.ipa.dna
 
 ### IPADNARangeCheck
