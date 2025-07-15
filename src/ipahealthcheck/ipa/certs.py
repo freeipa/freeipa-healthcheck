@@ -22,6 +22,7 @@ from ipalib import x509
 from ipalib.install import certmonger
 from ipalib.constants import RENEWAL_CA_NAME, IPA_CA_RECORD
 from ipaplatform.paths import paths
+from ipaplatform.tasks import tasks
 from ipaserver.install import certs
 from ipaserver.install import dsinstance
 from ipaserver.install import krainstance
@@ -1597,3 +1598,68 @@ class CertmongerStuckCheck(IPAPlugin):
 
         if len(requests) == 0:
             yield Result(self, constants.SUCCESS, key='no_stuck')
+
+
+@registry
+class CertmongerFIPSTokensCheck(IPAPlugin):
+    """Check if the current FIPS state doesn't match the certmonger
+       token name. This only applies if an HSM is not used for now.
+
+       We can only test this on certificates stored in NSS dbs.
+    """
+    requires = ('dirsrv',)
+
+    @duration
+    def check(self):
+        # token names we care about
+        candidates = ('NSS FIPS 140-2 Certificate DB', 'NSS Certificate DB')
+
+        if tasks.is_fips_enabled():
+            expected_token = 'NSS FIPS 140-2 Certificate DB'
+        else:
+            expected_token = 'NSS Certificate DB'
+
+        # Getting the requests this way instead of get_expected_requests
+        # because we need to be able to modify the list in tests and this
+        # is only currently possible doing it this way.
+
+        cm = certmonger._certmonger()
+        requests = cm.obj_if.get_requests()
+        failed = False
+        for request in requests:
+            req = certmonger._cm_dbus_object(cm.bus, cm, request,
+                                             certmonger.DBUS_CM_REQUEST_IF,
+                                             certmonger.DBUS_CM_IF, True)
+            request_id = str(req.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                             'nickname'))
+            if request_id is None:
+                # we could log here but other checks already do. Don't spam.
+                continue
+
+            storage = certmonger.get_request_value(request_id,
+                                                   'key-storage')
+
+            if storage != 'NSSDB':
+                logger.debug('Skipping non-NSSDB request %s',
+                             request_id)
+                continue
+
+            token = certmonger.get_request_value(request_id,
+                                                 'key-token')
+            if token not in candidates:
+                logger.debug('Skipping token %s in request %s',
+                             str(token), request_id)
+                continue
+
+            if token != expected_token:
+                yield Result(self, constants.ERROR,
+                             key=request_id,
+                             token=token,
+                             expected_token=expected_token,
+                             msg='certmonger request {key} has token {token} '
+                                 'but based on the current FIPS state the '
+                                 'expected token is {expected_token}')
+                failed = True
+
+        if not failed:
+            yield Result(self, constants.SUCCESS, key='fipstokencheck')
