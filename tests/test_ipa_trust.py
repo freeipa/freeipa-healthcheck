@@ -245,8 +245,9 @@ class TestTrustAgent(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     @patch('SSSDConfig.SSSDConfig')
     def test_trust_agent_ok(self, mock_sssd):
@@ -316,8 +317,9 @@ class TestTrustDomains(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     @patch('ipapython.ipautil.run')
     def test_trust_domain_list_fail(self, mock_run):
@@ -519,8 +521,9 @@ class TestTrustCatalog(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     @patch('pysss_nss_idmap.getnamebysid')
     @patch('ipapython.ipautil.run')
@@ -779,8 +782,9 @@ class Testsidgen(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     def test_sidgen_ok(self):
         attrs = {
@@ -859,8 +863,9 @@ class TestTrustAgentMember(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     def test_member_ok(self):
         agent_dn = DN(('fqdn', m_api.env.host), m_api.env.container_host,
@@ -934,8 +939,9 @@ class TestControllerPrincipal(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     def test_principal_ok(self):
         agent_dn = DN(('krbprincipalname',
@@ -1011,8 +1017,9 @@ class TestControllerService(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     def test_service_enabled(self):
         service_dn = DN(('cn', 'ADTRUST'))
@@ -1081,8 +1088,9 @@ class TestControllerGroupSID(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     def test_principal_ok(self):
         admins_dn = DN(('cn', 'admins'))
@@ -1155,8 +1163,9 @@ class TestControllerAdminSID(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     def test_principal_ok(self):
         admin_dn = DN(('uid', 'admin'))
@@ -1229,8 +1238,9 @@ class TestControllerConf(BaseTest):
 
         self.results = capture_results(f)
 
-        # Zero because the call was skipped altogether
-        assert len(self.results) == 0
+        assert len(self.results) == 1
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
 
     @patch('ipapython.ipautil.run')
     def test_ldapi_ok(self, mock_run):

@@ -67,6 +67,8 @@ class IPATrustAgentCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_agent:
             logger.debug('Not a trust agent, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust agent")
             return
 
         try:
@@ -123,6 +125,8 @@ class IPATrustDomainsCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_agent:
             logger.debug('Not a trust agent, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust agent")
             return
 
         result = ipautil.run([paths.SSSCTL, "domain-list"], raiseonerr=False,
@@ -272,6 +276,8 @@ class IPATrustCatalogCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_agent:
             logger.debug('Not a trust agent, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust agent")
             return
 
         try:
@@ -360,6 +366,8 @@ class IPAsidgenpluginCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_agent:
             logger.debug('Not a trust agent, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust agent")
             return
 
         for plugin in ['IPA SIDGEN', 'ipa-sidgen-task']:
@@ -403,6 +411,8 @@ class IPATrustAgentMemberCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_agent:
             logger.debug('Not a trust agent, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust agent")
             return
 
         agent_dn = DN(('fqdn', api.env.host), api.env.container_host,
@@ -442,6 +452,8 @@ class IPATrustControllerPrincipalCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_controller:
             logger.debug('Not a trust controller, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust controller")
             return
 
         agent_dn = DN(('krbprincipalname',
@@ -483,6 +495,8 @@ class IPATrustControllerServiceCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_controller:
             logger.debug('Not a trust controller, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust controller")
             return
 
         service_dn = DN(('cn', 'ADTRUST'), ('cn', api.env.host),
@@ -526,6 +540,8 @@ class IPATrustControllerConfCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_controller:
             logger.debug('Not a trust controller, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust controller")
             return
 
         ldapi_socket = "ipasam:ldapi://%%2fvar%%2frun%%2fslapd-%s.socket" % \
@@ -586,6 +602,8 @@ class IPATrustControllerGroupSIDCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_controller:
             logger.debug('Not a trust controller, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust controller")
             return
 
         admins_dn = DN(('cn', 'admins'),
@@ -624,6 +642,8 @@ class IPATrustControllerAdminSIDCheck(IPAPlugin):
     def check(self):
         if not self.registry.trust_controller:
             logger.debug('Not a trust controller, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust controller")
             return
 
         admin_dn = DN(('uid', 'admin'),
@@ -667,9 +687,13 @@ class IPATrustPackageCheck(IPAPlugin):
     def check(self):
         if self.registry.trust_controller:
             logger.debug('Trust controller, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust controller")
             return
         if not self.registry.trust_agent:
             logger.debug('Not a trust agent, skipping')
+            yield Result(self, constants.SUCCESS,
+                         msg="Skipped. Not a trust agent")
             return
 
         # The trust-ad package provides this import
