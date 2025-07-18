@@ -29,8 +29,21 @@ class TestExpiration(BaseTest):
         'ipalib.install.certmonger._certmonger':
         Mock(return_value=_certmonger())
     }
+    root_ca = 'CN=Certificate Authority,O=EXAMPLE.TEST'
+    subject = 'CN=Certificate Authority,O=EXAMPLE.TEST'
 
-    def test_expiration(self):
+    @patch('ipalib.x509.load_certificate_list')
+    @patch('ipahealthcheck.ipa.certs.is_ipa_issued_cert')
+    def test_expiration(self, mock_external, mock_load):
+        mock_external.return_value = True
+        mock_load.return_value = [
+            FakeIPACertificate(
+                None,
+                subject=self.subject,
+                issuer=self.root_ca,
+                not_after=datetime.now(timezone.utc) + timedelta(days=20)
+            ),
+        ]
         set_requests()
 
         framework = object()
@@ -55,7 +68,18 @@ class TestExpiration(BaseTest):
         assert result.check == 'IPACertmongerExpirationCheck'
         assert result.kw.get('key') == '5678'
 
-    def test_expiration_warning(self):
+    @patch('ipalib.x509.load_certificate_list')
+    @patch('ipahealthcheck.ipa.certs.is_ipa_issued_cert')
+    def test_expiration_warning(self, mock_external, mock_load):
+        mock_external.return_value = True
+        mock_load.return_value = [
+            FakeIPACertificate(
+                None,
+                subject=self.subject,
+                issuer=self.root_ca,
+                not_after=datetime.now(timezone.utc) + timedelta(days=20)
+            ),
+        ]
         warning = datetime.now(timezone.utc) + timedelta(days=20)
         replaceme = {
             'nickname': '7777',
@@ -63,6 +87,7 @@ class TestExpiration(BaseTest):
             'key-file': paths.RA_AGENT_KEY,
             'ca-name': 'dogtag-ipa-ca-renew-agent',
             'not-valid-after': int(warning.timestamp()),
+            'cert': '----- BEGIN -----'
         }
 
         set_requests(remove=0, add=replaceme)
@@ -88,16 +113,72 @@ class TestExpiration(BaseTest):
         assert result.check == 'IPACertmongerExpirationCheck'
         assert result.kw.get('key') == '7777'
         assert result.kw.get('days') == 19
+        assert 'This is not an IPA-issued cert' not in result.kw.get('msg')
+
+    @patch('ipalib.x509.load_certificate_list')
+    @patch('ipahealthcheck.ipa.certs.is_ipa_issued_cert')
+    def test_external_expiration_warning(self, mock_external, mock_load):
+        root_ca = 'CN=Certificate Shack Root CA,O=Certificate Shack Ltd'
+        subject = 'CN=Certificate Authority,O=EXAMPLE.TEST'
+        mock_external.return_value = False
+        mock_load.return_value = [
+            FakeIPACertificate(
+                None,
+                subject=subject,
+                issuer=root_ca,
+                not_after=datetime.now(timezone.utc) + timedelta(days=20)
+            ),
+        ]
+        warning = datetime.now(timezone.utc) + timedelta(days=20)
+        replaceme = {
+            'nickname': '7777',
+            'cert-file': paths.RA_AGENT_PEM,
+            'key-file': paths.RA_AGENT_KEY,
+            'ca-name': 'dogtag-ipa-ca-renew-agent',
+            'not-valid-after': int(warning.timestamp()),
+            'cert': '----- BEGIN -----'
+        }
+
+        set_requests(remove=0, add=replaceme)
+
+        framework = object()
+        registry.initialize(framework, config.Config)
+        f = IPACertmongerExpirationCheck(registry)
+
+        f.config.cert_expiration_days = str(CERT_EXPIRATION_DAYS)
+        self.results = capture_results(f)
+
+        assert len(self.results) == 2
+
+        result = self.results.results[0]
+        assert result.result == constants.SUCCESS
+        assert result.source == 'ipahealthcheck.ipa.certs'
+        assert result.check == 'IPACertmongerExpirationCheck'
+        assert result.kw.get('key') == '5678'
+
+        result = self.results.results[1]
+        assert result.result == constants.WARNING
+        assert result.source == 'ipahealthcheck.ipa.certs'
+        assert result.check == 'IPACertmongerExpirationCheck'
+        assert result.kw.get('key') == '7777'
+        assert result.kw.get('days') == 19
+        assert 'This is not an IPA-issued cert' in result.kw.get('msg')
 
 
 class FakeIPACertificate:
-    def __init__(self, cert, backend=None, subject=None, not_after=None):
+    def __init__(self, cert, backend=None, subject=None, issuer=None,
+                 not_after=None):
         self.subj = subject
+        self._issuer = issuer
         self.not_after = not_after
 
     @property
     def subject(self):
         return self.subj
+
+    @property
+    def issuer(self):
+        return self._issuer
 
     @property
     def not_valid_after_utc(self):
