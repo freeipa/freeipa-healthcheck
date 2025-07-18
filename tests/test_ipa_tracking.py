@@ -59,7 +59,8 @@ class TestTracking(BaseTest):
             "cert-presave-command=" \
             "/usr/libexec/ipa/certmonger/renew_ra_cert_pre, " \
             "cert-postsave-command=" \
-            "/usr/libexec/ipa/certmonger/renew_ra_cert"
+            "/usr/libexec/ipa/certmonger/renew_ra_cert, " \
+            "cert=----- BEGIN -----"
 
     def test_unknown_cert_tracking(self):
         # Add a custom, unknown request

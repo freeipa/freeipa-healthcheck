@@ -304,6 +304,9 @@ class IPACertmongerExpirationCheck(IPAPlugin):
                                          'nickname'))
             notafter = int(request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
                                                'not-valid-after'))
+            cert = str(request.prop_if.Get(certmonger.DBUS_CM_REQUEST_IF,
+                                           'cert'))
+
             if notafter == 0:
                 yield Result(self, constants.ERROR,
                              key=id,
@@ -312,27 +315,53 @@ class IPACertmongerExpirationCheck(IPAPlugin):
                                  'has not been issued yet.')
                 continue
 
+            # if we have notafter then we should have a cert but lets not
+            # assume.
+            is_ipa_issued = None
+            if cert:
+                try:
+                    cert = x509.load_certificate_list(cert.encode('utf-8'))[0]
+                except Exception as e:
+                    logger.debug("Failed to load certificate: ", e)
+                else:
+                    is_ipa_issued = is_ipa_issued_cert(api, cert)
+
+            if is_ipa_issued is False:
+                external_msg = (
+                    'This is not an IPA-issued certificate and '
+                    'will not auto-renew.')
+            else:
+                external_msg = ''
+
             nafter = datetime.fromtimestamp(notafter, timezone.utc)
             now = datetime.now(timezone.utc)
 
             if now > nafter:
+                msg = (
+                    'Request id {key} expired on {expiration_date}. '
+                    + external_msg)
                 yield Result(self, constants.ERROR,
                              key=id,
                              expiration_date=generalized_time(nafter),
-                             msg='Request id {key} expired on '
-                                 '{expiration_date}')
+                             msg=msg)
             else:
                 delta = nafter - now
                 diff = int(delta.total_seconds() / DAY)
                 if diff < int(self.config.cert_expiration_days):
+                    msg = 'Request id {key} expires in {days} days. '
+                    if external_msg:
+                        msg = msg + external_msg
+                    else:
+                        msg = msg + (
+                             'certmonger should renew this '
+                             'automatically. Watch the status with '
+                             'getcert list -i {key}.'
+                        )
                     yield Result(self, constants.WARNING,
                                  key=id,
                                  expiration_date=generalized_time(nafter),
                                  days=diff,
-                                 msg='Request id {key} expires in {days} '
-                                     'days. certmonger should renew this '
-                                     'automatically. Watch the status with '
-                                     'getcert list -i {key}.')
+                                 msg=msg)
                 else:
                     yield Result(self, constants.SUCCESS,
                                  key=id)
