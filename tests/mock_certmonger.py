@@ -23,6 +23,7 @@ pristine_cm_requests = [
         'cert-storage': 'FILE',
         'cert-presave-command': template % 'renew_ra_cert_pre',
         'cert-postsave-command': template % 'renew_ra_cert',
+        'cert': '----- BEGIN -----',
         'not-valid-after': (
             int(
                 datetime(1970, 1, 1, 0, 17, 4, tzinfo=timezone.utc).timestamp()
@@ -37,6 +38,7 @@ pristine_cm_requests = [
         'template_profile': 'caIPAserviceCert',
         'cert-storage': 'FILE',
         'cert-postsave-command': template % 'restart_httpd',
+        'cert': '----- BEGIN -----',
         'not-valid-after': (
             int(
                 (
