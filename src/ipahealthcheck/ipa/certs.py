@@ -596,7 +596,10 @@ class IPACertTracking(IPAPlugin):
                              key=flatten,
                              msg='Expected certmonger tracking is missing for '
                                  '{key}. Automated renewal will not happen '
-                                 'for this certificate')
+                                 'for this certificate. Run ipa-certupdate(1) '
+                                 'to add tracking requests for lightweight '
+                                 'CAs.'
+                             )
                 continue
 
         # Report any unknown certmonger requests as warnings
