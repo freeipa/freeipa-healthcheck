@@ -4,7 +4,6 @@ from setuptools import find_packages, setup
 setup(
     name='ipahealthcheck',
     version='0.19',
-    namespace_packages=['ipahealthcheck', 'ipaclustercheck'],
     package_dir={'': 'src'},
     # packages=find_packages(where='src'),
     packages=[
@@ -16,6 +15,10 @@ setup(
         'ipahealthcheck.system',
         'ipaclustercheck.core',
         'ipaclustercheck.ipa',
+    ],
+    # Add importlib-metadata for Python < 3.8 compatibility
+    install_requires=[
+        'importlib-metadata>=1.0; python_version<"3.8"',
     ],
     entry_points={
         # creates bin/ipahealthcheck
@@ -83,6 +86,11 @@ setup(
     },
     classifiers=[
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
-    python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
+    python_requires='>=3.6',
 )
