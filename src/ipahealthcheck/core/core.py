@@ -5,7 +5,10 @@
 import argparse
 import json
 import logging
-import pkg_resources
+try:
+    from importlib import metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 import signal
 import sys
 import traceback
@@ -30,15 +33,17 @@ def find_registries(entry_points):
     registries = {}
     for entry_point in entry_points:
         registries.update({
-            ep.name: ep.resolve()
-            for ep in pkg_resources.iter_entry_points(entry_point)
+            ep.name: ep.load()
+            for ep in importlib_metadata.entry_points().select(
+                group=entry_point
+            )
         })
     logger.setLevel(log_level)
     return registries
 
 
 def find_plugins(name, registry):
-    for ep in pkg_resources.iter_entry_points(name):
+    for ep in importlib_metadata.entry_points().select(group=name):
         # load module
         ep.load()
     return registry.get_plugins()
@@ -337,8 +342,8 @@ class RunChecks:
             for registry in self.entry_points:
                 name = registry.split('.')[0]
                 try:
-                    version = pkg_resources.get_distribution(name).version
-                except pkg_resources.DistributionNotFound:
+                    version = importlib_metadata.version(name)
+                except importlib_metadata.PackageNotFoundError:
                     continue
                 print('%s: %s' % (name, version))
             return 0
