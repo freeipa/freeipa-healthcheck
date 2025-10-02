@@ -45,29 +45,81 @@ def find_plugins(name, registry):
 
 
 def run_plugin(plugin, available=(), timeout=constants.DEFAULT_TIMEOUT):
+    plugin_name = F"{plugin.__class__.__module__}:{plugin.__class__.__name__}"
+    timed_out = {}
+
     def signal_handler(signum, frame):
-        raise TimeoutError('Request timed out')
+        # Our exception will likely be caught by code called by the plugin,
+        # which may not log the traceback, or may even catch the exception
+        # itself! So while we throw the exception in order to interrupt the
+        # plugin code, we also stash a copy of it so that we can log it after
+        # the plugin returns.
+        timed_out["exception"] = TimeoutError(
+            f"Check {plugin_name} cancelled after {timeout} sec"
+        )
+        logger.error("--- %s ---", timed_out["exception"])
+        traceback.print_stack()
+        timed_out["stack"] = traceback.format_stack()
+        logger.error(
+            "--- The following messages were logged by the check after it"
+            " was cancelled. They may not indicate the reason why the plugin"
+            " took too long to run. ---"
+        )
+        raise timed_out["exception"]
 
     # manually calculate duration when we create results of our own
     start = datetime.now(tz=timezone.utc)
     signal.signal(signal.SIGALRM, signal_handler)
     signal.alarm(timeout)
+
     try:
         for result in plugin.check():
             if result is None:
                 # Treat no result as success, fudge start time
                 result = Result(plugin, constants.SUCCESS, start=start)
             yield result
-    except TimeoutError as e:
-        yield Result(plugin, constants.ERROR, exception=str(e),
-                     start=start)
+    except TimeoutError:
+        # The plugin code _may_ have raised our original TimeoutError however
+        # we also have to deal with cases where it did not raise anything! In
+        # the finally block below we handle such cases, and since we already
+        # stashed the TimeoutError that we raised in timed_out[0], we don't
+        # need to handle it here.
+        pass
     except Exception as e:
-        logger.debug('Exception raised: %s', e)
-        logger.debug(traceback.format_exc())
+        # We've got no way to know whether the plugin's own exception was
+        # related to our TimeoutError; if it was then we will yield a
+        # result here based on the plugin's own exception, and _also_
+        # later on in the finally block.
+        logger.exception(
+            "Exception raised in check %r",
+            plugin_name
+        )
         yield Result(plugin, constants.CRITICAL, exception=str(e),
                      traceback=traceback.format_exc(),
                      start=start)
     finally:
+        if timed_out:
+            logger.error(
+                "--- Increasing the timeout in"
+                " /etc/ipahealthcheck/ipahealthcheck.conf may allow this"
+                " healthcheck to complete before the deadline. ---"
+            )
+            # If the plugin already handled our TimeoutError properly (i.e,
+            # logged it and raised its own exception with a sensible error
+            # message) then there is no need to yield our own error result
+            # here; however we can't rely on the plugin doing so. It may have
+            # caught our TimeoutError and logged something misleading; in that
+            # case let's err on the side of caution and return an additional
+            # result.
+            yield Result(plugin, constants.CRITICAL,
+                         exception=str(timed_out["exception"]),
+                         key="healthcheck_timeout", start=start,
+                         traceback=timed_out["stack"])
+        else:
+            logging.debug(
+                "--- Check %s complete after %s sec ---",
+                plugin_name, datetime.now(tz=timezone.utc) - start
+            )
         signal.alarm(0)
 
 
@@ -141,7 +193,7 @@ def run_service_plugins(plugins, source, check):
                 )
                 continue
 
-        logger.debug('Calling check %s', plugin)
+        logger.debug('--- Calling check %s ---', plugin)
         for result in plugin.check():
             # always run the service checks so dependencies work
             if result is not None and result.result == constants.SUCCESS:
@@ -176,7 +228,7 @@ def run_plugins(plugins, available, source, check,
         if not source_or_check_matches(plugin, source, check):
             continue
 
-        logger.debug("Calling check %s", plugin)
+        logger.debug("--- Calling check %s ---", plugin)
         if not set(plugin.requires).issubset(available):
             logger.debug('Skipping %s:%s because %s service(s) not running',
                          plugin.__class__.__module__,
