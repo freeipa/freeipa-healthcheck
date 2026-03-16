@@ -159,7 +159,8 @@ class IPAFileCheck(IPAPlugin, FileCheck):
 
         for globpath in glob.glob("%s/debug*.log" % paths.TOMCAT_KRA_DIR):
             self.files.append(
-                (globpath, constants.PKI_USER, constants.PKI_GROUP, "0644")
+                (globpath, constants.PKI_USER, constants.PKI_GROUP,
+                 ("0644", "0640"))
             )
 
         for globpath in glob.glob(
