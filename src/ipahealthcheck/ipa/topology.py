@@ -23,6 +23,10 @@ class IPATopologyDomainCheck(IPAPlugin):
       * too many agreements
       * connection errors
     """
+    description = (
+        "Verifies the replication topology using topologysuffix-verify"
+    )
+
     def report_errors(self, suffix, result):
         if result['result']['in_order']:
             yield Result(self, constants.SUCCESS, suffix=suffix)

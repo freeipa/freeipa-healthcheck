@@ -94,6 +94,8 @@ class IPAServiceCheck(ServiceCheck):
 
 @registry
 class certmonger(IPAServiceCheck):
+    description = "Checks if the certmonger service is running"
+
     def check(self, instance=''):
         self.service_name = 'certmonger'
 
@@ -102,6 +104,8 @@ class certmonger(IPAServiceCheck):
 
 @registry
 class dirsrv(IPAServiceCheck):
+    description = "Checks if the dirsrv service is running"
+
     def check(self, instance=''):
         self.service_name = 'dirsrv'
 
@@ -110,6 +114,8 @@ class dirsrv(IPAServiceCheck):
 
 @registry
 class gssproxy(IPAServiceCheck):
+    description = "Checks if the gssproxy service is running"
+
     def check(self, instance=''):
         self.service_name = 'gssproxy'
 
@@ -118,6 +124,8 @@ class gssproxy(IPAServiceCheck):
 
 @registry
 class httpd(IPAServiceCheck):
+    description = "Checks if the httpd service is running"
+
     def check(self, instance=''):
         self.service_name = 'httpd'
 
@@ -126,6 +134,7 @@ class httpd(IPAServiceCheck):
 
 @registry
 class ipa_custodia(IPAServiceCheck):
+    description = "Checks if the ipa-custodia service is running"
     requires = ('dirsrv',)
 
     def check(self, instance=''):
@@ -140,6 +149,8 @@ class ipa_custodia(IPAServiceCheck):
 
 @registry
 class ipa_otpd(IPAServiceCheck):
+    description = "Checks if the ipa-otpd service is running"
+
     def check(self, instance=''):
         self.service_name = 'ipa-otpd'
 
@@ -148,6 +159,7 @@ class ipa_otpd(IPAServiceCheck):
 
 @registry
 class kadmin(IPAServiceCheck):
+    description = "Checks if the kadmin service is running"
     requires = ('dirsrv',)
 
     def check(self, instance=''):
@@ -162,6 +174,7 @@ class kadmin(IPAServiceCheck):
 
 @registry
 class krb5kdc(IPAServiceCheck):
+    description = "Checks if the krb5kdc service is running"
     requires = ('dirsrv',)
 
     def check(self, instance=''):
@@ -176,6 +189,7 @@ class krb5kdc(IPAServiceCheck):
 
 @registry
 class named(IPAServiceCheck):
+    description = "Checks if the named service is running"
     requires = ('dirsrv',)
 
     def check(self, instance=''):
@@ -190,6 +204,7 @@ class named(IPAServiceCheck):
 
 @registry
 class ods_enforcerd(IPAServiceCheck):
+    description = "Checks if the ods-enforcerd service is running"
     requires = ('dirsrv',)
 
     def check(self, instance=''):
@@ -204,6 +219,7 @@ class ods_enforcerd(IPAServiceCheck):
 
 @registry
 class ipa_dnskeysyncd(IPAServiceCheck):
+    description = "Checks if the ipa-dnskeysyncd service is running"
     requires = ('dirsrv',)
 
     def check(self, instance=''):
@@ -218,6 +234,7 @@ class ipa_dnskeysyncd(IPAServiceCheck):
 
 @registry
 class pki_tomcatd(IPAServiceCheck):
+    description = "Checks if the pki-tomcatd service is running"
     requires = ('dirsrv',)
 
     def check(self, instance=''):
@@ -232,6 +249,8 @@ class pki_tomcatd(IPAServiceCheck):
 
 @registry
 class sssd(IPAServiceCheck):
+    description = "Checks if the sssd service is running"
+
     def check(self, instance=''):
         self.service_name = 'sssd'
 
@@ -240,6 +259,8 @@ class sssd(IPAServiceCheck):
 
 @registry
 class chronyd(IPAServiceCheck):
+    description = "Checks if the chronyd service is running"
+
     def check(self, instance=''):
         self.service_name = 'chronyd'
 
@@ -248,6 +269,7 @@ class chronyd(IPAServiceCheck):
 
 @registry
 class smb(IPAServiceCheck):
+    description = "Checks if the smb service is running"
     requires = ('dirsrv',)
 
     def check(self, instance=''):
@@ -262,6 +284,7 @@ class smb(IPAServiceCheck):
 
 @registry
 class winbind(IPAServiceCheck):
+    description = "Checks if the winbind service is running"
     requires = ('dirsrv',)
 
     def check(self, instance=''):

@@ -63,6 +63,8 @@ class IPATrustAgentCheck(IPAPlugin):
     """
     Check the values that should be set when configures as a trust agent.
     """
+    description = "Checks the SSSD configuration for trust agent setup"
+
     @duration
     def check(self):
         if not self.registry.trust_agent:
@@ -121,6 +123,11 @@ class IPATrustDomainsCheck(IPAPlugin):
     """
     Check the trust domains
     """
+    description = (
+        "Ensures IPA domain is in sssctl domain-list and trust domains "
+        "match"
+    )
+
     @duration
     def check(self):
         if not self.registry.trust_agent:
@@ -272,6 +279,11 @@ class IPATrustCatalogCheck(IPAPlugin):
     check will be skipped because we can't predict what the UID of the
     Administrator account will be.
     """
+    description = (
+        "Verifies AD Global Catalog and Domain Controller values in "
+        "sssctl"
+    )
+
     @duration
     def check(self):
         if not self.registry.trust_agent:
@@ -362,6 +374,10 @@ class IPAsidgenpluginCheck(IPAPlugin):
     """
     Verify that the sidgen 389-ds plugins are enabled
     """
+    description = (
+        "Verifies the sidgen plugin is enabled in the IPA 389-ds instance"
+    )
+
     @duration
     def check(self):
         if not self.registry.trust_agent:
@@ -407,6 +423,8 @@ class IPATrustAgentMemberCheck(IPAPlugin):
     """
     Verify that the current host is a member of adtrust agents
     """
+    description = "Verifies the host is a member of the adtrust agents group"
+
     @duration
     def check(self):
         if not self.registry.trust_agent:
@@ -448,6 +466,11 @@ class IPATrustControllerPrincipalCheck(IPAPlugin):
     """
     Verify that the current host cifs principal is a member of adtrust agents
     """
+    description = (
+        "Verifies the cifs principal is a member of the adtrust agents "
+        "group"
+    )
+
     @duration
     def check(self):
         if not self.registry.trust_controller:
@@ -491,6 +514,8 @@ class IPATrustControllerServiceCheck(IPAPlugin):
     """
     Verify that the current host starts the ADTRUST service.
     """
+    description = "Verifies the ADTRUST service is enabled in ipactl"
+
     @duration
     def check(self):
         if not self.registry.trust_controller:
@@ -536,6 +561,8 @@ class IPATrustControllerConfCheck(IPAPlugin):
 
     This is expected to be expanded over time.
     """
+    description = "Verifies ldapi is enabled for the passdb backend"
+
     @duration
     def check(self):
         if not self.registry.trust_controller:
@@ -598,6 +625,10 @@ class IPATrustControllerGroupSIDCheck(IPAPlugin):
     """
     Verify that the admins group's SID ends with 512 (Domain Admins RID)
     """
+    description = (
+        "Verifies the admins group SID ends with 512 (Domain Admins RID)"
+    )
+
     @duration
     def check(self):
         if not self.registry.trust_controller:
@@ -683,6 +714,8 @@ class IPATrustPackageCheck(IPAPlugin):
     able to resolve users/groups via extdom plugin and sssd but won't
     be able to do framework-specific operations.
     """
+    description = "Verifies the trust-ad sub-package is installed when needed"
+
     @duration
     def check(self):
         if (

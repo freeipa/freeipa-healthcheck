@@ -59,6 +59,7 @@ class CheckKeytab(IPAPlugin):
 @registry
 class IPAHostKeytab(CheckKeytab):
     """Ensure the host keytab can get a TGT"""
+    description = "Verifies the host keytab can obtain a TGT"
     requires = ('krb5kdc', 'dirsrv')
     service = 'host'
     keytab = paths.KRB5_KEYTAB

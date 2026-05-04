@@ -24,6 +24,8 @@ class IPACRLManagerCheck(IPAPlugin):
     useful in the context of the ohter masters. Some external
     service is expected to aggregate this.
     """
+    description = "Determines if this master is the CRL manager"
+
     @duration
     def check(self):
         if not self.ca.is_configured():
@@ -50,6 +52,7 @@ class IPARenewalMasterCheck(IPAPlugin):
     useful in the context of the ohter masters. Some external
     service is expected to aggregate this.
     """
+    description = "Determines if this master is the CA renewal master"
     requires = ('dirsrv',)
 
     @duration

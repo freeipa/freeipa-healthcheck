@@ -25,6 +25,7 @@ logger = logging.getLogger()
 
 @registry
 class IPAFileNSSDBCheck(IPAPlugin, FileCheck):
+    description = "Verifies owner and permissions of NSS database files"
 
     def collect_files(self, basedir, filelist, owner, group, perms):
         for file in filelist:
@@ -55,6 +56,8 @@ class IPAFileNSSDBCheck(IPAPlugin, FileCheck):
 
 @registry
 class IPAFileCheck(IPAPlugin, FileCheck):
+    description = "Verifies owner and permissions of IPA-managed files"
+
     def dns_container_exists(self):
         try:
             self.conn.get_entry(DN(api.env.container_dns,
@@ -187,6 +190,10 @@ class IPAFileCheck(IPAPlugin, FileCheck):
 
 @registry
 class TomcatFileCheck(IPAPlugin, FileCheck):
+    description = (
+        "Verifies owner and permissions of Tomcat configuration files"
+    )
+
     def check(self):
         if not self.ca.is_configured():
             logger.debug('CA is not configured, skipping')

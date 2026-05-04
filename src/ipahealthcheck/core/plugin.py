@@ -99,6 +99,7 @@ class Plugin:
 
     """
     requires = ()
+    description = None
 
     def __init__(self, registry):
         self.registry = registry
@@ -129,7 +130,7 @@ class Result:
         exception: used when a check raises an exception
     """
     def __init__(self, plugin, result, source=None, check=None,
-                 start=None, duration=None, when=None, **kw):
+                 start=None, duration=None, when=None, description=None, **kw):
         self.result = result
         self.kw = kw
         self.when = when or generalized_time(datetime.now(timezone.utc))
@@ -138,11 +139,13 @@ class Result:
         if None not in (check, source):
             self.check = check
             self.source = source
+            self.description = description
         else:
             if plugin is None:
                 raise TypeError('source and check or plugin must be provided')
             self.check = plugin.__class__.__name__
             self.source = plugin.__class__.__module__
+            self.description = getattr(plugin, 'description', None)
         if start is not None:
             dur = datetime.now(tz=timezone.utc) - start
             self.duration = '%6.6f' % dur.total_seconds()
@@ -184,13 +187,16 @@ class Results:
 
     def output(self):
         for result in self.results:
-            yield dict(source=result.source,
-                       check=result.check,
-                       result=getLevelName(result.result),
-                       uuid=result.uuid,
-                       when=result.when,
-                       duration=result.duration,
-                       kw=result.kw)
+            d = dict(source=result.source,
+                     check=result.check,
+                     result=getLevelName(result.result),
+                     uuid=result.uuid,
+                     when=result.when,
+                     duration=result.duration,
+                     kw=result.kw)
+            if result.description is not None:
+                d['description'] = result.description
+            yield d
 
 
 def json_to_results(data):
@@ -209,9 +215,10 @@ def json_to_results(data):
         check = line.pop('check')
         duration = line.pop('duration')
         when = line.pop('when')
+        description = line.pop('description', None)
         kw = line.pop('kw')
         result = Result(None, result, source, check, duration=duration,
-                        when=when, **kw)
+                        when=when, description=description, **kw)
         results.add(result)
 
     return results

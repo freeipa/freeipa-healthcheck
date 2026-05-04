@@ -19,6 +19,10 @@ logger = logging.getLogger()
 
 @registry
 class MetaCheck(Plugin):
+    description = (
+        "Provides basic IPA master information including FQDN and version"
+    )
+
     @duration
     def check(self):
 

@@ -292,6 +292,8 @@ class IPACertmongerExpirationCheck(IPAPlugin):
     This is to ensure something hasn't changed certmonger's view of
     the world.
     """
+    description = "Checks expiration of certmonger-tracked certificates"
+
     @duration
     def check(self):
         cm = certmonger._certmonger()
@@ -379,6 +381,10 @@ class IPACertfileExpirationCheck(IPAPlugin):
     This is to ensure a certificate wasn't replaced without
     certmonger being notified.
     """
+    description = (
+        "Checks certificate expiration from PEM files or NSS databases"
+    )
+
     @duration
     def check(self):
         cm = certmonger._certmonger()
@@ -580,6 +586,10 @@ class IPACertTracking(IPAPlugin):
        6. Report on all tracked certs that IPA didn't setup itself as
           potential issues.
     """
+    description = (
+        "Compares certmonger tracking to expected certificate "
+        "configuration"
+    )
 
     requires = ('dirsrv',)
 
@@ -750,6 +760,10 @@ class IPACertDNSSAN(IPAPlugin):
 @registry
 class IPACertNSSTrust(IPAPlugin):
     """Compare the NSS trust for the CA certs to a known good value"""
+    description = (
+        "Verifies NSS database certificate trust flags against expected "
+        "values"
+    )
 
     @duration
     def check(self):
@@ -837,6 +851,9 @@ class IPACertMatchCheck(IPAPlugin):
     """
     Ensure certificates match between LDAP and NSS databases
     """
+    description = (
+        "Ensures CA certificate entries in LDAP and NSS databases match"
+    )
 
     requires = ('dirsrv',)
 
@@ -945,6 +962,8 @@ class IPADogtagCertsMatchCheck(IPAPlugin):
     """
     Check if dogtag certs present in both NSS DB and LDAP match
     """
+    description = "Checks if Dogtag certificates in NSS DB and LDAP match"
+
     requires = ('dirsrv',)
 
     @duration
@@ -1078,6 +1097,7 @@ class IPADogtagCertsMatchCheck(IPAPlugin):
 @registry
 class IPANSSChainValidation(IPAPlugin):
     """Validate the certificate chain of the certs."""
+    description = "Validates the certificate chain of NSS certificates"
 
     def validate_nss(self, dbdir, dbtype, pinfile, nickname):
         """Call out to certutil to verify a certificate.
@@ -1175,6 +1195,7 @@ class IPANSSChainValidation(IPAPlugin):
 @registry
 class IPAOpenSSLChainValidation(IPAPlugin):
     """Validate the certificate chain of the certs."""
+    description = "Validates the certificate chain of OpenSSL certificates"
 
     def validate_openssl(self, file):
         """Call out to openssl to verify a certificate against global chain
@@ -1317,6 +1338,7 @@ class IPARAAgent(IPAPlugin):
 
        Compare the description and usercertificate values.
     """
+    description = "Verifies the RA agent certificate entry in LDAP"
 
     requires = ('dirsrv',)
 
@@ -1336,6 +1358,7 @@ class IPAKRAAgent(IPAPlugin):
 
        Compare the description and usercertificate values.
     """
+    description = "Verifies the KRA agent certificate entry in LDAP"
 
     requires = ('dirsrv',)
 
@@ -1361,6 +1384,7 @@ class IPACertRevocation(IPAPlugin):
        This uses the certmonger expected tracking list to know which
        one(s) to consider.
     """
+    description = "Confirms that IPA certificates are not revoked"
 
     revocation_reason = [
         "unspecified",
@@ -1495,6 +1519,7 @@ class IPACertmongerCA(IPAPlugin):
 
        Addresses symptom of https://pagure.io/freeipa/issue/7870
     """
+    description = "Checks that the certmonger CA configuration is correct"
 
     def find_ca(self, name):
         cm = certmonger._certmonger()
@@ -1530,6 +1555,7 @@ class IPACertmongerCA(IPAPlugin):
 class IPACAChainExpirationCheck(IPAPlugin):
     """Verify that the certs in the CA chain in /etc/ipa/ca.crt are valid
     """
+    description = "Checks the CA chain from /etc/ipa/ca.crt for expiration"
 
     @duration
     def check(self):

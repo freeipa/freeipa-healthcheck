@@ -25,6 +25,7 @@ class IPADNARangeCheck(IPAPlugin):
     if a master does not have a range. It IS an error if no masters have
     a range.
     """
+    description = "Reports the configured DNA range for this master"
     requires = ('dirsrv',)
 
     @duration

@@ -33,6 +33,7 @@ def in_container():
 @registry
 class FileSystemSpaceCheck(SystemPlugin):
     """Check for filesystem available space."""
+    description = "Checks available disk space on important filesystem paths"
 
     # watch important directories for FreeIPA
     _pathchecks = {

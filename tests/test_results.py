@@ -77,3 +77,113 @@ def test_getLevel():
     assert constants.getLevel('ERROR') == constants.ERROR
     assert constants.getLevel('CRITICAL') == constants.CRITICAL
     assert constants.getLevel('FOO') == 'FOO'
+
+
+def test_Result_with_description():
+    """Test Result with a plugin that has description set"""
+    registry = Registry()
+
+    class PluginWithDescription(Plugin):
+        description = "This is a test description"
+
+        def __init__(self, registry):
+            super().__init__(registry)
+
+    p = PluginWithDescription(registry)
+    r = Result(p, constants.SUCCESS)
+
+    assert r.description == "This is a test description"
+
+    # Check that description appears in output
+    results = Results()
+    results.add(r)
+    output = list(results.output())
+    assert len(output) == 1
+    assert 'description' in output[0]
+    assert output[0]['description'] == "This is a test description"
+
+
+def test_Result_without_description():
+    """Test Result with a plugin that has no description"""
+    registry = Registry()
+    p = Plugin(registry)
+    r = Result(p, constants.SUCCESS)
+
+    assert r.description is None
+
+    # Check that description does NOT appear in output
+    results = Results()
+    results.add(r)
+    output = list(results.output())
+    assert len(output) == 1
+    assert 'description' not in output[0]
+
+
+def test_Result_with_explicit_description():
+    """Test Result created with source/check and explicit description"""
+    r = Result(None, constants.SUCCESS, source='test.source',
+               check='TestCheck', description='Explicit description')
+
+    assert r.description == 'Explicit description'
+
+    # Check that description appears in output
+    results = Results()
+    results.add(r)
+    output = list(results.output())
+    assert len(output) == 1
+    assert 'description' in output[0]
+    assert output[0]['description'] == 'Explicit description'
+
+
+def test_json_to_results_with_description():
+    """Test json_to_results() with description in input data"""
+    from ipahealthcheck.core.plugin import json_to_results
+
+    json_data = [
+        {
+            'source': 'test.source',
+            'check': 'TestCheck',
+            'result': 'SUCCESS',
+            'uuid': '00000000-0000-0000-0000-000000000000',
+            'when': '20250101000000Z',
+            'duration': '0.000001',
+            'description': 'Test description from JSON',
+            'kw': {}
+        }
+    ]
+
+    results = json_to_results(json_data)
+    assert len(results.results) == 1
+    assert results.results[0].description == 'Test description from JSON'
+
+    # Check that description appears in output
+    output = list(results.output())
+    assert len(output) == 1
+    assert 'description' in output[0]
+    assert output[0]['description'] == 'Test description from JSON'
+
+
+def test_json_to_results_without_description():
+    """Test json_to_results() without description (backward compat)"""
+    from ipahealthcheck.core.plugin import json_to_results
+
+    json_data = [
+        {
+            'source': 'test.source',
+            'check': 'TestCheck',
+            'result': 'SUCCESS',
+            'uuid': '00000000-0000-0000-0000-000000000000',
+            'when': '20250101000000Z',
+            'duration': '0.000001',
+            'kw': {}
+        }
+    ]
+
+    results = json_to_results(json_data)
+    assert len(results.results) == 1
+    assert results.results[0].description is None
+
+    # Check that description does NOT appear in output
+    output = list(results.output())
+    assert len(output) == 1
+    assert 'description' not in output[0]

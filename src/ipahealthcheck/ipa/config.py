@@ -21,6 +21,10 @@ class IPAkrbLastSuccessfulAuth(IPAPlugin):
     """Warn if krbLastSuccessfulAuth is enabled. It can cause
        performance issues.
     """
+    description = (
+        "Warns if krbLastSuccessfulAuth logging may cause performance "
+        "issues"
+    )
     requires = ('dirsrv',)
 
     @duration
@@ -62,6 +66,7 @@ class SSSDAllowedUids389Check(IPAPlugin):
     If UID 389 is in allowed_uids, SSSD will prevent local resolution
     which will cause issues with the IPA services.
     """
+    description = "Checks that the 389 user is not in SSSD allowed_uids"
 
     @duration
     def check(self):

@@ -27,6 +27,10 @@ class DogtagCertsConfigCheck(DogtagPlugin):
     """
     Compare the cert blob in the NSS database to that stored in CS.cfg
     """
+    description = (
+        "Compares the CA and KRA certificate values with those in CS.cfg"
+    )
+
     @duration
     def check(self):
         if not self.ca.is_configured():
@@ -117,6 +121,7 @@ class DogtagCertsConnectivityCheck(DogtagPlugin):
     know this certificate should exist. Use its serial number to do
     the lookup.
     """
+    description = "Verifies basic CA connectivity by running cert-show"
     requires = ('dirsrv',)
 
     @duration
