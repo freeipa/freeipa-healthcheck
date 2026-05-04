@@ -685,15 +685,13 @@ class IPATrustPackageCheck(IPAPlugin):
     """
     @duration
     def check(self):
-        if self.registry.trust_controller:
-            logger.debug('Trust controller, skipping')
+        if (
+            not self.registry.trust_controller
+            and not self.registry.trust_agent
+        ):
+            logger.debug('Not a trust controller or agent, skipping')
             yield Result(self, constants.SUCCESS,
-                         msg="Skipped. Not a trust controller")
-            return
-        if not self.registry.trust_agent:
-            logger.debug('Not a trust agent, skipping')
-            yield Result(self, constants.SUCCESS,
-                         msg="Skipped. Not a trust agent")
+                         msg="Skipped. Not a trust controller or agent")
             return
 
         # The trust-ad package provides this import
