@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        fedora-release: [41, 42]
+        fedora-release: [43, 44]
 
     steps:
     - uses: actions/checkout@v4
