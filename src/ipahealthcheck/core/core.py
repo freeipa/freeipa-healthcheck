@@ -198,15 +198,16 @@ def run_plugins(plugins, available, source, check,
 
 
 def list_sources(plugins):
-    """Print list of all sources and checks"""
-    source = None
+    """Return a list of sources and their checks"""
+    sources = {}
     for plugin in plugins:
-        if source != plugin.__class__.__module__:
-            print(plugin.__class__.__module__)
-            source = plugin.__class__.__module__
-        print("  ", plugin.__class__.__name__)
-
-    return 0
+        module = plugin.__class__.__module__
+        name = plugin.__class__.__name__
+        sources.setdefault(module, []).append(name)
+    return [
+        {"source": source, "checks": checks}
+        for source, checks in sources.items()
+    ]
 
 
 def add_default_options(parser, output_registry, default_output):
@@ -251,6 +252,11 @@ def parse_options(parser):
     # Validation
     if options.check and not options.source:
         raise ValueError("--source is required when --check is used")
+
+    if options.list_sources and options.output_type == 'prometheus':
+        raise ValueError(
+            "--output-type=prometheus is not supported with --list-sources"
+        )
 
     return options
 
@@ -426,7 +432,8 @@ class RunChecks:
             return 1
 
         if options.list_sources:
-            return list_sources(plugins)
+            output.render_source_list(list_sources(plugins))
+            return 0
 
         if 'infile' in options and options.infile:
             try:

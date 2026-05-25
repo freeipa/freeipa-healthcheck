@@ -137,3 +137,39 @@ def test_incorrect_delimiter_cfg_file(mock_parse, mock_run, mock_service,
 
     finally:
         os.remove(config_path)
+
+
+def test_list_sources_prometheus_incompatible():
+    """
+    Test that --list-sources with --output-type=prometheus raises an error
+
+    The Prometheus output format doesn't support source listing.
+    """
+    from ipahealthcheck.core.core import parse_options
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--list-sources', dest='list_sources',
+                        action='store_true', default=False)
+    parser.add_argument('--output-type', dest='output_type',
+                        choices=['json', 'human', 'prometheus'],
+                        default='json')
+    parser.add_argument('--source', dest='source', default=None)
+    parser.add_argument('--check', dest='check', default=None)
+
+    # Mock sys.argv to simulate --list-sources --output-type=prometheus
+    import sys
+    original_argv = sys.argv
+    try:
+        sys.argv = ['test', '--list-sources', '--output-type=prometheus']
+
+        # This should raise a ValueError
+        try:
+            parse_options(parser)
+            assert False, "Expected ValueError was not raised"
+        except ValueError as e:
+            assert (
+                "--output-type=prometheus is not supported "
+                "with --list-sources" in str(e)
+            )
+    finally:
+        sys.argv = original_argv

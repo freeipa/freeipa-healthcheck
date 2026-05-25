@@ -120,6 +120,22 @@ class Output:
         """
         raise NotImplementedError
 
+    def render_source_list(self, data):
+        """Process the source list into output"""
+        output = self.generate_source_list(data)
+        self.write_file(output)
+
+    def generate_source_list(self, data):
+        """Convert the source list to the desired format, ready for writing
+
+           Output plugins should override this method to provide
+           source list formatting. The return value should be in
+           ready-to-write format.
+
+           Returns a string.
+        """
+        raise NotImplementedError
+
 
 @output_registry
 class JSON(Output):
@@ -135,6 +151,13 @@ class JSON(Output):
         self.indent = options.indent
 
     def generate(self, data):
+        output = json.dumps(data, indent=self.indent)
+        if self.filename is None:
+            output += '\n'
+
+        return output
+
+    def generate_source_list(self, data):
         output = json.dumps(data, indent=self.indent)
         if self.filename is None:
             output += '\n'
@@ -166,6 +189,17 @@ class Human(Output):
             elif 'exception' in kw:
                 outline += ': %s' % kw.get('exception')
             output += outline + '\n'
+
+        return output
+
+    def generate_source_list(self, data):
+        output = ''
+        for item in data:
+            source = item.get('source')
+            checks = ['  %s' % check for check in item.get('checks', [])]
+            output += source + '\n'
+            if checks:
+                output += "\n".join(checks) + '\n'
 
         return output
 
