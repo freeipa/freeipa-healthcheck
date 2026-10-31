@@ -20,6 +20,10 @@ class mock_ldap:
 
     def get_entry(self, dn, attrs_list=None, time_limit=None,
                   size_limit=None, get_effective_rights=False):
+        # The check must look up the cn=config entry and request the
+        # nsslapd-idletimeout attribute.
+        assert dn == DN('cn=config')
+        assert attrs_list is not None and 'nsslapd-idletimeout' in attrs_list
         if self.results is None:
             raise errors.NotFound(reason='test')
         return self.results
