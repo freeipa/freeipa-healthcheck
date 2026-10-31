@@ -753,6 +753,27 @@ On success it will return the configured domains.
       }
     }
 
+### IPAReplicationAgreementCountCheck
+
+Report the number of replication agreements for the IPA (domain) and PKI
+(ca) suffixes. IPA supports a maximum of 60 replication agreements;
+exceeding this is not supported and can lead to replication and
+performance problems. A CRITICAL result is returned when the count is
+exceeded.
+
+    {
+      "source": "ipahealthcheck.ipa.topology",
+      "check": "IPAReplicationAgreementCountCheck",
+      "result": "CRITICAL",
+      "kw": {
+        "key": "domain",
+        "suffix": "domain",
+        "count": 61,
+        "max": 60,
+        "msg": "The number of replication agreements for suffix \"domain\" is 61 which exceeds the supported maximum of 60."
+      }
+    }
+
 ## ipahealthcheck.ipa.trust
 
 Verify common AD Trust configuration issues. Checks will return SUCCESS if not configured as a trust agent or controller.

@@ -77,3 +77,54 @@ class IPATopologyDomainCheck(IPAPlugin):
         if api.Command.ca_is_enabled()['result']:
             for y in self.run_check(u'ca'):
                 yield y
+
+
+@registry
+class IPAReplicationAgreementCountCheck(IPAPlugin):
+    """
+    Report the number of replication agreements per suffix.
+
+    IPA supports a maximum of 60 replication agreements. Exceeding this
+    limit is not supported and can lead to replication and performance
+    problems. Report a CRITICAL error when the count is exceeded. This is
+    checked for both the IPA (domain) and PKI (ca) suffixes.
+    """
+    requires = ('dirsrv',)
+
+    MAX_AGREEMENTS = 60
+
+    def count_suffix(self, suffix):
+        try:
+            result = api.Command.topologysegment_find(suffix, sizelimit=0)
+        except Exception as e:
+            yield Result(self, constants.ERROR,
+                         key=suffix,
+                         suffix=suffix,
+                         error=str(e),
+                         msg='Unable to retrieve topology segments for '
+                             'suffix {suffix}: {error}')
+            return
+
+        count = result['count']
+        if count > self.MAX_AGREEMENTS:
+            yield Result(self, constants.CRITICAL,
+                         key=suffix,
+                         suffix=suffix,
+                         count=count,
+                         max=self.MAX_AGREEMENTS,
+                         msg='The number of replication agreements for '
+                             'suffix "{suffix}" is {count} which exceeds the '
+                             'supported maximum of {max}.')
+        else:
+            yield Result(self, constants.SUCCESS,
+                         key=suffix,
+                         suffix=suffix,
+                         count=count)
+
+    @duration
+    def check(self):
+        for y in self.count_suffix(u'domain'):
+            yield y
+        if api.Command.ca_is_enabled()['result']:
+            for y in self.count_suffix(u'ca'):
+                yield y
