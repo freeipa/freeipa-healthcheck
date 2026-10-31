@@ -633,6 +633,24 @@ timeouts and performance problems as SSSD will try to de-reference
 the value against LDAP. This can cause looping and failures in trust
 setups.
 
+### IPAnsslapdIdleTimeoutCheck
+Warn if the 389-ds nsslapd-idletimeout value in cn=config is lower than
+the default of 3600 seconds or set to 0 (unlimited). A value lower than
+the default can cause clients to have idle connections dropped
+unexpectedly, resulting in failures reported as SERVER_DOWN.
+
+    {
+      "source": "ipahealthcheck.ipa.config",
+      "check": "IPAnsslapdIdleTimeoutCheck",
+      "result": "WARNING",
+      "kw": {
+        "key": "nsslapd-idletimeout",
+        "value": 10,
+        "default": 3600,
+        "msg": "nsslapd-idletimeout is set to 10 which is lower than the default of 3600. This may cause clients to see connections dropped unexpectedly."
+      }
+    }
+
 ## ipahealthcheck.ipa.dna
 
 ### IPADNARangeCheck
