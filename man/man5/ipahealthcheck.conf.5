@@ -69,7 +69,7 @@ Filter results based on the result key in the healthcheck output.
 .TP
 All command\-line options may be included in the configuration file. Dashes must be converted to underscore for the configuration file, e.g. \-\-output\-type becomes output_type. All options, including those that don't make sense in a config file, like \-\-list\-sources, are allowed. Let the buyer beware.
 .TP
-The purpose of allowing command\-line options to be in the configuration file is for automation without having to tweak the automation script. For example, if you want the default output type to be human for the systemd timer automated runs, settting output_type=human in the configuration file will do this. When loading configuration the first option wins, so if any option is in the configuration file then it cannot be overridden by the command-line unless a different configuration file is specified (see \-\-config).
+The purpose of allowing command\-line options to be in the configuration file is for automation without having to tweak the automation script. For example, if you want the default output type to be human for the systemd timer automated runs, setting output_type=human in the configuration file will do this. When loading configuration the first option wins, so if any option is in the configuration file then it cannot be overridden by the command-line unless a different configuration file is specified (see \-\-config).
 .TP
 There may be conflicting exceptions. For example, if all=True is set in the configuration file, and the command\-line contains \-\-failures\-only, then only failures will be displayed because of the way the option evaluation is done.
 .TP
